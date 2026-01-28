@@ -7,13 +7,6 @@ class IngestionService:
         self.repo = repo
 
     def ingest_logs(self, logs):
-        # for log in logs:
-        #     # Convert ZK log to Pydantic schema
-        #     schema = AttendanceLog(
-        #         user_id=log.user_id,
-        #         timestamp=log.timestamp
-        #     )
-        #     self.repo.insert_log(schema)
 
         schemas = []
         for log in logs:
