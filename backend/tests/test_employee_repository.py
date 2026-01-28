@@ -27,7 +27,7 @@ class TestEmployeeRepository:
     def test_insert_employee_success(self, mock_db):
         """Test successfully inserting a single employee"""
         # Arrange
-        with patch('app.utils.get_db', return_value=mock_db):
+        with patch('app.repositories.employeeRepo.utils.get_db', return_value=mock_db):
             repo = EmployeeRepository()
             employee = Employee(
                 employee_code="001",
@@ -49,7 +49,7 @@ class TestEmployeeRepository:
     def test_insert_employee_duplicate(self, mock_db):
         """Test inserting duplicate employee (should be ignored)"""
         # Arrange
-        with patch('app.utils.get_db', return_value=mock_db):
+        with patch('app.repositories.employeeRepo.utils.get_db', return_value=mock_db):
             repo = EmployeeRepository()
             employee = Employee(
                 employee_code="001",
@@ -71,7 +71,7 @@ class TestEmployeeRepository:
     def test_insert_many_employees(self, mock_db):
         """Test inserting multiple employees"""
         # Arrange
-        with patch('app.utils.get_db', return_value=mock_db):
+        with patch('app.repositories.employeeRepo.utils.get_db', return_value=mock_db):
             repo = EmployeeRepository()
             employees = [
                 Employee(
@@ -107,7 +107,7 @@ class TestEmployeeRepository:
     def test_insert_many_with_duplicates(self, mock_db):
         """Test inserting multiple employees with some duplicates"""
         # Arrange
-        with patch('app.utils.get_db', return_value=mock_db):
+        with patch('app.repositories.employeeRepo.utils.get_db', return_value=mock_db):
             repo = EmployeeRepository()
             employees_batch_1 = [
                 Employee(
@@ -154,7 +154,7 @@ class TestEmployeeRepository:
     def test_get_all_employees(self, mock_db):
         """Test retrieving all employees"""
         # Arrange
-        with patch('app.utils.get_db', return_value=mock_db):
+        with patch('app.repositories.employeeRepo.utils.get_db', return_value=mock_db):
             repo = EmployeeRepository()
             employees = [
                 Employee(
@@ -186,7 +186,7 @@ class TestEmployeeRepository:
     def test_get_all_employees_empty(self, mock_db):
         """Test retrieving all employees from empty collection"""
         # Arrange
-        with patch('app.utils.get_db', return_value=mock_db):
+        with patch('app.repositories.employeeRepo.utils.get_db', return_value=mock_db):
             repo = EmployeeRepository()
 
             # Act
@@ -199,7 +199,7 @@ class TestEmployeeRepository:
     def test_find_by_name(self, mock_db):
         """Test finding employees by name"""
         # Arrange
-        with patch('app.utils.get_db', return_value=mock_db):
+        with patch('app.repositories.employeeRepo.utils.get_db', return_value=mock_db):
             repo = EmployeeRepository()
             employees = [
                 Employee(
@@ -237,7 +237,7 @@ class TestEmployeeRepository:
     def test_find_by_name_multiple_results(self, mock_db):
         """Test finding multiple employees with similar names"""
         # Arrange
-        with patch('app.utils.get_db', return_value=mock_db):
+        with patch('app.repositories.employeeRepo.utils.get_db', return_value=mock_db):
             repo = EmployeeRepository()
             employees = [
                 Employee(
@@ -266,7 +266,7 @@ class TestEmployeeRepository:
     def test_find_by_name_not_found(self, mock_db):
         """Test finding employee that doesn't exist"""
         # Arrange
-        with patch('app.utils.get_db', return_value=mock_db):
+        with patch('app.repositories.employeeRepo.utils.get_db', return_value=mock_db):
             repo = EmployeeRepository()
             employee = Employee(
                 employee_code="001",
@@ -286,7 +286,7 @@ class TestEmployeeRepository:
     def test_count_employees(self, mock_db):
         """Test counting employees in collection"""
         # Arrange
-        with patch('app.utils.get_db', return_value=mock_db):
+        with patch('app.repositories.employeeRepo.utils.get_db', return_value=mock_db):
             repo = EmployeeRepository()
 
             # Act & Assert - Empty collection
@@ -317,7 +317,7 @@ class TestEmployeeRepository:
     def test_unique_index_on_employee_code(self, mock_db):
         """Test that unique index is created on employee_code"""
         # Arrange
-        with patch('app.utils.get_db', return_value=mock_db):
+        with patch('app.repositories.employeeRepo.utils.get_db', return_value=mock_db):
             repo = EmployeeRepository()
 
             # Assert

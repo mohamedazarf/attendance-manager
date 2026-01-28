@@ -1,18 +1,21 @@
 from app.schemas.attendanceLog import AttendanceLog
-from app.utils import get_db
-db = get_db()
+from pymongo.errors import BulkWriteError
+from app import utils
+
 class AttendanceRepository:
 
     def __init__(self, collection):
+        db = utils.get_db()
         self.collection = db["attendance_logs"]
+        self.collection.create_index([("user_id", 1), ("timestamp", 1)], unique=True)
 
 
     def insert_log(self, log: AttendanceLog):
-        self.collection.insert_one(log.dict())
+        self.collection.insert_one(log.model_dump())
 
     def insert_many(self, logs: list[AttendanceLog]):
         try:
-            self.collection.insert_many([log.dict() for log in logs], ordered=False)
+            self.collection.insert_many([log.model_dump() for log in logs], ordered=False)
         except BulkWriteError:
             pass
 

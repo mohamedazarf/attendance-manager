@@ -1,13 +1,14 @@
 from app.schemas.employee import Employee
-from app.utils import get_db
-from pymongo.errors import DuplicateKeyError
+from app import utils
+from pymongo.errors import DuplicateKeyError, BulkWriteError
 
 
-db = get_db()
+
 
 class EmployeeRepository:
 
     def __init__(self):
+        db = utils.get_db()
         self.collection = db["employees"]
 
         # Create unique index on employee_code
@@ -15,15 +16,15 @@ class EmployeeRepository:
 
     def insert_employee(self, employee: Employee):
         try:
-            self.collection.insert_one(employee.dict())
+            self.collection.insert_one(employee.model_dump())
         except DuplicateKeyError:
             # ignore duplicates
             return None
 
     def insert_many(self, employees: list[Employee]):
         try:
-            self.collection.insert_many([e.dict() for e in employees], ordered=False)
-        except DuplicateKeyError:
+            self.collection.insert_many([e.model_dump() for e in employees], ordered=False)
+        except (DuplicateKeyError, BulkWriteError):
             # duplicates will be ignored
             return None
 
