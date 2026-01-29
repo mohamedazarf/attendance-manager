@@ -1,5 +1,5 @@
 from app.schemas.attendanceLog import AttendanceLog
-from pymongo.errors import BulkWriteError
+from pymongo.errors import BulkWriteError, DuplicateKeyError, OperationFailure
 from app import utils
 
 class AttendanceRepository:
@@ -7,7 +7,10 @@ class AttendanceRepository:
     def __init__(self, collection):
         db = utils.get_db()
         self.collection = db["attendance_logs"]
-        self.collection.create_index([("user_id", 1), ("timestamp", 1)], unique=True)
+        try:
+            self.collection.create_index([("user_id", 1), ("timestamp", 1)], unique=True)
+        except (DuplicateKeyError, OperationFailure):
+            pass
 
 
     def insert_log(self, log: AttendanceLog):
