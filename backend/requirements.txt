@@ -3,4 +3,4 @@ httpx
 pydantic
 pytest
 mongomock
-zk-client
+pyzk

@@ -5,8 +5,10 @@ from app.utils import get_db
 from app.repositories.attendanceRepo import AttendanceRepository
 from app.services.ingestion_service import IngestionService
 from app.services.attendance_processing_service import AttendanceProcessingService
+from app.services.attendance_metrics_service import AttendanceMetricsService
 from app.sdk.mock import ZKMock
 from typing import List
+from datetime import datetime, date
 
 router = APIRouter()
 
@@ -262,10 +264,87 @@ def report_mock():
         "data": list(by_employee.values())
     }
 
-# from fastapi import APIRouter
 
-# router = APIRouter()
+# ==================== METRICS ENDPOINTS ====================
 
-# @router.get("/test")
-# def test():
-#     return {"message": "OK"}
+@router.get("/metrics/employee/{employee_id}")
+def get_employee_metrics(employee_id: int, year: int, month: int):
+    """
+    Get attendance metrics for a specific employee in a given month.
+    
+    Parameters:
+    - employee_id: Employee ID
+    - year: Year (e.g., 2024)
+    - month: Month (1-12)
+    
+    Returns:
+    - presence_rate: Percentage of days present
+    - absence_rate: Percentage of days absent
+    - total_working_days: Number of working days in month
+    - days_present: Number of days employee attended
+    - days_absent: Number of days employee was absent
+    """
+    try:
+        service = AttendanceMetricsService()
+        metrics = service.get_employee_attendance_status(employee_id, year, month)
+        return {"status": "success", "data": metrics}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@router.get("/metrics/all-employees")
+def get_all_employees_metrics(year: int, month: int):
+    """
+    Get attendance metrics for all employees in a given month.
+    
+    Parameters:
+    - year: Year (e.g., 2024)
+    - month: Month (1-12)
+    
+    Returns:
+    - List of all employees with their metrics (presence_rate, absence_rate, etc.)
+    """
+    try:
+        service = AttendanceMetricsService()
+        metrics_list = service.get_all_employees_metrics(year, month)
+        return {
+            "status": "success",
+            "total_employees": len(metrics_list),
+            "year": year,
+            "month": month,
+            "data": metrics_list
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@router.get("/metrics/employee/{employee_id}/range")
+def get_employee_metrics_range(
+    employee_id: int,
+    start_date: str,
+    end_date: str
+):
+    """
+    Get attendance metrics for a specific employee over a custom date range.
+    
+    Parameters:
+    - employee_id: Employee ID
+    - start_date: Start date (format: YYYY-MM-DD)
+    - end_date: End date (format: YYYY-MM-DD)
+    
+    Returns:
+    - Metrics for the specified date range
+    """
+    try:
+        start = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end = datetime.strptime(end_date, "%Y-%m-%d").date()
+        
+        service = AttendanceMetricsService()
+        metrics = service.get_employee_metrics_date_range(employee_id, start, end)
+        return {"status": "success", "data": metrics}
+    except ValueError as e:
+        return {"status": "error", "message": "Invalid date format. Use YYYY-MM-DD"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
