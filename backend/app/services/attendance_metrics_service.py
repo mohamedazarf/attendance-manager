@@ -16,6 +16,49 @@ class AttendanceMetricsService:
         self.attendance_repo = AttendanceRepository(db["attendance_logs"])
         self.db = db
 
+    def _is_weekend(self, date_obj: date) -> bool:
+        """Check if date is Saturday (5) or Sunday (6)"""
+        return date_obj.weekday() >= 5
+
+    def _calculate_weekend_hours(self, logs: List[dict]) -> tuple:
+        """Calculate weekend days worked and hours. Returns (days, hours)"""
+        # Sort logs by timestamp first
+        try:
+            sorted_logs = sorted(logs, key=lambda x: x.get("timestamp", ""))
+        except:
+            sorted_logs = logs
+        
+        weekend_days = set()
+        weekend_hours = 0.0
+        
+        for i in range(0, len(sorted_logs) - 1, 2):
+            try:
+                ts1 = sorted_logs[i].get("timestamp")
+                ts2 = sorted_logs[i + 1].get("timestamp")
+                
+                # Handle both datetime objects and strings
+                if isinstance(ts1, datetime):
+                    dt1 = ts1
+                else:
+                    ts1_str = str(ts1).replace("+00:00", "")  # Remove timezone
+                    dt1 = datetime.fromisoformat(ts1_str)
+                
+                if isinstance(ts2, datetime):
+                    dt2 = ts2
+                else:
+                    ts2_str = str(ts2).replace("+00:00", "")  # Remove timezone
+                    dt2 = datetime.fromisoformat(ts2_str)
+                
+                if self._is_weekend(dt1.date()):
+                    weekend_days.add(dt1.date())
+                    hours = (dt2 - dt1).total_seconds() / 3600
+                    if hours > 0:
+                        weekend_hours += hours
+            except Exception as e:
+                continue
+        
+        return len(weekend_days), round(weekend_hours, 2)
+
     def get_working_days_in_month(self, year: int, month: int) -> int:
         """
         Calculate number of working days (Monday-Friday) in a given month.
@@ -78,6 +121,9 @@ class AttendanceMetricsService:
             log_date = log["timestamp"].date()  # Extract YYYY-MM-DD
             days_with_attendance.add(log_date)
         
+        # Calculate weekend metrics
+        weekend_days, weekend_hours = self._calculate_weekend_hours(logs)
+        
         # Calculate metrics
         working_days = self.get_working_days_in_month(year, month)
         days_present = len(days_with_attendance)
@@ -101,7 +147,9 @@ class AttendanceMetricsService:
             "days_absent": days_absent,
             "presence_rate": presence_rate,
             "absence_rate": absence_rate,
-            "attendance_count": len(logs)
+            "attendance_count": len(logs),
+            "weekend_days_worked": weekend_days,
+            "weekend_hours_worked": weekend_hours
         }
 
     def get_all_employees_metrics(
@@ -161,6 +209,9 @@ class AttendanceMetricsService:
             log_date = log["timestamp"].date()
             days_with_attendance.add(log_date)
 
+        # Calculate weekend metrics
+        weekend_days, weekend_hours = self._calculate_weekend_hours(logs)
+
         total_working_days = 0
         current_date = start_date
         while current_date <= end_date:
@@ -187,5 +238,7 @@ class AttendanceMetricsService:
             "days_absent": days_absent,
             "presence_rate": presence_rate,
             "absence_rate": absence_rate,
-            "attendance_count": len(logs)
+            "attendance_count": len(logs),
+            "weekend_days_worked": weekend_days,
+            "weekend_hours_worked": weekend_hours
         }

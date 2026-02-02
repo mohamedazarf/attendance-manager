@@ -348,3 +348,37 @@ def get_employee_metrics_range(
         return {"status": "error", "message": str(e)}
 
 
+@router.get("/metrics/employee/{employee_id}/weekend")
+def get_employee_weekend_metrics(employee_id: int, year: int, month: int):
+    """
+    Get weekend work metrics for a specific employee in a given month.
+    
+    Parameters:
+    - employee_id: Employee ID
+    - year: Year (e.g., 2024)
+    - month: Month (1-12)
+    
+    Returns:
+    - weekend_days_worked: Number of weekend days with work
+    - weekend_hours_worked: Total hours worked on weekends
+    """
+    try:
+        service = AttendanceMetricsService()
+        metrics = service.get_employee_attendance_status(employee_id, year, month)
+        
+        # Extract only weekend-related data
+        weekend_data = {
+            "employee_id": employee_id,
+            "year": year,
+            "month": month,
+            "period": metrics.get("period"),
+            "weekend_days_worked": metrics.get("weekend_days_worked", 0),
+            "weekend_hours_worked": metrics.get("weekend_hours_worked", 0.0),
+            "total_attendance_count": metrics.get("attendance_count", 0)
+        }
+        
+        return {"status": "success", "data": weekend_data}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+

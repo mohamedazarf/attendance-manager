@@ -103,3 +103,22 @@ class TestAttendanceMetricsService:
         # Jan 1-7, 2024: Mon(1), Tue(2), Wed(3), Thu(4), Fri(5) = 5 working days
         # (Sat(6) and Sun(7) are weekend)
         assert metrics["total_working_days"] == 5
+
+    def test_is_weekend(self, metrics_service):
+        """Test weekend detection"""
+        assert metrics_service._is_weekend(date(2022, 3, 12)) == True   # Saturday
+        assert metrics_service._is_weekend(date(2022, 3, 13)) == True   # Sunday
+        assert metrics_service._is_weekend(date(2022, 3, 14)) == False  # Monday
+
+    def test_calculate_weekend_hours_empty(self, metrics_service):
+        """Test with no logs"""
+        days, hours = metrics_service._calculate_weekend_hours([])
+        assert days == 0
+        assert hours == 0.0
+
+    def test_weekend_hours_worked_field(self, metrics_service):
+        """Test weekend hours in response"""
+        metrics = metrics_service.get_employee_attendance_status(1, 2022, 3)
+        assert "weekend_days_worked" in metrics
+        assert "weekend_hours_worked" in metrics
+        assert isinstance(metrics["weekend_hours_worked"], float)
