@@ -10,6 +10,27 @@ backend/venv/
 # Environment variables
 .env
 
+# Frontend
+frontend/**/node_modules/
+frontend/**/dist/
+frontend/**/build/
+frontend/**/.vite/
+frontend/**/.next/
+frontend/**/.nuxt/
+frontend/**/out/
+
+# Frontend build & dev
+frontend/**/*.local
+frontend/**/*.tsbuildinfo
+frontend/**/.vscode/
+frontend/**/.idea/
+frontend/**/.DS_Store
+frontend/**/npm-debug.log*
+frontend/**/yarn-error.log*
+frontend/**/pnpm-debug.log*
+frontend/**/lerna-debug.log*
+
 # OS
 .DS_Store
 Thumbs.db
+
