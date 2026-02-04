@@ -1,82 +1,21 @@
-// import { useEffect, useState } from "react";
-// import { Box, Table } from "@chakra-ui/react";
-// import axios from "axios";
-// const BASE_URL = "http://localhost:8000/api/v1";
-
-// interface Employee {
-//   employee_code: string;
-//   name: string;
-//   privilege: number;
-//   group_id: string;
-//   card: number;
-// }
-
-// export default function EmployeesPage() {
-//   const [employees, setEmployees] = useState<Employee[]>([]);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     const fetchEmployees = async () => {
-//       try {
-//         const response = await axios.get(`${BASE_URL}/employee/`);
-//         setEmployees(response.data);
-//       } catch (error) {
-//         console.error("Error fetching employees:", error);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchEmployees();
-//   }, []);
-
-//   if (loading) return <Box p={5}>Chargement...</Box>;
-
-//   return (
-//     <Box ml={["0", "250px"]} p={5}>
-//       <Table.Root variant="line">
-//         <Table.Header>
-//           <Table.Row>
-//             <Table.ColumnHeader>Code</Table.ColumnHeader>
-//             <Table.ColumnHeader>Nom</Table.ColumnHeader>
-//             <Table.ColumnHeader>Privilege</Table.ColumnHeader>
-//             <Table.ColumnHeader>Groupe</Table.ColumnHeader>
-//             <Table.ColumnHeader>Carte</Table.ColumnHeader>
-//           </Table.Row>
-//         </Table.Header>
-
-//         <Table.Body>
-//           {employees.map((emp) => (
-//             <Table.Row key={emp.employee_code}>
-//               <Table.Cell>{emp.employee_code}</Table.Cell>
-//               <Table.Cell>{emp.name}</Table.Cell>
-//               <Table.Cell>{emp.privilege}</Table.Cell>
-//               <Table.Cell>{emp.group_id || "-"}</Table.Cell>
-//               <Table.Cell>{emp.card || "-"}</Table.Cell>
-//             </Table.Row>
-//           ))}
-//         </Table.Body>
-//       </Table.Root>
-//     </Box>
-//   );
-// }
-
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Input,
   InputGroup,
   InputLeftElement,
+  SimpleGrid,
   Spinner,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
+  Flex,
+  Heading,
+  Badge,
+  Text,
+  Select,
+  IconButton,
 } from "@chakra-ui/react";
-import { SearchIcon } from "@chakra-ui/icons";
+import { SearchIcon, HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
 import axios from "axios";
+import Sidebar from "../components/layout/Sidebar"; // path correct
 
 const BASE_URL = "http://localhost:8000/api/v1";
 
@@ -92,6 +31,10 @@ export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [privilege, setPrivilege] = useState("all");
+
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -104,61 +47,123 @@ export default function EmployeesPage() {
         setLoading(false);
       }
     };
-
     fetchEmployees();
   }, []);
 
-  const filteredEmployees = employees.filter((emp) =>
-    `${emp.name} ${emp.employee_code}`
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  );
+  const filteredEmployees = useMemo(() => {
+    return employees.filter((emp) => {
+      const matchSearch =
+        `${emp.name} ${emp.employee_code}`
+          .toLowerCase()
+          .includes(search.toLowerCase());
+
+      const matchPrivilege =
+        privilege === "all" || emp.privilege.toString() === privilege;
+
+      return matchSearch && matchPrivilege;
+    });
+  }, [employees, search, privilege]);
 
   if (loading) {
     return (
       <Box p={5} textAlign="center">
-        <Spinner />
+        <Spinner size="xl" />
       </Box>
     );
   }
 
   return (
-    <Box ml={["0", "250px"]} p={5}>
-      {/* 🔍 Search */}
-      <InputGroup mb={4} maxW="300px">
-        <InputLeftElement pointerEvents="none">
-          <SearchIcon color="gray.400" />
-        </InputLeftElement>
-        <Input
-          placeholder="Rechercher un employé..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </InputGroup>
+    <Box bg="gray.50" minH="100vh" display="flex">
+      {/* Sidebar */}
+      <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-      {/* 📋 Table */}
-      <Table variant="simple">
-        <Thead>
-          <Tr>
-            <Th>Code</Th>
-            <Th>Nom</Th>
-            <Th>Privilege</Th>
-            <Th>Groupe</Th>
-            <Th>Carte</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
+      {/* Hamburger button for mobile */}
+      <IconButton
+        icon={isSidebarOpen ? <CloseIcon /> : <HamburgerIcon />}
+        aria-label="Toggle Sidebar"
+        display={["inline-flex", "none"]}
+        onClick={toggleSidebar}
+        position="fixed"
+        top="4"
+        left="4"
+        zIndex={1600} // above sidebar
+      />
+
+      {/* Main content */}
+      <Box flex={1} ml={["0", "250px"]} p={5}>
+        <Flex justify="space-between" align="center" mb={6}>
+          <Box>
+            <Heading size="md" pl="10">Employees</Heading>
+            <Text fontSize="sm" color="gray.500" pl="10">
+              {filteredEmployees.length} employee(s) found
+            </Text>
+          </Box>
+        </Flex>
+
+        {/* Filters */}
+        <Flex gap={4} mb={4} flexWrap="wrap">
+          <InputGroup maxW="260px">
+            <InputLeftElement pointerEvents="none">
+              <SearchIcon color="gray.400" />
+            </InputLeftElement>
+            <Input
+              placeholder="Search employee..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </InputGroup>
+
+          <Select
+            maxW="200px"
+            value={privilege}
+            onChange={(e) => setPrivilege(e.target.value)}
+          >
+            <option value="all">All privileges</option>
+            <option value="0">User</option>
+            <option value="1">Admin</option>
+          </Select>
+        </Flex>
+
+        {/* Employee cards */}
+        <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={5}>
           {filteredEmployees.map((emp) => (
-            <Tr key={emp.employee_code}>
-              <Td>{emp.employee_code}</Td>
-              <Td>{emp.name}</Td>
-              <Td>{emp.privilege}</Td>
-              <Td>{emp.group_id || "-"}</Td>
-              <Td>{emp.card || "-"}</Td>
-            </Tr>
+            <Box
+              key={emp.employee_code}
+              borderWidth="1px"
+              borderRadius="lg"
+              p={5}
+              bg="white"
+              shadow="md"
+              _hover={{
+                shadow: "xl",
+                transform: "translateY(-2px)",
+                transition: "all 0.2s",
+              }}
+            >
+              <Flex justify="space-between" align="center" mb={3}>
+                <Heading size="md">{emp.name}</Heading>
+                <Badge
+                  colorScheme={emp.privilege === 1 ? "green" : "blue"}
+                  fontSize="0.8em"
+                >
+                  {emp.privilege === 1 ? "Admin" : "User"}
+                </Badge>
+              </Flex>
+
+              <Text fontSize="sm" mb={1}>
+                <strong>Code:</strong> {emp.employee_code}
+              </Text>
+              <Text fontSize="sm" mb={1}>
+                <strong>Group:</strong> {emp.group_id || "-"}
+              </Text>
+              <Text fontSize="sm">
+                <strong>Card:</strong> {emp.card || "-"}
+              </Text>
+            </Box>
           ))}
-        </Tbody>
-      </Table>
+        </SimpleGrid>
+      </Box>
     </Box>
   );
 }
+
