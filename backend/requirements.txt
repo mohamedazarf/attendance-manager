@@ -1,6 +1,9 @@
 fastapi
+uvicorn
 httpx
 pydantic
 pytest
+pymongo
 mongomock
 pyzk
+python-dotenv
