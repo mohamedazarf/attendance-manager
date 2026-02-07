@@ -242,3 +242,4 @@ class AttendanceMetricsService:
             "weekend_days_worked": weekend_days,
             "weekend_hours_worked": weekend_hours
         }
+

@@ -9,6 +9,7 @@ from app.services.attendance_metrics_service import AttendanceMetricsService
 from app.sdk.mock import ZKMock
 from typing import List
 from datetime import datetime, date
+from app import utils
 
 router = APIRouter()
 
@@ -380,5 +381,210 @@ def get_employee_weekend_metrics(employee_id: int, year: int, month: int):
         return {"status": "success", "data": weekend_data}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+# @router.get("/metrics/weekend")
+# def get_all_employees_weekend_metrics(year: int, month: int):
+#     try:
+#         service = AttendanceMetricsService()
+#         db = utils.get_db()
+
+#         employees = list(db["employees"].find({}))  # ou employees_mock
+#         results = []
+
+#         for emp in employees:
+#             emp_id = emp["user_id"]
+
+#             metrics = service.get_employee_attendance_status(
+#                 emp_id, year, month
+#             )
+
+#             if metrics["weekend_hours_worked"] > 0:
+#                 results.append({
+#                     "employee_id": emp_id,
+#                     "employee_name": emp.get("name") or emp.get("employee_name"),
+#                     "weekend_days_worked": metrics["weekend_days_worked"],
+#                     "weekend_hours_worked": metrics["weekend_hours_worked"]
+#                 })
+
+#         return {
+#             "status": "success",
+#             "data": results
+#         }
+
+#     except Exception as e:
+#         return {"status": "error", "message": str(e)}
+
+# @router.get("/metrics/employees/weekend")
+# def get_all_employees_weekend_metrics(year: int, month: int):
+#     try:
+#         service = AttendanceMetricsService()
+#         db = utils.get_db()
+
+#         employees = list(db["employees"].find({}))
+#         results = []
+
+#         for emp in employees:
+#             emp_id = emp.get("user_id")
+#             if not emp_id:
+#                 continue
+
+#             metrics = service.get_employee_attendance_status(emp_id, year, month)
+
+#             if metrics["weekend_hours_worked"] > 0:
+#                 results.append({
+#                     "employee_id": emp_id,
+#                     "employee_name": (
+#                         emp.get("employee_name")
+#                         or emp.get("name")
+#                         or f"Employee {emp_id}"
+#                     ),
+#                     "weekend_days_worked": metrics["weekend_days_worked"],
+#                     "weekend_hours_worked": metrics["weekend_hours_worked"]
+#                 })
+
+#         return {"status": "success", "data": results}
+
+#     except Exception as e:
+#         return {"status": "error", "message": str(e)}
+
+@router.get("/report-mock-weekend")
+@router.post("/report-mock-weekend")
+def report_mock_weekend():
+    """
+    Get a comprehensive attendance report with weekend hours.
+    Summary by employee with daily breakdown.
+    """
+    db = get_db()
+    logs_collection = db["attendances_mock"]
+    employees_collection = db["employees_mock"]
+    
+    raw_logs = list(logs_collection.find({}, {"_id": 0}))
+    employees = {emp["user_id"]: emp for emp in employees_collection.find({}, {"_id": 0})}
+    
+    if not raw_logs:
+        return {"status": "error", "message": "No mock logs found. Call /ingest-logs-mock first"}
+    
+    service = AttendanceProcessingService()
+    processed = service.process_logs(raw_logs)
+    
+    by_employee = {}
+    
+    for (user_id, date), attendance in processed.items():
+        if user_id not in by_employee:
+            employee_info = employees.get(user_id, {})
+            by_employee[user_id] = {
+                "user_id": user_id,
+                "employee_code": employee_info.get("employee_code"),
+                "employee_name": employee_info.get("name"),
+                "daily_records": [],
+                "total_hours": 0.0,
+                "expected_hours": 0.0,
+                "weekend_hours": 0.0,  # nouveau KPI
+                "weekend_days": 0,     # nouveau KPI
+                "anomaly_count": 0
+            }
+
+        summary = service.generate_summary(attendance, employees.get(user_id, {}))
+        
+        # Calcul weekend pour ce jour
+        weekend_hours = 0
+        if summary.date.weekday() in [5, 6]:  # samedi=5, dimanche=6
+            weekend_hours = summary.total_hours_worked
+        
+        by_employee[user_id]["daily_records"].append({
+            "date": str(summary.date),
+            "hours_worked": round(summary.total_hours_worked, 2),
+            "expected_hours": round(summary.expected_hours, 2),
+            "status": summary.status,
+            "anomalies": summary.anomalies,
+            "weekend_hours": round(weekend_hours, 2)
+        })
+        
+        # Cumuler les totaux
+        by_employee[user_id]["total_hours"] += summary.total_hours_worked
+        by_employee[user_id]["expected_hours"] += summary.expected_hours
+        by_employee[user_id]["weekend_hours"] += weekend_hours
+        if weekend_hours > 0:
+            by_employee[user_id]["weekend_days"] += 1
+        if summary.status == "anomaly":
+            by_employee[user_id]["anomaly_count"] += 1
+
+    return {
+        "status": "success",
+        "total_employees": len(by_employee),
+        "data": list(by_employee.values())
+    }
+
+
+
+
+
+@router.get("/read-logs")
+def read_logs_from_zk():
+    """Read attendance logs directly from ZK device and return them"""
+    try:
+        # Connect to ZK device
+        zk = ZK('192.168.100.5', port=4370, timeout=5)
+        conn = zk.connect()
+        
+        # Get logs from device
+        logs = conn.get_attendance()
+        
+        # Format the logs for display
+        formatted_logs = []
+        for log in logs:
+            # Format each log entry
+            formatted_log = {
+                "user_id": log.user_id,
+                "timestamp": log.timestamp.strftime("%Y-%m-%d %H:%M:%S") if log.timestamp else None,
+                "status": log.status,
+                "punch": log.punch,
+                "uid": log.uid,
+                "device_id": "ZK001"
+            }
+            formatted_logs.append(formatted_log)
+        
+        conn.disconnect()
+        
+        return {
+            "status": "success",
+            "source": "zk_device_192.168.100.5",
+            "logs": formatted_logs,
+            "count": len(logs),
+            "read_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        
+    except ZKNetworkError as e:
+        return {"status": "error", "message": f"Cannot connect to ZK device: {str(e)}"}
+    except Exception as e:
+        return {"status": "error", "message": f"Error reading logs: {str(e)}"}
+
+
+
+
+
+from app.services.DailyAttendanceDashboardService import DailyAttendanceDashboardService
+@router.get("/dashboard/today")
+def dashboard_today():
+    """
+    Dashboard global + per-employee data for today
+    """
+    service = DailyAttendanceDashboardService()
+    return service.get_today_data()
+
+from datetime import date
+from fastapi import Query
+from app.services.DailyAttendanceDashboardService import DailyAttendanceDashboardService
+
+
+@router.get("/dashboard/day")
+def dashboard_day(
+    day: date = Query(None, description="YYYY-MM-DD (optional)")
+):
+    service = DailyAttendanceDashboardService()
+    return service.get_today_data(day)
+
+
+
 
 
