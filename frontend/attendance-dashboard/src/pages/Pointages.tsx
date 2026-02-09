@@ -25,6 +25,7 @@ import Navbar from "../components/layout/Navbar";
 import Sidebar from "../components/layout/Sidebar";
 import { useEffect, useState } from "react";
 import { CloseIcon, HamburgerIcon } from "@chakra-ui/icons";
+import { useLocation, useNavigate } from "react-router-dom";
 
 /* -------------------- Types -------------------- */
 
@@ -87,6 +88,10 @@ export default function Pointages() {
   const [selectedFilter, setSelectedFilter] = useState<
     "all" | "present" | "absent" | null
   >(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const params = new URLSearchParams(location.search);
+  const filter = params.get("filter"); // "all" | "present" | "absent"
 
   /* -------------------- Fetch data -------------------- */
 
@@ -140,7 +145,11 @@ export default function Pointages() {
         <Navbar />
 
         <Container maxW="100%" flex={1} p={6}>
-          <Heading mb={2}>Attendance Dashboard</Heading>
+          <Heading mb={2}>Attendance Dashboard  {filter === "present"
+              ? "Present Employees"
+              : filter === "absent"
+              ? "Absent Employees"
+              : "All Employees Today"}</Heading>
 
           <Text color="gray.500" mb={6}>
             Date: {dashboard?.date}
@@ -159,17 +168,17 @@ export default function Pointages() {
                 <StatCard
                   label="Total Employees"
                   value={dashboard?.global.total_employees ?? 0}
-                  onClick={() => setSelectedFilter("all")}
+                  onClick={() => navigate("/employeesToday")}
                 />
                 <StatCard
                   label="Present Today"
                   value={dashboard?.global.present_today ?? 0}
-                  onClick={() => setSelectedFilter("present")}
+                  onClick={() => navigate("/employeesToday?filter=present")}
                 />
                 <StatCard
                   label="Absent Today"
                   value={dashboard?.global.absent_today ?? 0}
-                  onClick={() => setSelectedFilter("absent")}
+                  onClick={() => navigate("/employeesToday?filter=absent")}
                 />
                 <StatCard
                   label="Attendance Rate"

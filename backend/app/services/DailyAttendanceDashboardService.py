@@ -1,8 +1,8 @@
 from datetime import datetime, date, time
 from app import utils
 from typing import Dict, Any, List
-
-
+from app.services.attendance_processing_service import AttendanceProcessingService
+from app.schemas.processed_attendance import ProcessedAttendance, DailyAttendanceSummary, AttendanceCheckPoint
 
 class DailyAttendanceDashboardService:
 
@@ -10,6 +10,7 @@ class DailyAttendanceDashboardService:
         self.db = utils.get_db()
         self.logs_collection = self.db["attendance_logs"]
         self.employees_collection = self.db["employees"]
+        self.processor = AttendanceProcessingService()
 
     def get_today_data(self, target_date: date = None):
         if not target_date:
@@ -22,13 +23,28 @@ class DailyAttendanceDashboardService:
             {}, {"_id": 0, "employee_code": 1, "name": 1}
         ))
 
+        # Récupérer les logs du jour
         logs = list(self.logs_collection.find({
             "timestamp": {"$gte": start_dt, "$lte": end_dt}
         }))
 
+        # ⚡ Normaliser tous les timestamps en datetime naive
+        for log in logs:
+            ts = log.get("timestamp")
+            if isinstance(ts, str):
+                log["timestamp"] = datetime.fromisoformat(ts)
+            elif isinstance(ts, datetime):
+                log["timestamp"] = ts.replace(tzinfo=None)  # enlever timezone si present
+            else:
+                log["timestamp"] = None  # fallback
+
+        self.processor.process_logs(logs)  # Process logs to detect anomalies, late arrivals, etc.
+
+        # Grouper par employé
         logs_by_employee = {}
         for log in logs:
-            logs_by_employee.setdefault(log["user_id"], []).append(log)
+            emp_id = int(log["user_id"])
+            logs_by_employee.setdefault(emp_id, []).append(log)
 
         present_today = 0
         employees_data = []
@@ -38,22 +54,39 @@ class DailyAttendanceDashboardService:
             emp_logs = logs_by_employee.get(emp_id, [])
 
             if emp_logs:
-                emp_logs.sort(key=lambda x: x["timestamp"])
+                # Tri sûr sur timestamp
+                emp_logs.sort(key=lambda x: x["timestamp"] or datetime.min)
                 check_in = emp_logs[0]["timestamp"]
                 check_out = emp_logs[-1]["timestamp"]
                 status = "present"
                 present_today += 1
+                events = [AttendanceCheckPoint(event_type="in", timestamp=check_in,event_order=1),
+                          AttendanceCheckPoint(event_type="out", timestamp=check_out,event_order=2)]
+                processed = ProcessedAttendance(
+                    user_id=emp_id,
+                    date=target_date,
+                    check_in_time=check_in,
+                    check_out_time=check_out,
+                    events=events
+                )
+                self.processor.calculate_hours(processed)
+                worked_hours = processed.total_hours_worked
+                is_late = processed.is_late
             else:
                 check_in = None
                 check_out = None
                 status = "absent"
+                worked_hours = 0
+                is_late = False
 
             employees_data.append({
                 "employee_id": emp_id,
                 "employee_name": emp.get("name"),
                 "status": status,
                 "check_in_time": check_in,
-                "check_out_time": check_out
+                "check_out_time": check_out,
+                "worked_hours": worked_hours,
+                "is_late": is_late
             })
 
         total_employees = len(employees)
@@ -72,6 +105,7 @@ class DailyAttendanceDashboardService:
             },
             "employees": employees_data
         }
+
 
 
 # #new

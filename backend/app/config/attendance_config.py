@@ -15,7 +15,7 @@ class AttendanceConfig:
     PAUSE_DURATION = 60           # 1 hour lunch break
     
     # Tolerance for late arrival (in minutes)
-    LATE_TOLERANCE = 15           # Allow 15 min grace period
+    LATE_TOLERANCE = 0           # Allow 15 min grace period
     
     # Thresholds for anomalies
     EARLY_DEPARTURE_THRESHOLD = 30  # Leave more than 30 min early = anomaly

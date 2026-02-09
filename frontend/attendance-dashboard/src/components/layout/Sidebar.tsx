@@ -1,18 +1,28 @@
-// import { Box, VStack, Text, Image } from "@chakra-ui/react";
+// import {
+//   Box,
+//   VStack,
+//   Text,
+//   Image,
+//   HStack,
+//   Collapse
+// } from "@chakra-ui/react";
+// import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons";
 // import logo from "../../assets/logo.png";
 // import { useNavigate } from "react-router-dom";
+// import { useState } from "react";
 
 // interface SidebarProps {
 //   isSidebarOpen: boolean;
-//   toggleSidebar: () => void; // add this
+//   toggleSidebar: () => void;
 // }
 
 // export default function Sidebar({ isSidebarOpen, toggleSidebar }: SidebarProps) {
 //   const navigate = useNavigate();
+//   const [isRapportsOpen, setRapportsOpen] = useState(false);
 
 //   const handleNavigate = (path: string) => {
 //     navigate(path);
-//     toggleSidebar(); // close sidebar after clicking on mobile
+//     toggleSidebar();
 //   };
 
 //   return (
@@ -29,41 +39,81 @@
 //       transition="left 0.3s"
 //     >
 //       <Image src={logo} alt="Logo" mb={6} h="60px" />
-//       <VStack align="start" spacing={4}>
+
+//       <VStack align="start" spacing={3} w="full">
+
 //         <Text
-//           _hover={{ cursor: "pointer", color: "#B98112" }}
+//           _hover={{ color: "#B98112", cursor: "pointer" }}
 //           onClick={() => handleNavigate("/")}
 //         >
 //           Dashboard
 //         </Text>
+
 //         <Text
-//           _hover={{ cursor: "pointer", color: "#B98112" }}
+//           _hover={{ color: "#B98112", cursor: "pointer" }}
 //           onClick={() => handleNavigate("/pointages")}
 //         >
 //           Pointages
 //         </Text>
+
 //         <Text
-//           _hover={{ cursor: "pointer", color: "#B98112" }}
+//           _hover={{ color: "#B98112", cursor: "pointer" }}
 //           onClick={() => handleNavigate("/employees")}
 //         >
 //           Employés
 //         </Text>
-//         <Text
-//           _hover={{ cursor: "pointer", color: "#B98112" }}
-//           onClick={() => handleNavigate("/rapports")}
-//         >
-//           Rapports
-//         </Text>
+
+//         {/* RAPPORTS WITH CLICK SUBMENU */}
+//         <Box w="full">
+//           <HStack
+//             justify="space-between"
+//             w="full"
+//             cursor="pointer"
+//             _hover={{ color: "#B98112" }}
+//             onClick={() => setRapportsOpen(!isRapportsOpen)}
+//           >
+//             <Text>Rapports</Text>
+//             {isRapportsOpen ? <ChevronDownIcon /> : <ChevronRightIcon />}
+//           </HStack>
+
+//           <Collapse in={isRapportsOpen} animateOpacity>
+//             <VStack
+//               align="start"
+//               pl={4}
+//               mt={2}
+//               spacing={2}
+//               borderLeft="2px solid"
+//               borderColor="gray.600"
+//             >
+//               <Text
+//                 fontSize="sm"
+//                 color="gray.300"
+//                 _hover={{ color: "#B98112", cursor: "pointer" }}
+//                 onClick={() => handleNavigate("/rapports/charts")}
+//               >
+//                 • Graphiques
+//               </Text>
+
+//               <Text
+//                 fontSize="sm"
+//                 color="gray.300"
+//                 _hover={{ color: "#B98112", cursor: "pointer" }}
+//                 onClick={() => handleNavigate("/rapports")}
+//               >
+//                 • Rapport mensuel
+//               </Text>
+//             </VStack>
+//           </Collapse>
+//         </Box>
+
 //       </VStack>
 //     </Box>
 //   );
 // }
 
-
-import { Box, VStack, Text, Image } from "@chakra-ui/react";
+import { Box, VStack, Text, Image, HStack } from "@chakra-ui/react";
 import logo from "../../assets/logo.png";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
 
 interface SidebarProps {
   isSidebarOpen: boolean;
@@ -72,7 +122,6 @@ interface SidebarProps {
 
 export default function Sidebar({ isSidebarOpen, toggleSidebar }: SidebarProps) {
   const navigate = useNavigate();
-  const [isRapportsOpen, setRapportsOpen] = useState(false);
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -95,6 +144,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }: SidebarProps) 
       <Image src={logo} alt="Logo" mb={6} h="60px" />
 
       <VStack align="start" spacing={3} w="full">
+
         <Text
           _hover={{ color: "#B98112", cursor: "pointer" }}
           onClick={() => handleNavigate("/")}
@@ -116,43 +166,42 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }: SidebarProps) 
           Employés
         </Text>
 
-        {/* RAPPORTS WITH SUBMENU */}
-        <Box
-          w="full"
-          onMouseEnter={() => setRapportsOpen(true)}
-          onMouseLeave={() => setRapportsOpen(false)}
+        {/* RAPPORTS MENU */}
+        <Text
+          fontWeight="bold"
+          mt={4}
+          mb={1}
+          color="gray.400"
+          textTransform="uppercase"
+          fontSize="sm"
         >
+          Rapports
+        </Text>
+
+        {/* SUBMENU – toujours visible */}
+        <VStack align="start" pl={4} spacing={2}>
           <Text
+            fontSize="sm"
+            color="gray.300"
             _hover={{ color: "#B98112", cursor: "pointer" }}
-            onClick={() => setRapportsOpen(!isRapportsOpen)} // mobile support
+            onClick={() => handleNavigate("/rapports/charts")}
           >
-            Rapports
+            • Graphiques
           </Text>
 
-          {isRapportsOpen && (
-            <VStack align="start" pl={4} mt={2} spacing={2}>
-              <Text
-                fontSize="sm"
-                color="gray.300"
-                _hover={{ color: "#B98112", cursor: "pointer" }}
-                onClick={() => handleNavigate("/rapports/charts")}
-              >
-                Graphiques
-              </Text>
+          <Text
+            fontSize="sm"
+            color="gray.300"
+            _hover={{ color: "#B98112", cursor: "pointer" }}
+            onClick={() => handleNavigate("/rapports")}
+          >
+            • Rapport mensuel
+          </Text>
+        </VStack>
 
-              <Text
-                fontSize="sm"
-                color="gray.300"
-                _hover={{ color: "#B98112", cursor: "pointer" }}
-                onClick={() => handleNavigate("/rapports")}
-              >
-                Rapport mensuel
-              </Text>
-            </VStack>
-          )}
-        </Box>
       </VStack>
     </Box>
   );
 }
+
 

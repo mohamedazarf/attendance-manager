@@ -3,7 +3,7 @@ from typing import List, Dict, Tuple
 from app.schemas.attendanceLog import AttendanceLog
 from app.schemas.processed_attendance import ProcessedAttendance, DailyAttendanceSummary, AttendanceCheckPoint
 from app.config.attendance_config import AttendanceConfig, AnomalyType
-
+from app.utils import to_datetime
 
 class AttendanceProcessingService:
     """
@@ -29,7 +29,13 @@ class AttendanceProcessingService:
         
         for log in logs:
             user_id = log["user_id"]
-            timestamp = datetime.fromisoformat(log["timestamp"])
+            timestamp = log["timestamp"]  # si c’est déjà un datetime
+# ou pour être sûr :
+            if isinstance(log["timestamp"], str):
+                timestamp = datetime.fromisoformat(log["timestamp"])
+            else:
+                timestamp = log["timestamp"]
+
             log_date = timestamp.date()
             key = (user_id, log_date)
             
@@ -51,7 +57,7 @@ class AttendanceProcessingService:
         """
         # Remove duplicates and sort by timestamp
         unique_logs = self._deduplicate_logs(logs)
-        unique_logs.sort(key=lambda x: datetime.fromisoformat(x["timestamp"]))
+        unique_logs.sort(key=lambda x: to_datetime(x["timestamp"]))
         
         # Determine in/out events
         events = self._determine_events(unique_logs)
@@ -65,11 +71,11 @@ class AttendanceProcessingService:
         
         # Set check-in and check-out times
         if events:
-            processed.check_in_time = events[0].timestamp
-            processed.check_out_time = events[-1].timestamp if len(events) > 1 else None
+            processed.check_in_time = to_datetime(events[0].timestamp)
+            processed.check_out_time = to_datetime(events[-1].timestamp) if len(events) > 1 else None
         
         # Calculate hours and detect anomalies
-        self._calculate_hours(processed)
+        self.calculate_hours(processed)
         self._detect_anomalies(processed)
         
         return processed
@@ -81,8 +87,8 @@ class AttendanceProcessingService:
         
         unique = [logs[0]]
         for log in logs[1:]:
-            last_time = datetime.fromisoformat(unique[-1]["timestamp"])
-            curr_time = datetime.fromisoformat(log["timestamp"])
+            last_time = to_datetime(unique[-1]["timestamp"])
+            curr_time = to_datetime(log["timestamp"])
             
             # If timestamps differ by more than 5 seconds, keep the log
             if (curr_time - last_time).total_seconds() > 5:
@@ -97,7 +103,13 @@ class AttendanceProcessingService:
         """
         events = []
         for order, log in enumerate(logs, 1):
-            timestamp = datetime.fromisoformat(log["timestamp"])
+            timestamp = to_datetime(log["timestamp"])  # si c’est déjà un datetime
+# ou pour être sûr :
+            if isinstance(log["timestamp"], str):
+                timestamp = datetime.fromisoformat(log["timestamp"])
+            else:
+                timestamp = log["timestamp"]
+
             event_type = "in" if order % 2 == 1 else "out"
             
             events.append(AttendanceCheckPoint(
@@ -108,7 +120,7 @@ class AttendanceProcessingService:
         
         return events
     
-    def _calculate_hours(self, processed: ProcessedAttendance):
+    def calculate_hours(self, processed: ProcessedAttendance):
         """Calculate total working hours from in/out pairs"""
         if not processed.events:
             processed.total_hours_worked = 0.0
@@ -151,10 +163,10 @@ class AttendanceProcessingService:
         if processed.check_in_time:
             # Create timezone-aware start time for comparison
             start_time = datetime.combine(processed.date, self.config.START_TIME)
-            start_time_utc = start_time.replace(tzinfo=dt_timezone.utc)
+            start_time_utc = start_time.replace(tzinfo=None)
             start_with_tolerance = start_time_utc + timedelta(minutes=self.config.LATE_TOLERANCE)
             
-            if processed.check_in_time > start_with_tolerance:
+            if to_datetime(processed.check_in_time) > to_datetime(start_with_tolerance):
                 late_minutes = int(
                     (processed.check_in_time - start_time_utc).total_seconds() / 60
                 )
@@ -174,7 +186,7 @@ class AttendanceProcessingService:
         # Check for early departure
         if processed.check_out_time:
             end_time = datetime.combine(processed.date, self.config.END_TIME)
-            end_time_utc = end_time.replace(tzinfo=dt_timezone.utc)
+            end_time_utc = end_time.replace(tzinfo=None)
             
             if processed.check_out_time < end_time_utc:
                 early_minutes = int(
