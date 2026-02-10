@@ -1,11 +1,12 @@
 from fastapi import APIRouter, HTTPException
 from app.repositories.employeeRepo import EmployeeRepository
+from app.services.attendanceHistoryService import AttendanceHistoryService
 from zk import ZK
 from app.schemas.employee import Employee
 from app.services.employee_service import EmployeeService
 from app.sdk.mock import ZKMock
 from app.utils import get_db
-
+from datetime import date
 router = APIRouter(tags=["Employees"])
 
 
@@ -49,3 +50,14 @@ def ingest_employees_mock():
         }
     else:
         return {"status": "error", "message": "No employees to insert"}
+
+
+
+@router.get("/{employee_id}/history")
+def get_employee_history(
+    employee_id: int,
+    date_from: date,
+    date_to: date
+):
+    service = AttendanceHistoryService()
+    return service.get_employee_history(employee_id, date_from, date_to)

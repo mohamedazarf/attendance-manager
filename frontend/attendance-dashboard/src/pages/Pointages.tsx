@@ -65,7 +65,11 @@ const StatCard = ({
     borderRadius="lg"
     boxShadow="sm"
     cursor={onClick ? "pointer" : "default"}
-    _hover={onClick ? { bg: "gray.50" } : undefined}
+    _hover={{
+        borderColor: "blue.400",
+        transform: "translateY(-2px)",
+        boxShadow: "lg",
+      }}
     onClick={onClick}
   >
     <Text fontSize="sm" color="gray.600" mb={2}>

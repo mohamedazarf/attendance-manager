@@ -151,7 +151,8 @@ def daily_summary_mock():
             "expected_hours": round(summary.expected_hours, 2),
             "hours_difference": round(summary.hours_difference, 2),
             "status": summary.status,
-            "anomalies": summary.anomalies
+            "anomalies": summary.anomalies,
+          
         })
     
     return {

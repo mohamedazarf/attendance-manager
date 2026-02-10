@@ -166,7 +166,7 @@ class AttendanceProcessingService:
             start_time_utc = start_time.replace(tzinfo=None)
             start_with_tolerance = start_time_utc + timedelta(minutes=self.config.LATE_TOLERANCE)
             
-            if to_datetime(processed.check_in_time) > to_datetime(start_with_tolerance):
+            if processed.check_in_time > start_with_tolerance:
                 late_minutes = int(
                     (processed.check_in_time - start_time_utc).total_seconds() / 60
                 )
@@ -226,7 +226,9 @@ class AttendanceProcessingService:
             expected_hours=processed.expected_hours,
             hours_difference=processed.total_hours_worked - processed.expected_hours,
             anomalies=processed.anomalies,
-            status=processed.status
+            status=processed.status,
+             is_late=processed.is_late,
+    late_minutes=processed.late_minutes if processed.is_late else 0
         )
         
         # Add employee info if available

@@ -8,14 +8,14 @@ class AttendanceConfig:
     """
     
     # Standard working hours
-    START_TIME = time(8, 0)      # 8:00 AM
+    START_TIME = time(8, 30)      # 8:00 AM
     END_TIME = time(17, 0)        # 5:00 PM
     
     # Pause/Break duration (in minutes)
     PAUSE_DURATION = 60           # 1 hour lunch break
     
     # Tolerance for late arrival (in minutes)
-    LATE_TOLERANCE = 0           # Allow 15 min grace period
+    LATE_TOLERANCE = 0           # Allow 0 min grace period
     
     # Thresholds for anomalies
     EARLY_DEPARTURE_THRESHOLD = 30  # Leave more than 30 min early = anomaly

@@ -27,6 +27,8 @@
 //   check_out_time: string | null;
 //   worked_hours: number;
 //   is_late: boolean;
+//   late_minutes: number | null;
+//   anomalies: string[]; // new field for anomalies
 // };
 
 // type DashboardData = {
@@ -41,15 +43,24 @@
 //   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
 //   const [loading, setLoading] = useState(true);
 
-
-//   const location = useLocation();
 //   const navigate = useNavigate();
+//   const location = useLocation();
 //   const params = new URLSearchParams(location.search);
-//   const filter = params.get("filter"); // "all" | "present" | "absent"
+//   const urlFilter = params.get("filter") as "all" | "present" | "absent" | null;
 
+//   // -------------------- STATE HYBRIDE --------------------
+//   const [filterState, setFilterState] = useState<"all" | "present" | "absent">(urlFilter ?? "all");
+
+//   // Sync URL → state si l’URL change
 //   useEffect(() => {
-//     // const today = new Date().toISOString().split("T")[0]; // format YYYY-MM-DD
-//     const today="2026-01-26"
+//     if (urlFilter && urlFilter !== filterState) {
+//       setFilterState(urlFilter);
+//     }
+//   }, [urlFilter]);
+
+//   // -------------------- Fetch data --------------------
+//   useEffect(() => {
+//     const today = "2026-01-26";
 
 //     fetch(`http://127.0.0.1:8000/api/v1/attendance/dashboard/day?day=${today}`)
 //       .then((res) => res.json())
@@ -63,16 +74,21 @@
 //       });
 //   }, []);
 
-//   const filteredEmployees = dashboard?.employees.filter((emp) => {
-//     if (filter === "present") return emp.status === "present";
-//     if (filter === "absent") return emp.status === "absent";
-//     return true; // all
-//   });
+//   const filteredEmployees = dashboard?.employees
+//     // remove duplicates just in case
+//     .filter((emp, idx, arr) => arr.findIndex(e => e.employee_id === emp.employee_id) === idx)
+//     .filter((emp) => {
+//       if (filterState === "present") return emp.status === "present";
+//       if (filterState === "absent") return emp.status === "absent";
+//       return true;
+//     });
 
 //   if (loading) return <Spinner size="lg" />;
 
+//   // -------------------- Changement de filtre --------------------
 //   const handleFilterChange = (newFilter: "all" | "present" | "absent") => {
-//     navigate(`/employeesToday?filter=${newFilter}`);
+//     setFilterState(newFilter); // update local state
+//     navigate(`/employeesToday?filter=${newFilter}`); // update URL
 //   };
 
 //   return (
@@ -84,34 +100,36 @@
 
 //         <Container maxW="100%" flex={1} p={6}>
 //           <Heading mb={4}>
-//             {/* {filter === "present"
+//             {filterState === "present"
 //               ? "Present Employees"
-//               : filter === "absent"
+//               : filterState === "absent"
 //               ? "Absent Employees"
-//               : "All Employees Today"} */}
-//               Employees today
+//               : "All Employees Today"}
 //           </Heading>
-//  {/* -------------------- Filters -------------------- */}
+
+//           {/* -------------------- Filters -------------------- */}
 //           <ButtonGroup mb={4}>
 //             <Button
-//               colorScheme={filter === "all" ? "yellow" : "gray"}
-//             onClick={() => handleFilterChange("all")}
+//               colorScheme={filterState === "all" ? "yellow" : "gray"}
+//               onClick={() => handleFilterChange("all")}
 //             >
 //               All
 //             </Button>
 //             <Button
-//               colorScheme={filter === "present" ? "green" : "gray"}
+//               colorScheme={filterState === "present" ? "green" : "gray"}
 //               onClick={() => handleFilterChange("present")}
 //             >
 //               Present
 //             </Button>
 //             <Button
-//               colorScheme={filter === "absent" ? "red" : "gray"}
+//               colorScheme={filterState === "absent" ? "red" : "gray"}
 //               onClick={() => handleFilterChange("absent")}
 //             >
 //               Absent
 //             </Button>
 //           </ButtonGroup>
+
+//           {/* -------------------- Table -------------------- */}
 //           <Table size="sm">
 //             <Thead>
 //               <Tr>
@@ -121,6 +139,8 @@
 //                 <Th>Check-out</Th>
 //                 <Th>Worked Hours</Th>
 //                 <Th>Late</Th>
+//                 <Th>late minutes</Th>
+//                 <Th>Anomalies</Th>
 //               </Tr>
 //             </Thead>
 //             <Tbody>
@@ -137,13 +157,16 @@
 //                       {emp.status}
 //                     </Badge>
 //                   </Td>
-//                   <Td>{emp.check_in_time ?? "-"}</Td>
-//                   <Td>{emp.check_out_time ?? "-"}</Td>
+//                   <Td>{emp.check_in_time ? emp.check_in_time.split("T")[1] : "-"}</Td>
+//                   <Td>{emp.check_out_time ? emp.check_out_time.split("T")[1] : "-"}</Td>
 //                   <Td>{emp.status === "present" ? emp.worked_hours.toFixed(2) : "-"}</Td>
+//                   <Td>{emp.status === "present" ? (emp.is_late ? "Yes" : "No") : "-"}</Td>
+//                   <Td>{emp.late_minutes ? emp.late_minutes : "-"}</Td>
 //                   <Td>
-//                     {emp.status === "present" ? (emp.is_late ? "Yes" : "No") : "-"}
+//                     {emp.anomalies.length > 0
+//                       ? emp.anomalies.join(", ")
+//                       : "-"}
 //                   </Td>
-
 //                 </Tr>
 //               ))}
 //             </Tbody>
@@ -170,6 +193,9 @@ import {
   VStack,
   ButtonGroup,
   Button,
+  HStack,
+  Text,
+  Flex
 } from "@chakra-ui/react";
 import Navbar from "../components/layout/Navbar";
 import Sidebar from "../components/layout/Sidebar";
@@ -184,11 +210,22 @@ type Employee = {
   check_out_time: string | null;
   worked_hours: number;
   is_late: boolean;
+  late_minutes: number;
+  anomalies: string[];
 };
 
 type DashboardData = {
   date: string;
   employees: Employee[];
+};
+
+// Map pour colorier les anomalies
+const anomalyColors: Record<string, string> = {
+  retard: "orange",
+  early_departure: "red",
+  incomplete_day: "yellow",
+  entree_sans_sortie: "purple",
+  sortie_sans_entree: "teal",
 };
 
 export default function EmployeesToday() {
@@ -201,19 +238,29 @@ export default function EmployeesToday() {
   const navigate = useNavigate();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  const urlFilter = params.get("filter") as "all" | "present" | "absent" | null;
+  const urlFilter = params.get("filter") as string | null;
 
-  // -------------------- STATE HYBRIDE --------------------
-  const [filterState, setFilterState] = useState<"all" | "present" | "absent">(urlFilter ?? "all");
+  // Filtre principal (all/present/absent/late)
+  const [filterState, setFilterState] = useState<"all" | "present" | "absent" | "late">(urlFilter as any ?? "all");
 
-  // Sync URL → state si l’URL change
+  // Filtre par anomalies spécifiques
+  const [anomalyFilter, setAnomalyFilter] = useState<string>("all");
+  const [selectedAnomalies, setSelectedAnomalies] = useState<string[]>([]);
+const toggleAnomaly = (anom: string) => {
+  setSelectedAnomalies(prev =>
+    prev.includes(anom)
+      ? prev.filter(a => a !== anom) // remove if already selected
+      : [...prev, anom] // add if not selected
+  );
+};
+
   useEffect(() => {
     if (urlFilter && urlFilter !== filterState) {
-      setFilterState(urlFilter);
+      setFilterState(urlFilter as any);
     }
   }, [urlFilter]);
 
-  // -------------------- Fetch data --------------------
+  // Fetch dashboard
   useEffect(() => {
     const today = "2026-01-26";
 
@@ -229,60 +276,106 @@ export default function EmployeesToday() {
       });
   }, []);
 
+  // Filtrer les employés
   const filteredEmployees = dashboard?.employees
-    // remove duplicates just in case
     .filter((emp, idx, arr) => arr.findIndex(e => e.employee_id === emp.employee_id) === idx)
     .filter((emp) => {
       if (filterState === "present") return emp.status === "present";
       if (filterState === "absent") return emp.status === "absent";
+      if (filterState === "late") return emp.is_late;
       return true;
+    })
+    .filter((emp) => {
+      if (selectedAnomalies.length === 0) return true;
+      return emp.anomalies.some(a => selectedAnomalies.includes(a));
     });
 
   if (loading) return <Spinner size="lg" />;
 
   // -------------------- Changement de filtre --------------------
-  const handleFilterChange = (newFilter: "all" | "present" | "absent") => {
-    setFilterState(newFilter); // update local state
-    navigate(`/employeesToday?filter=${newFilter}`); // update URL
+  const handleFilterChange = (newFilter: "all" | "present" | "absent" | "late") => {
+    setFilterState(newFilter);
+    navigate(`/employeesToday?filter=${newFilter}`);
   };
 
   return (
     <Box display="flex" minH="100vh" bg="gray.50">
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-
       <VStack flex={1} spacing={0} ml={["0", "250px"]}>
         <Navbar />
-
         <Container maxW="100%" flex={1} p={6}>
           <Heading mb={4}>
             {filterState === "present"
               ? "Present Employees"
               : filterState === "absent"
               ? "Absent Employees"
+              : filterState === "late"
+              ? "Late Employees"
               : "All Employees Today"}
           </Heading>
+             <Text color="gray.500" mb={6}>
+                      Date: {"2026-01-26"}
+              </Text>
 
-          {/* -------------------- Filters -------------------- */}
-          <ButtonGroup mb={4}>
-            <Button
-              colorScheme={filterState === "all" ? "yellow" : "gray"}
-              onClick={() => handleFilterChange("all")}
-            >
-              All
-            </Button>
-            <Button
-              colorScheme={filterState === "present" ? "green" : "gray"}
-              onClick={() => handleFilterChange("present")}
-            >
-              Present
-            </Button>
-            <Button
-              colorScheme={filterState === "absent" ? "red" : "gray"}
-              onClick={() => handleFilterChange("absent")}
-            >
-              Absent
-            </Button>
-          </ButtonGroup>
+ 
+<Flex
+  mb={4}
+  align="center"
+  justify="space-between"
+  wrap="wrap"
+  gap={4}
+>
+  {/* ----- Filtre statut ----- */}
+  <ButtonGroup>
+    <Button
+      colorScheme={filterState === "all" ? "yellow" : "gray"}
+      onClick={() => handleFilterChange("all")}
+    >
+      All
+    </Button>
+    <Button
+      colorScheme={filterState === "present" ? "green" : "gray"}
+      onClick={() => handleFilterChange("present")}
+    >
+      Present
+    </Button>
+    <Button
+      colorScheme={filterState === "absent" ? "red" : "gray"}
+      onClick={() => handleFilterChange("absent")}
+    >
+      Absent
+    </Button>
+    <Button
+      colorScheme={filterState === "late" ? "orange" : "gray"}
+      onClick={() => handleFilterChange("late")}
+    >
+      Late
+    </Button>
+  </ButtonGroup>
+
+  {/* ----- Filtre anomalies ----- */}
+  <HStack spacing={2}>
+    <Button
+      colorScheme={anomalyFilter === "all" ? "yellow" : "gray"}
+      size="sm"
+      onClick={() => setAnomalyFilter("all")}
+    >
+      All Anomalies
+    </Button>
+
+    {Object.keys(anomalyColors).map((anom) => (
+      <Button
+        key={anom}
+        colorScheme={selectedAnomalies.includes(anom) ? "blue" : "gray"}
+        size="sm"
+        onClick={() => toggleAnomaly(anom)}
+      >
+        {anom.replace("_", " ")}
+      </Button>
+    ))}
+  </HStack>
+</Flex>
+
 
           {/* -------------------- Table -------------------- */}
           <Table size="sm">
@@ -294,6 +387,8 @@ export default function EmployeesToday() {
                 <Th>Check-out</Th>
                 <Th>Worked Hours</Th>
                 <Th>Late</Th>
+                <Th>Late Minutes</Th>
+                <Th>Anomalies</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -306,14 +401,22 @@ export default function EmployeesToday() {
                 >
                   <Td>{emp.employee_name}</Td>
                   <Td>
-                    <Badge colorScheme={emp.status === "present" ? "green" : "red"}>
-                      {emp.status}
-                    </Badge>
+                    <Badge colorScheme={emp.status === "present" ? "green" : "red"}>{emp.status}</Badge>
                   </Td>
                   <Td>{emp.check_in_time ? emp.check_in_time.split("T")[1] : "-"}</Td>
                   <Td>{emp.check_out_time ? emp.check_out_time.split("T")[1] : "-"}</Td>
                   <Td>{emp.status === "present" ? emp.worked_hours.toFixed(2) : "-"}</Td>
                   <Td>{emp.status === "present" ? (emp.is_late ? "Yes" : "No") : "-"}</Td>
+                  <Td>{emp.late_minutes || "-"}</Td>
+                  <Td>
+                    {emp.anomalies.length
+                      ? emp.anomalies.map((a) => (
+                          <Badge key={a} colorScheme={anomalyColors[a] || "gray"} mr={1}>
+                            {a.replace("_", " ")}
+                          </Badge>
+                        ))
+                      : "-"}
+                  </Td>
                 </Tr>
               ))}
             </Tbody>

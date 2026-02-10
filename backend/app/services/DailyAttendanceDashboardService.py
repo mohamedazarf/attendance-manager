@@ -52,6 +52,8 @@ class DailyAttendanceDashboardService:
         for emp in employees:
             emp_id = int(emp["employee_code"])
             emp_logs = logs_by_employee.get(emp_id, [])
+            late_minutes = 0
+            anomalies = []
 
             if emp_logs:
                 # Tri sûr sur timestamp
@@ -70,8 +72,11 @@ class DailyAttendanceDashboardService:
                     events=events
                 )
                 self.processor.calculate_hours(processed)
+                self.processor._detect_anomalies(processed)
                 worked_hours = processed.total_hours_worked
                 is_late = processed.is_late
+                late_minutes = processed.late_minutes if is_late else 0
+                anomalies = processed.anomalies
             else:
                 check_in = None
                 check_out = None
@@ -86,7 +91,9 @@ class DailyAttendanceDashboardService:
                 "check_in_time": check_in,
                 "check_out_time": check_out,
                 "worked_hours": worked_hours,
-                "is_late": is_late
+                "is_late": is_late,
+                "late_minutes": late_minutes,
+                "anomalies": anomalies
             })
 
         total_employees = len(employees)
