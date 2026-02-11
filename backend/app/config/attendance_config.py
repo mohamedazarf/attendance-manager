@@ -8,8 +8,8 @@ class AttendanceConfig:
     """
     
     # Standard working hours
-    START_TIME = time(8, 30)      # 8:00 AM
-    END_TIME = time(17, 0)        # 5:00 PM
+    START_TIME = time(8, 30)      # 8:30 AM
+    END_TIME = time(12, 30)        # 5:30 PM
     
     # Pause/Break duration (in minutes)
     PAUSE_DURATION = 60           # 1 hour lunch break

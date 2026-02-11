@@ -3,6 +3,7 @@ from app import utils
 from typing import Dict, Any, List
 from app.services.attendance_processing_service import AttendanceProcessingService
 from app.schemas.processed_attendance import ProcessedAttendance, DailyAttendanceSummary, AttendanceCheckPoint
+from app.config.attendance_config import AttendanceConfig
 
 class DailyAttendanceDashboardService:
 
@@ -54,6 +55,7 @@ class DailyAttendanceDashboardService:
             emp_logs = logs_by_employee.get(emp_id, [])
             late_minutes = 0
             anomalies = []
+            extra_hours = 0 
 
             if emp_logs:
                 # Tri sûr sur timestamp
@@ -77,6 +79,9 @@ class DailyAttendanceDashboardService:
                 is_late = processed.is_late
                 late_minutes = processed.late_minutes if is_late else 0
                 anomalies = processed.anomalies
+                expected_hours = AttendanceConfig.get_expected_working_hours()
+                if worked_hours > expected_hours:
+                    extra_hours = round(worked_hours - expected_hours, 2)
             else:
                 check_in = None
                 check_out = None
@@ -93,7 +98,8 @@ class DailyAttendanceDashboardService:
                 "worked_hours": worked_hours,
                 "is_late": is_late,
                 "late_minutes": late_minutes,
-                "anomalies": anomalies
+                "anomalies": anomalies,
+                "extra_hours": extra_hours
             })
 
         total_employees = len(employees)

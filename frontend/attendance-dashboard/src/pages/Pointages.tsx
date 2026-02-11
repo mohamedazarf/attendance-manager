@@ -280,6 +280,7 @@ type Employee = {
   check_in_time: string | null;
   check_out_time: string | null;
   anomalies: string[];
+  worked_hours: number;
   late_minutes?: number;
   extra_hours?: number;
 };
@@ -434,6 +435,7 @@ export default function Pointages() {
 
   useEffect(() => {
     const TEST_DATE = "2026-01-26";
+    
 
     fetch(
       `http://127.0.0.1:8000/api/v1/attendance/dashboard/day?day=${TEST_DATE}`
@@ -462,7 +464,7 @@ export default function Pointages() {
 
   const positiveAlerts =
     dashboard?.employees.filter(
-      emp => emp.extra_hours && emp.extra_hours > 0
+      emp => emp.worked_hours && emp.worked_hours > 4
     ) ?? [];
 
   /* -------------------- Render -------------------- */
