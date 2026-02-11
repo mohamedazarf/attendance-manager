@@ -1,11 +1,13 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Dashboard from "./pages/Dashboard";
+import Dashboard from "./components/Dashboard";
 import EmployeesPage from "./pages/EmployeesPage";
 import RapportPage from "./pages/RapportPage";
 import HoursByEmployeeChart from "./pages/charts/HoursByEmployeeChart";
 import RapportsChartsPage from "./pages/RapportChartsPage";
 import Pointages from "./pages/Pointages";
 import EmployeesToday from "./pages/EmployeesToday";
+import i18n from "./i18n";
+
 
 // import RapportsChartsPage from "./pages/charts/RapportChartsPage";
 export default function App() {

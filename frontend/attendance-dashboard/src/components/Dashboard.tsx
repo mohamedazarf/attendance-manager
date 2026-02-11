@@ -116,12 +116,12 @@
 
 
 import { Box, VStack, Heading, Flex, IconButton } from "@chakra-ui/react";
-import Sidebar from "../components/layout/Sidebar";
-import Navbar from "../components/layout/Navbar";
+import Sidebar from "./layout/Sidebar";
+import Navbar from "./layout/Navbar";
 import { useState } from "react";
-import HoursByEmployeeChart from "./charts/HoursByEmployeeChart";
-import MostAnomaliesPieChart from "./charts/mostAnomalies";
-import WeekendHoursByEmployeeChart from "./charts/weekendHours";
+import HoursByEmployeeChart from "../pages/charts/HoursByEmployeeChart";
+import MostAnomaliesPieChart from "../pages/charts/mostAnomalies";
+import WeekendHoursByEmployeeChart from "../pages/charts/weekendHours";
 import { Link } from "react-router-dom";
 import { CloseIcon } from "@chakra-ui/icons/Close";
 import { HamburgerIcon } from "@chakra-ui/icons/Hamburger";

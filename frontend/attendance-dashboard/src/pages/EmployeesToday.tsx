@@ -22,14 +22,14 @@ import {
   DrawerCloseButton,
   DrawerHeader,
   DrawerBody,
-  Input
+  Input,
+  IconButton
 } from "@chakra-ui/react";
 import Navbar from "../components/layout/Navbar";
 import Sidebar from "../components/layout/Sidebar";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { CloseIcon, HamburgerIcon } from "@chakra-ui/icons";
 
-import { useLocation } from "react-router-dom";
 
 // -------------------- Types --------------------
 type Employee = {
@@ -52,7 +52,8 @@ type EmployeeHistory = {
   is_late: boolean;
   late_minutes: number;
   anomalies: string[];
-  status: string; // "normal", "absent", "anomaly"
+  status: string; // "normal", "absent", "anomaly"*
+  total_period_hours: number;
 };
 
 type DashboardData = {
@@ -96,7 +97,9 @@ const params = new URLSearchParams(location.search);
 
   // -------------------- Historique employé --------------------
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
+  const [employeeName, setEmployeeName] = useState<string>("");
   const [history, setHistory] = useState<EmployeeHistory[]>([]);
+  const [totalPeriodHours, setTotalPeriodHours] = useState<number>(0);
   const [historyLoading, setHistoryLoading] = useState(false);
 
   // Dates filtre pour l’historique
@@ -146,7 +149,10 @@ const params = new URLSearchParams(location.search);
     fetch(`http://127.0.0.1:8000/api/v1/employee/${employee_id}/history?date_from=${dateFrom}&date_to=${dateTo}`)
       .then(res => res.json())
       .then(data => {
+        setEmployeeName(data.employee_name);
         setHistory(data.history);
+        setTotalPeriodHours(data.total_period_hours); 
+        console.log("Employee history:", data);
         setHistoryLoading(false);
         setDrawerFilterState("all");
         setDrawerSelectedAnomalies([]);
@@ -162,6 +168,16 @@ const params = new URLSearchParams(location.search);
   return (
     <Box display="flex" minH="100vh" bg="gray.50">
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+       <IconButton
+              icon={isSidebarOpen ? <CloseIcon /> : <HamburgerIcon />}
+              aria-label="Toggle Sidebar"
+              display={["inline-flex", "none"]}
+              onClick={toggleSidebar}
+              position="fixed"
+              top="4"
+              left="4"
+              zIndex={1600} // above sidebar
+            />
       <VStack flex={1} spacing={0} ml={["0", "250px"]}>
         <Navbar />
         <Container maxW="100%" flex={1} p={6}>
@@ -211,7 +227,7 @@ const params = new URLSearchParams(location.search);
                 <Th>Status</Th>
                 <Th>Check-in</Th>
                 <Th>Check-out</Th>
-                <Th>Worked Hours</Th>
+                <Th bg={"gray.500"} fontWeight={"bold"} color={"white"}>Worked Hours</Th>
                 <Th>Late</Th>
                 <Th>Late Minutes</Th>
                 <Th>Anomalies</Th>
@@ -227,7 +243,7 @@ const params = new URLSearchParams(location.search);
                   </Td>
                   <Td>{emp.check_in_time?.split("T")[1] ?? "-"}</Td>
                   <Td>{emp.check_out_time?.split("T")[1] ?? "-"}</Td>
-                  <Td>{emp.status === "present" ? emp.worked_hours.toFixed(2) : "-"}</Td>
+                  <Td border="2px solid" borderColor="gray.300" boxShadow="inset 0 1px 2px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.08)" bg="white">{emp.status === "present" ? emp.worked_hours.toFixed(2) : "-"}</Td>
                   <Td>{emp.status === "present" ? (emp.is_late ? "Yes" : "No") : "-"}</Td>
                   <Td>{emp.late_minutes || "-"}</Td>
                   <Td>
@@ -246,7 +262,7 @@ const params = new URLSearchParams(location.search);
             <DrawerContent>
               <DrawerCloseButton />
 <DrawerHeader>
-  Employee History
+  Employee History  {employeeName && `- ${employeeName}`}
 
   {/* -------------------- Ligne 1 : Dates + Filter -------------------- */}
   <Flex gap={2} mt={2} align="center">
@@ -338,6 +354,18 @@ const params = new URLSearchParams(location.search);
                         }
                       </Tbody>
                     </Table>
+                    {/* -------- TOTAL HOURS -------- */}
+<Box mt={4} p={3} bg="gray.100" borderRadius="md">
+  <Flex justify="space-between" align="center">
+    <Text fontWeight="bold">
+      Total Worked Hours in That Period:
+    </Text>
+    <Text fontWeight="bold" color="blue.600">
+            {totalPeriodHours.toFixed(2)} h
+    </Text>
+  </Flex>
+</Box>
+
                   </Box>
                 )}
               </DrawerBody>
