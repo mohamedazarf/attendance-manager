@@ -16,6 +16,7 @@ import {
 import { SearchIcon, HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
 import axios from "axios";
 import Sidebar from "../components/layout/Sidebar"; // path correct
+import Navbar from "../components/layout/Navbar";
 
 const BASE_URL = "http://localhost:8000/api/v1";
 
@@ -90,8 +91,9 @@ export default function EmployeesPage() {
       />
 
       {/* Main content */}
-      <Box flex={1} ml={["0", "250px"]} p={5}>
-        <Flex justify="space-between" align="center" mb={6}>
+      <Box flex={1} ml={["0", "250px"]} display="flex" flexDirection="column">
+        <Navbar/>
+        <Flex justify="space-between" p={5} align="center" mb={6}>
           <Box>
             <Heading size="md" pl="10">Employees</Heading>
             <Text fontSize="sm" color="gray.500" pl="10">
