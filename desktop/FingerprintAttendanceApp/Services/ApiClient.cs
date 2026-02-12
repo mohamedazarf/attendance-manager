@@ -33,8 +33,9 @@ public class ApiClient
         };
         _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
         
+        // TODO: TEMPORARILY COMMENTED OUT FOR TESTING - Re-enable when backend auth is ready
         // Try to authenticate immediately
-        Task.Run(async () => await InitializeAuthenticationAsync()).Wait();
+        // Task.Run(async () => await InitializeAuthenticationAsync()).Wait();
     }
 
     private async Task<bool> InitializeAuthenticationAsync()
@@ -123,11 +124,12 @@ public class ApiClient
     {
         try
         {
-            if (!await EnsureAuthenticatedAsync())
-            {
-                _logger.LogError("Cannot authenticate to get users");
-                return new List<User>();
-            }
+            // TODO: TEMPORARILY COMMENTED OUT FOR TESTING - Re-enable when backend auth is ready
+            // if (!await EnsureAuthenticatedAsync())
+            // {
+            //     _logger.LogError("Cannot authenticate to get users");
+            //     return new List<User>();
+            // }
             
             _logger.LogInformation("Fetching users from API...");
             string fullUrl = $"{_baseUrl}/users";
@@ -190,11 +192,12 @@ public class ApiClient
     {
         try
         {
-            if (!await EnsureAuthenticatedAsync())
-            {
-                _logger.LogError("Cannot authenticate to get user");
-                return null;
-            }
+            // TODO: TEMPORARILY COMMENTED OUT FOR TESTING - Re-enable when backend auth is ready
+            // if (!await EnsureAuthenticatedAsync())
+            // {
+            //     _logger.LogError("Cannot authenticate to get user");
+            //     return null;
+            // }
             
             _logger.LogInformation($"Fetching user with ID: {id}");
             string fullUrl = $"{_baseUrl}/users/{id}";
@@ -331,11 +334,12 @@ public class ApiClient
     {
         try
         {
-            if (!await EnsureAuthenticatedAsync())
-            {
-                _logger.LogError("Cannot authenticate to update user");
-                return false;
-            }
+            // TODO: TEMPORARILY COMMENTED OUT FOR TESTING - Re-enable when backend auth is ready
+            // if (!await EnsureAuthenticatedAsync())
+            // {
+            //     _logger.LogError("Cannot authenticate to update user");
+            //     return false;
+            // }
             
             _logger.LogInformation($"Updating user {id}");
             var jsonContent = JsonConvert.SerializeObject(user);
@@ -367,11 +371,12 @@ public class ApiClient
     {
         try
         {
-            if (!await EnsureAuthenticatedAsync())
-            {
-                _logger.LogError("Cannot authenticate to update fingerprint status");
-                return false;
-            }
+            // TODO: TEMPORARILY COMMENTED OUT FOR TESTING - Re-enable when backend auth is ready
+            // if (!await EnsureAuthenticatedAsync())
+            // {
+            //     _logger.LogError("Cannot authenticate to update fingerprint status");
+            //     return false;
+            // }
             
             _logger.LogInformation($"Updating fingerprint status for {employeeId}");
             
@@ -408,11 +413,12 @@ public class ApiClient
     {
         try
         {
-            if (!await EnsureAuthenticatedAsync())
-            {
-                _logger.LogError("Cannot authenticate to get fingerprint status");
-                return null;
-            }
+            // TODO: TEMPORARILY COMMENTED OUT FOR TESTING - Re-enable when backend auth is ready
+            // if (!await EnsureAuthenticatedAsync())
+            // {
+            //     _logger.LogError("Cannot authenticate to get fingerprint status");
+            //     return null;
+            // }
             
             _logger.LogInformation($"Checking fingerprint status for {employeeId}");
             string fullUrl = $"{_baseUrl}/fingerprint/check/{employeeId}";
@@ -504,11 +510,12 @@ public class ApiClient
     {
         try
         {
-            if (!await EnsureAuthenticatedAsync())
-            {
-                _logger.LogError("Cannot authenticate to get pending enrollments");
-                return null;
-            }
+            // TODO: TEMPORARILY COMMENTED OUT FOR TESTING - Re-enable when backend auth is ready
+            // if (!await EnsureAuthenticatedAsync())
+            // {
+            //     _logger.LogError("Cannot authenticate to get pending enrollments");
+            //     return null;
+            // }
             
             string fullUrl = $"{_baseUrl}/fingerprint/pending";
             var response = await _httpClient.GetAsync(fullUrl);
@@ -548,11 +555,12 @@ public class ApiClient
     {
         try
         {
-            if (!await EnsureAuthenticatedAsync())
-            {
-                _logger.LogError("Cannot authenticate to confirm enrollment");
-                return false;
-            }
+            // TODO: TEMPORARILY COMMENTED OUT FOR TESTING - Re-enable when backend auth is ready
+            // if (!await EnsureAuthenticatedAsync())
+            // {
+            //     _logger.LogError("Cannot authenticate to confirm enrollment");
+            //     return false;
+            // }
             
             _logger.LogInformation($"Confirming enrollment for biometric ID: {biometricId}");
             
@@ -600,11 +608,12 @@ public class ApiClient
     {
         try
         {
-            if (!await EnsureAuthenticatedAsync())
-            {
-                _logger.LogError("Cannot authenticate to get user by biometric ID");
-                return null;
-            }
+            // TODO: TEMPORARILY COMMENTED OUT FOR TESTING - Re-enable when backend auth is ready
+            // if (!await EnsureAuthenticatedAsync())
+            // {
+            //     _logger.LogError("Cannot authenticate to get user by biometric ID");
+            //     return null;
+            // }
             
             string fullUrl = $"{_baseUrl}/users/biometric/{biometricId}";
             var response = await _httpClient.GetAsync(fullUrl);
@@ -632,11 +641,12 @@ public class ApiClient
     {
         try
         {
-            if (!await EnsureAuthenticatedAsync())
-            {
-                _logger.LogError("Cannot authenticate to record attendance");
-                return false;
-            }
+            // TODO: TEMPORARILY COMMENTED OUT FOR TESTING - Re-enable when backend auth is ready
+            // if (!await EnsureAuthenticatedAsync())
+            // {
+            //     _logger.LogError("Cannot authenticate to record attendance");
+            //     return false;
+            // }
             
             var attendanceData = new
             {

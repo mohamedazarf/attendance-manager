@@ -125,9 +125,12 @@ import WeekendHoursByEmployeeChart from "../pages/charts/weekendHours";
 import { Link } from "react-router-dom";
 import { CloseIcon } from "@chakra-ui/icons/Close";
 import { HamburgerIcon } from "@chakra-ui/icons/Hamburger";
+import { useTranslation } from "react-i18next";
+
 // import hoursDifference from ".charts/HoursByEmployeeChart";
 
 export default function Dashbord() {
+  const { t } = useTranslation();
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
 
@@ -137,45 +140,45 @@ export default function Dashbord() {
   return (
     <Box display="flex" minH="100vh" bg="gray.50">
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-      
-            {/* Hamburger button for mobile */}
-            <IconButton
-              icon={isSidebarOpen ? <CloseIcon /> : <HamburgerIcon />}
-              aria-label="Toggle Sidebar"
-              display={["inline-flex", "none"]}
-              onClick={toggleSidebar}
-              position="fixed"
-              top="4"
-              left="4"
-              zIndex={1600} // above sidebar
-            />
-      
+
+      {/* Hamburger button for mobile */}
+      <IconButton
+        icon={isSidebarOpen ? <CloseIcon /> : <HamburgerIcon />}
+        aria-label={t("sidebar.toggle")}
+        display={["inline-flex", "none"]}
+        onClick={toggleSidebar}
+        position="fixed"
+        top="4"
+        left="4"
+        zIndex={1600} // above sidebar
+      />
+
 
       <VStack flex={1} ml={["0", "250px"]} spacing={0} align="stretch">
         <Navbar />
 
         <Box p={6}>
           <Heading size="md" mb={6}>
-            Rapports · Graphiques
+            {t("charts.reports")}
           </Heading>
 
           {/* Container flex pour deux charts côte à côte */}
           <Flex gap={6} wrap="wrap" mb={10}>
             <Box flex="1 1 45%" minW="300px" height={`${chartHeight}px`}>
-             <Link to="/charts/hoursByEmployee">
-              <HoursByEmployeeChart fixedHeight={chartHeight} />
+              <Link to="/charts/hoursByEmployee">
+                <HoursByEmployeeChart fixedHeight={chartHeight} />
               </Link>
             </Box>
 
-            <Box flex="1 1 45%" minW="300px"  height={`${chartHeight}px`}>
+            <Box flex="1 1 45%" minW="300px" height={`${chartHeight}px`}>
               <MostAnomaliesPieChart fixedHeight={chartHeight} />
             </Box>
-            </Flex>
-            <Flex gap={6} wrap="wrap" >
-          <Box flex="1 1 45%" minW="300px" height={`${chartHeight}px`}>
+          </Flex>
+          <Flex gap={6} wrap="wrap" >
+            <Box flex="1 1 45%" minW="300px" height={`${chartHeight}px`}>
               {/* <AnotherChart fixedHeight={chartHeight} /> */}
-              <WeekendHoursByEmployeeChart/>
-            </Box> 
+              <WeekendHoursByEmployeeChart />
+            </Box>
           </Flex>
         </Box>
       </VStack>

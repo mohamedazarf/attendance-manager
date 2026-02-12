@@ -79,11 +79,11 @@ export default function EmployeesToday() {
 
 
 
-const params = new URLSearchParams(location.search);
+  const params = new URLSearchParams(location.search);
   const urlFilter = params.get("filter") as "all" | "present" | "absent" | "late" | null;
 
   const [filterState, setFilterState] = useState<"all" | "present" | "absent" | "late">(urlFilter || "all");
-  
+
 
 
   // -------------------- Filtres principaux --------------------
@@ -151,7 +151,7 @@ const params = new URLSearchParams(location.search);
       .then(data => {
         setEmployeeName(data.employee_name);
         setHistory(data.history);
-        setTotalPeriodHours(data.total_period_hours); 
+        setTotalPeriodHours(data.total_period_hours);
         console.log("Employee history:", data);
         setHistoryLoading(false);
         setDrawerFilterState("all");
@@ -168,16 +168,16 @@ const params = new URLSearchParams(location.search);
   return (
     <Box display="flex" minH="100vh" bg="gray.50">
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-       <IconButton
-              icon={isSidebarOpen ? <CloseIcon /> : <HamburgerIcon />}
-              aria-label="Toggle Sidebar"
-              display={["inline-flex", "none"]}
-              onClick={toggleSidebar}
-              position="fixed"
-              top="4"
-              left="4"
-              zIndex={1600} // above sidebar
-            />
+      <IconButton
+        icon={isSidebarOpen ? <CloseIcon /> : <HamburgerIcon />}
+        aria-label="Toggle Sidebar"
+        display={["inline-flex", "none"]}
+        onClick={toggleSidebar}
+        position="fixed"
+        top="4"
+        left="4"
+        zIndex={1600} // above sidebar
+      />
       <VStack flex={1} spacing={0} ml={["0", "250px"]}>
         <Navbar />
         <Container maxW="100%" flex={1} p={6}>
@@ -236,7 +236,7 @@ const params = new URLSearchParams(location.search);
             <Tbody>
               {filteredEmployees?.map(emp => (
                 <Tr key={emp.employee_id} cursor="pointer" _hover={{ bg: "gray.100" }}
-                    onClick={() => openEmployeeHistory(emp.employee_id)}>
+                  onClick={() => openEmployeeHistory(emp.employee_id)}>
                   <Td>{emp.employee_name}</Td>
                   <Td>
                     <Badge colorScheme={emp.status === "present" ? "green" : "red"}>{emp.status}</Badge>
@@ -248,7 +248,7 @@ const params = new URLSearchParams(location.search);
                   <Td>{emp.late_minutes || "-"}</Td>
                   <Td>
                     {emp.anomalies.map(a => (
-                      <Badge key={a} colorScheme={anomalyColors[a] || "gray"} mr={1}>{a.replace("_"," ")}</Badge>
+                      <Badge key={a} colorScheme={anomalyColors[a] || "gray"} mr={1}>{a.replace("_", " ")}</Badge>
                     ))}
                   </Td>
                 </Tr>
@@ -261,48 +261,48 @@ const params = new URLSearchParams(location.search);
             <DrawerOverlay />
             <DrawerContent>
               <DrawerCloseButton />
-<DrawerHeader>
-  Employee History  {employeeName && `- ${employeeName}`}
+              <DrawerHeader>
+                Employee History  {employeeName && `- ${employeeName}`}
 
-  {/* -------------------- Ligne 1 : Dates + Filter -------------------- */}
-  <Flex gap={2} mt={2} align="center">
-    <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
-    <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
-    <Button size="sm" onClick={() => selectedEmployeeId && openEmployeeHistory(selectedEmployeeId)}>
-      Filter
-    </Button>
-  </Flex>
+                {/* -------------------- Ligne 1 : Dates + Filter -------------------- */}
+                <Flex gap={2} mt={2} align="center">
+                  <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+                  <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
+                  <Button size="sm" onClick={() => selectedEmployeeId && openEmployeeHistory(selectedEmployeeId)}>
+                    Filter
+                  </Button>
+                </Flex>
 
-  {/* -------------------- Ligne 2 : Status + Anomalies -------------------- */}
-  <Flex gap={2} mt={2} align="center" wrap="wrap">
-    {/* Status filters */}
-    <ButtonGroup size="sm">
-      {["all","present","absent","late"].map(f => (
-        <Button
-          key={f}
-          colorScheme={drawerFilterState === f ? "yellow" : "gray"}
-          onClick={() => setDrawerFilterState(f as any)}
-        >
-          {f.charAt(0).toUpperCase() + f.slice(1)}
-        </Button>
-      ))}
-    </ButtonGroup>
+                {/* -------------------- Ligne 2 : Status + Anomalies -------------------- */}
+                <Flex gap={2} mt={2} align="center" wrap="wrap">
+                  {/* Status filters */}
+                  <ButtonGroup size="sm">
+                    {["all", "present", "absent", "late"].map(f => (
+                      <Button
+                        key={f}
+                        colorScheme={drawerFilterState === f ? "yellow" : "gray"}
+                        onClick={() => setDrawerFilterState(f as any)}
+                      >
+                        {f.charAt(0).toUpperCase() + f.slice(1)}
+                      </Button>
+                    ))}
+                  </ButtonGroup>
 
-    {/* Anomaly filters */}
-    {Object.keys(anomalyColors).map(a => (
-      <Button
-        key={a}
-        colorScheme={drawerSelectedAnomalies.includes(a) ? "blue" : "gray"}
-        size="sm"
-        onClick={() => setDrawerSelectedAnomalies(prev =>
-          prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a]
-        )}
-      >
-        {a.replace("_"," ")}
-      </Button>
-    ))}
-  </Flex>
-</DrawerHeader>
+                  {/* Anomaly filters */}
+                  {Object.keys(anomalyColors).map(a => (
+                    <Button
+                      key={a}
+                      colorScheme={drawerSelectedAnomalies.includes(a) ? "blue" : "gray"}
+                      size="sm"
+                      onClick={() => setDrawerSelectedAnomalies(prev =>
+                        prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a]
+                      )}
+                    >
+                      {a.replace("_", " ")}
+                    </Button>
+                  ))}
+                </Flex>
+              </DrawerHeader>
 
 
               <DrawerBody>
@@ -345,7 +345,7 @@ const params = new URLSearchParams(location.search);
                               <Td>{h.late_minutes}</Td>
                               <Td>
                                 {h.anomalies.map(a => (
-                                  <Badge key={a} colorScheme={anomalyColors[a] || "gray"} mr={1}>{a.replace("_"," ")}</Badge>
+                                  <Badge key={a} colorScheme={anomalyColors[a] || "gray"} mr={1}>{a.replace("_", " ")}</Badge>
                                 ))}
                               </Td>
                               <Td>{h.status}</Td>
@@ -355,16 +355,16 @@ const params = new URLSearchParams(location.search);
                       </Tbody>
                     </Table>
                     {/* -------- TOTAL HOURS -------- */}
-<Box mt={4} p={3} bg="gray.100" borderRadius="md">
-  <Flex justify="space-between" align="center">
-    <Text fontWeight="bold">
-      Total Worked Hours in That Period:
-    </Text>
-    <Text fontWeight="bold" color="blue.600">
-            {totalPeriodHours.toFixed(2)} h
-    </Text>
-  </Flex>
-</Box>
+                    <Box mt={4} p={3} bg="gray.100" borderRadius="md">
+                      <Flex justify="space-between" align="center">
+                        <Text fontWeight="bold">
+                          Total Worked Hours in That Period:
+                        </Text>
+                        <Text fontWeight="bold" color="blue.600">
+                          {totalPeriodHours.toFixed(2)} h
+                        </Text>
+                      </Flex>
+                    </Box>
 
                   </Box>
                 )}
@@ -377,3 +377,6 @@ const params = new URLSearchParams(location.search);
     </Box>
   );
 }
+
+
+
