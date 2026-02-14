@@ -316,7 +316,7 @@ import {
 } from "@chakra-ui/react";
 import Navbar from "../components/layout/Navbar";
 import Sidebar from "../components/layout/Sidebar";
-import { HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
+import { HamburgerIcon, CloseIcon, DownloadIcon } from "@chakra-ui/icons";
 import axios from "axios";
 
 const BASE_URL = "http://localhost:8000/api/v1";
@@ -462,6 +462,51 @@ export default function RapportPage() {
       return true;
     });
 
+  const downloadCSV = () => {
+    if (!data || data.length === 0) return;
+
+    const headers = [
+      "ID",
+      "Name",
+      "Period",
+      "Working Days",
+      "Presences",
+      "Absences",
+      "Presence %",
+      "Absence %",
+      "Weekend Days",
+      "Weekend Hours",
+    ];
+
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [
+        headers.join(","),
+        ...data.map((row) =>
+          [
+            row.employee_id,
+            `"${row.employee_name}"`,
+            `"${row.start_date} -> ${row.end_date}"`,
+            row.total_working_days,
+            row.days_present,
+            row.days_absent,
+            row.presence_rate.toFixed(1),
+            row.absence_rate.toFixed(1),
+            row.weekend_days_worked,
+            row.weekend_hours_worked,
+          ].join(",")
+        ),
+      ].join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `attendance_report_${startDate}_${endDate}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <Box display="flex" minH="100vh" bg="gray.50">
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
@@ -481,11 +526,16 @@ export default function RapportPage() {
           <Text fontSize="xl" fontWeight="bold" mb={4}>Attendance Report</Text>
 
           {/* Date range filters */}
-          <HStack spacing={2} mb={4}>
-            <Text>Start Date:</Text>
-            <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
-            <Text>End Date:</Text>
-            <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+          <HStack spacing={2} mb={4} justifyContent="space-between">
+            <HStack>
+              <Text>Start Date:</Text>
+              <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+              <Text>End Date:</Text>
+              <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+            </HStack>
+            <Button leftIcon={<DownloadIcon />} colorScheme="green" onClick={downloadCSV}>
+              Export CSV
+            </Button>
           </HStack>
 
           {loading ? (
