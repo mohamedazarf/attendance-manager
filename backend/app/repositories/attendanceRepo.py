@@ -14,7 +14,12 @@ class AttendanceRepository:
 
 
     def insert_log(self, log: AttendanceLog):
-        self.collection.insert_one(log.model_dump())
+        try:
+            self.collection.insert_one(log.model_dump())
+            return True
+        except DuplicateKeyError:
+            # log already exists → ignore
+            return False
 
     def insert_many(self, logs: list[AttendanceLog]):
         try:

@@ -1,292 +1,3 @@
-// import { useEffect, useState } from "react";
-// import {
-//   Box,
-//   VStack,
-//   Text,
-//   HStack,
-//   Spinner,
-//   Table,
-//   Thead,
-//   Tbody,
-//   Tr,
-//   Th,
-//   Td,
-//   IconButton,
-// } from "@chakra-ui/react";
-// import Sidebar from "../components/layout/Sidebar";
-// import Navbar from "../components/layout/Navbar";
-// import { HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
-// import axios from "axios";
-// import { useTranslation } from "react-i18next";
-
-// const BASE_URL = "http://localhost:8000/api/v1";
-// interface AttendanceMetric {
-//   employee_id: number;
-//   employee_name: string;
-//   start_date: string;
-//   end_date: string;
-//   period: string;
-//   total_working_days: number;
-//   days_present: number;
-//   days_absent: number;
-//   presence_rate: number;
-//   absence_rate: number;
-//   weekend_days_worked: number;
-//   weekend_hours_worked: number;
-// }
-
-// export default function RapportPage() {
-//   const { t } = useTranslation();
-//   const [isSidebarOpen, setSidebarOpen] = useState(false);
-//   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
-
-//   const [startDate, setStartDate] = useState("2025-03-01");
-//   const [endDate, setEndDate] = useState("2025-04-16");
-//   const [data, setData] = useState<AttendanceMetric[]>([]);
-//   const [loading, setLoading] = useState(false);
-
-//   const [selectedEmployee, setSelectedEmployee] = useState<AttendanceMetric | null>(null);
-//   const [employeeHistory, setEmployeeHistory] = useState<any[]>([]);
-//   const [historyLoading, setHistoryLoading] = useState(false);
-
-//   const [presenceFilter, setPresenceFilter] = useState<number | "all">("all");
-//   const [absentFilter, setAbsentFilter] = useState<number | "all">("all");
-
-
-//   const fetchEmployeeHistory = async (employee: AttendanceMetric) => {
-//     setSelectedEmployee(employee);
-//     setHistoryLoading(true);
-//     try {
-//       const res = await axios.get(
-//         `${BASE_URL}/attendance/employee/${employee.employee_id}/history`,
-//         {
-//           params: {
-//             start_date: startDate,
-//             end_date: endDate,
-//           },
-//         }
-//       );
-//       console.log("Raw history response:", res.data);
-//       const history = res.data.history.map((item: any) => ({
-//         date: item.date,
-//         checkin: item.check_in_time ? new Date(item.check_in_time).toLocaleTimeString() : "-",
-//         checkout: item.check_out_time ? new Date(item.check_out_time).toLocaleTimeString() : "-",
-//         worked_hours: item.worked_hours,
-//         late: item.is_late,
-//         late_minutes: item.late_minutes,
-//         anomalies: item.anomalies.join(", "),
-//         status: item.status,
-//       }));
-//       setEmployeeHistory(history); // tableau d’objets {date, checkin, checkout, worked_hours, ...}
-//     } catch (err) {
-//       console.error("Error fetching employee history:", err);
-//     } finally {
-//       setHistoryLoading(false);
-//     }
-//   };
-
-
-
-//   useEffect(() => {
-//     const fetchMetrics = async () => {
-//       setLoading(true);
-//       try {
-//         // 1️⃣ Get all employees
-//         const empRes = await axios.get(`${BASE_URL}/employee/`);
-//         const employees = empRes.data; // array of employees
-
-//         // 2️⃣ Fetch metrics for each employee in parallel
-//         const metricsPromises = employees.map((emp: any) =>
-//           axios
-//             .get(
-//               `${BASE_URL}/attendance/metrics/employee/${emp.employee_code}/range`,
-//               { params: { start_date: startDate, end_date: endDate } }
-//             )
-//             .then((res) => ({
-//               employee_id: emp.employee_code,
-//               employee_name: emp.name, // <-- on garde le nom
-//               ...res.data.data,
-//             }))
-//         );
-
-//         const allMetrics = await Promise.all(metricsPromises);
-//         setData(allMetrics);
-//       } catch (err) {
-//         console.error("Error fetching metrics:", err);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchMetrics();
-//   }, [startDate, endDate]);
-//   // Remplacez votre bloc filteredData par celui-ci :
-//   const filteredData = data.filter((row) => {
-//     // Conversion explicite en nombre pour éviter les erreurs de type
-//     const presence = Number(row.presence_rate) || 0;
-//     const absences = Number(row.days_absent) || 0;
-
-//     const matchesPresence =
-//       presenceFilter === "all" || presence >= (presenceFilter as number);
-
-//     const matchesAbsence =
-//       absentFilter === "all" || absences >= (absentFilter as number);
-
-//     return matchesPresence && matchesAbsence;
-//   });
-
-//   return (
-//     <Box display="flex" minH="100vh" bg="gray.50">
-//       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-//       <IconButton
-//         icon={isSidebarOpen ? <CloseIcon /> : <HamburgerIcon />}
-//         aria-label="Toggle Sidebar"
-//         display={["inline-flex", "none"]}
-//         position="fixed"
-//         top="4"
-//         left="4"
-//         zIndex={1500}
-//         onClick={toggleSidebar}
-//       />
-
-//       <VStack flex={1} spacing={0} ml={["0", "250px"]} align="stretch">
-//         <Navbar />
-
-//         <Box p={5}>
-//           <Text fontSize="xl" fontWeight="bold" mb={4}>
-//             {t("Attendance report")}
-//           </Text>
-
-//           {/* Date range filters */}
-//           <HStack spacing={4} mb={6} flexWrap="wrap">
-//             {/* Start / End Date */}
-//             <Text>{t("Start Date")}</Text>
-//             <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-//             <Text>{t("End Date")}</Text>
-//             <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-
-//             {/* Nouvelle section filtres */}
-//             <Text>{t("Min Presence %")}</Text>
-//             <select
-//               value={presenceFilter}
-//               onChange={(e) =>
-//                 setPresenceFilter(e.target.value === "all" ? "all" : Number(e.target.value))
-//               }
-//             >
-//               <option value="all">{t("All")}</option>
-//               <option value={50}>≥50%</option>
-//               <option value={75}>≥75%</option>
-//               <option value={90}>≥90%</option>
-//             </select>
-
-//             <Text>{t("Min Absences")}</Text>
-//             <select
-//               value={absentFilter}
-//               onChange={(e) =>
-//                 setAbsentFilter(e.target.value === "all" ? "all" : Number(e.target.value))
-//               }
-//             >
-//               <option value="all">{t("All")}</option>
-//               <option value={1}>≥1</option>
-//               <option value={3}>≥3</option>
-//               <option value={5}>≥5</option>
-//             </select>
-//           </HStack>
-
-
-//           {loading ? (
-//             <Box textAlign="center" py={10}>
-//               <Spinner />
-//             </Box>
-//           ) : (
-//             <Box overflowX="auto">
-//               <Table variant="simple" size="sm">
-//                 <Thead>
-//                   <Tr>
-//                     <Th>{t("Employee ID")}</Th>
-//                     <Th>{t("Employee Name")}</Th> {/* <-- affichage du nom */}
-//                     <Th>{t("Period")}</Th>
-//                     <Th isNumeric>{t("Working days")}</Th>
-//                     <Th isNumeric>{t("Presences")}</Th>
-//                     <Th isNumeric>{t("Absences")}</Th>
-//                     <Th isNumeric>{t("Presence %")}</Th>
-//                     <Th isNumeric>{t("Absence %")}</Th>
-//                     <Th isNumeric>{t("Weekend Days")}</Th>
-//                     <Th isNumeric>{t("Weekend Hours")}</Th>
-//                   </Tr>
-//                 </Thead>
-//                 <Tbody>
-//                   {filteredData.map((row, index) => (
-//                     <Tr key={`$row.employee_id}-$index`} onClick={() => fetchEmployeeHistory(row)} style={{ cursor: "pointer" }}>
-//                       <Td>{row.employee_id}</Td>
-//                       <Td>{row.employee_name}</Td> {/* <-- affichage du nom */}
-//                       <Td>{`${row.start_date} → ${row.end_date}`}</Td>
-//                       <Td isNumeric>{row.total_working_days}</Td>
-//                       <Td isNumeric>{row.days_present}</Td>
-//                       <Td isNumeric>{row.days_absent}</Td>
-//                       <Td isNumeric>{row.presence_rate.toFixed(1)}%</Td>
-//                       <Td isNumeric>{row.absence_rate.toFixed(1)}%</Td>
-//                       <Td isNumeric>{row.weekend_days_worked}</Td>
-//                       <Td isNumeric>{row.weekend_hours_worked}</Td>
-//                     </Tr>
-//                   ))}
-//                 </Tbody>
-//               </Table>
-//             </Box>
-//           )}
-//         </Box>
-//       </VStack>
-//       {selectedEmployee && (
-//         <Box mt={10} bg="white" p={5} borderRadius="md" boxShadow="sm">
-//           <Text fontSize="lg" fontWeight="bold" mb={4}>
-//             {t("Employee History")} - {selectedEmployee.employee_name}
-//           </Text>
-
-//           {historyLoading ? (
-//             <Spinner />
-//           ) : (
-//             <Table variant="simple" size="sm">
-//               <Thead>
-//                 <Tr>
-//                   <Th>{t("Date")}</Th>
-//                   <Th>{t("Check-in")}</Th>
-//                   <Th>{t("Check-out")}</Th>
-//                   <Th isNumeric>{t("Worked Hours")}</Th>
-//                   <Th>{t("Late")}</Th>
-//                   <Th isNumeric>{t("Late Minutes")}</Th>
-//                   <Th>{t("Anomalies")}</Th>
-//                   <Th>{t("Status")}</Th>
-//                 </Tr>
-//               </Thead>
-//               <Tbody>
-//                 {employeeHistory.map((row: any, index: number) => (
-//                   <Tr key={index}>
-//                     <Td>{row.date}</Td>
-//                     <Td>{row.checkin || "-"}</Td>
-//                     <Td>{row.checkout || "-"}</Td>
-//                     <Td isNumeric>{row.worked_hours?.toFixed(2) ?? 0}</Td>
-//                     <Td>{row.late ? t("Yes") : t("No")}</Td>
-//                     <Td isNumeric>{row.late_minutes ?? 0}</Td>
-//                     <Td>{row.anomalies || "-"}</Td>
-//                     <Td>{row.status}</Td>
-//                   </Tr>
-//                 ))}
-//               </Tbody>
-//             </Table>
-//           )}
-
-//           {/* Total worked hours */}
-//           <Text fontWeight="bold" mt={4}>
-//             {t("Total Worked Hours in That Period")}:{" "}
-//             {employeeHistory.reduce((acc, cur) => acc + (cur.worked_hours ?? 0), 0).toFixed(2)} h
-//           </Text>
-//         </Box>
-//       )}
-
-//     </Box>
-//   );
-// }
-
 import { useEffect, useState } from "react";
 import {
   Box,
@@ -318,6 +29,8 @@ import Navbar from "../components/layout/Navbar";
 import Sidebar from "../components/layout/Sidebar";
 import { HamburgerIcon, CloseIcon, DownloadIcon } from "@chakra-ui/icons";
 import axios from "axios";
+import * as XLSX from "xlsx";
+
 
 const BASE_URL = "http://localhost:8000/api/v1";
 
@@ -507,6 +220,116 @@ export default function RapportPage() {
     document.body.removeChild(link);
   };
 
+
+
+const downloadAllEmployeesExcel = () => {
+  if (!data || data.length === 0) return;
+
+  // Map all employees into a single array of rows
+  const sheetData = data.map(emp => ({
+    "ID": emp.employee_id,
+    "Name": emp.employee_name,
+    "Period": `${emp.start_date} → ${emp.end_date}`,
+    "Working Days": emp.total_working_days,
+    "Presences": emp.days_present,
+    "Absences": emp.days_absent,
+    "Presence %": emp.presence_rate.toFixed(1),
+    "Absence %": emp.absence_rate.toFixed(1),
+    "Weekend Days": emp.weekend_days_worked,
+    "Weekend Hours": emp.weekend_hours_worked,
+  }));
+
+  // Create worksheet and workbook
+  const ws = XLSX.utils.json_to_sheet(sheetData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Attendance");
+
+  // Save the file
+  XLSX.writeFile(wb, `attendance_all_employees_${startDate}_to_${endDate}.xlsx`);
+};
+
+
+  const downloadEmployeeHistoryCSV = () => {
+    if (!selectedEmployee || employeeHistory.length === 0) return;
+
+    const headers = [
+      "Date",
+      "Check-in",
+      "Check-out",
+      "Worked Hours",
+      "Late",
+      "Late Minutes",
+      "Anomalies",
+      "Status",
+    ];
+
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [
+        headers.join(","),
+        ...employeeHistory.map((h) =>
+          [
+            h.date,
+            h.check_in_time?.split("T")[1] ?? "-",
+            h.check_out_time?.split("T")[1] ?? "-",
+            h.worked_hours.toFixed(2),
+            h.is_late ? "Yes" : "No",
+            h.late_minutes,
+            `"${h.anomalies.join("; ")}"`,
+            h.status,
+          ].join(",")
+        ),
+      ].join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute(
+      "href",
+      encodedUri
+    );
+    link.setAttribute(
+      "download",
+      `attendance_${selectedEmployee.employee_name}_${dateFrom}_to_${dateTo}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  const downloadEmployeeExcel = () => {
+    if (!selectedEmployee || employeeHistory.length === 0) return;
+
+    const sheetData = employeeHistory.map(h => ({
+      Date: h.date,
+      "Check-in": h.check_in_time?.slice(11, 16) ?? "-",
+      "Check-out": h.check_out_time?.slice(11, 16) ?? "-",
+      "Worked Hours": h.worked_hours.toFixed(2),
+      Late: h.is_late ? "Yes" : "No",
+      "Late Minutes": h.late_minutes,
+      Anomalies: h.anomalies.join("; "),
+      Status: h.status,
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(sheetData);
+
+    // Add header row with employee name and period
+    XLSX.utils.sheet_add_aoa(
+      ws,
+      [
+        [`Employee: ${selectedEmployee.employee_name}`, `Period: ${dateFrom} → ${dateTo}`],
+        []
+      ],
+      { origin: "A1" }
+    );
+
+    // Move table below header row
+    XLSX.utils.sheet_add_json(ws, sheetData, { skipHeader: true, origin: "A3" });
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Attendance");
+    XLSX.writeFile(wb, `attendance_${selectedEmployee.employee_name}_${dateFrom}_to_${dateTo}.xlsx`);
+  };
+
+
   return (
     <Box display="flex" minH="100vh" bg="gray.50">
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
@@ -533,9 +356,14 @@ export default function RapportPage() {
               <Text>End Date:</Text>
               <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
             </HStack>
+            <HStack>
             <Button leftIcon={<DownloadIcon />} colorScheme="green" onClick={downloadCSV}>
               Export CSV
             </Button>
+            <Button leftIcon={<DownloadIcon />} colorScheme="green" onClick={downloadAllEmployeesExcel}>
+              Export Excel
+            </Button>
+            </HStack>
           </HStack>
 
           {loading ? (
@@ -583,12 +411,34 @@ export default function RapportPage() {
           )}
 
           {/* -------------------- Employee History Drawer -------------------- */}
-          <Drawer isOpen={!!selectedEmployee} placement="right" onClose={closeDrawer} size="xl">
+          <Drawer isOpen={!!selectedEmployee} placement="right" onClose={closeDrawer} size="full">
             <DrawerOverlay />
             <DrawerContent>
               <DrawerCloseButton />
               <DrawerHeader>
-                Employee History {selectedEmployee?.employee_name && `- ${selectedEmployee.employee_name}`}
+                <Flex justifyContent="space-between">
+                  <text>Employee History {selectedEmployee?.employee_name && `- ${selectedEmployee.employee_name}`}</text>
+                  {/* <Button mr={10} leftIcon={<DownloadIcon />} colorScheme="green" onClick={downloadEmployeeHistoryCSV}>
+                    Export CSV
+                  </Button> */}
+                  <HStack mr={10}>
+                    <Button
+                      leftIcon={<DownloadIcon />}
+                      colorScheme="green"
+                      onClick={downloadEmployeeHistoryCSV}
+                    >
+                      Export CSV
+                    </Button>
+
+                    <Button
+                      leftIcon={<DownloadIcon />}
+                      colorScheme="blue"
+                      onClick={downloadEmployeeExcel} // Excel
+                    >
+                      Export Excel
+                    </Button>
+                  </HStack>
+                </Flex>
                 <Flex gap={2} mt={2}>
                   <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
                   <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
