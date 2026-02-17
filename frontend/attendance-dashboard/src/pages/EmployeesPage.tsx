@@ -500,9 +500,7 @@ export default function EmployeesPage() {
                 <Text fontSize="sm">
                   <strong>Card:</strong> {emp.card || "-"}
                 </Text>
-                <Text fontSize="sm">
-                  <strong>Is Active:</strong> {emp.is_active === false ? "No" : "Yes"}
-                </Text>
+
 
                 <Flex gap={2} mt={3} wrap="wrap">
                   <Button
@@ -540,58 +538,9 @@ export default function EmployeesPage() {
               </Box>
             ))}
 
-          {/* Separator */}
-          {filteredEmployees.some((emp) => emp.is_active === false) && (
-            <Box gridColumn="1/-1" textAlign="center" py={2}>
-              <Text fontWeight="bold" color="gray.500">Inactive Employees</Text>
-              <Box height="1px" bg="gray.300" mt={1} />
-            </Box>
-          )}
-
-          {/* Inactive Employees */}
-          {filteredEmployees
-            .filter((emp) => emp.is_active === false) // Then inactive
-            .map((emp) => (
-              <Box
-                key={emp.employee_code}
-                borderWidth="1px"
-                borderRadius="lg"
-                p={5}
-                bg="gray.100" // Slightly different background for inactive
-                shadow="md"
-                cursor="pointer"
-                onClick={() => openEmployeeHistory(emp)}
-                _hover={{
-                  shadow: "xl",
-                  transform: "translateY(-2px)",
-                  transition: "all 0.2s",
-                }}
-              >
-                <Flex justify="space-between" align="center" mb={3}>
-                  <Heading size="md">{emp.name}</Heading>
-                  <Badge
-                    colorScheme={emp.privilege === 1 ? "green" : "blue"}
-                    fontSize="0.8em"
-                  >
-                    {emp.privilege === 1 ? "Admin" : "User"}
-                  </Badge>
-                </Flex>
-                <Text fontSize="sm" mb={1}>
-                  <strong>Code:</strong> {emp.employee_code}
-                </Text>
-                <Text fontSize="sm" mb={1}>
-                  <strong>Group:</strong> {emp.group_id || "-"}
-                </Text>
-                <Text fontSize="sm">
-                  <strong>Card:</strong> {emp.card || "-"}
-                </Text>
-                <Text fontSize="sm">
-                  <strong>Is Active:</strong> {emp.is_active === false ? "No" : "Yes"}
-                </Text>
 
 
-              </Box>
-            ))}
+
         </SimpleGrid>
 
 

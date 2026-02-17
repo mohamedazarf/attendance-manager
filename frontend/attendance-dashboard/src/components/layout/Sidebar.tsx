@@ -92,7 +92,7 @@
 // }
 
 
-import { Box, VStack, Text, Image, HStack } from "@chakra-ui/react";
+import { Box, VStack, Text, Image, HStack, Button } from "@chakra-ui/react";
 import logo from "../../assets/logo.png";
 import { useNavigate } from "react-router-dom";
 import LanguageSwitcher from "./LanguageSwitcher";
@@ -180,6 +180,13 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }: SidebarProps) 
           </Text>
         </VStack>
 
+      
+        <Text
+          _hover={{ color: "#B98112", cursor: "pointer" }}
+          onClick={() => handleNavigate("/inactive-employees")}
+        >
+          Employés inactifs
+        </Text>
       </VStack>
     </Box>
   );
