@@ -1,64 +1,3 @@
-# from app.services.zk_service import ZKService
-# from app.repositories.employeeRepo import EmployeeRepository
-# from app.repositories.attendanceRepo import AttendanceRepository
-# from app.schemas.employee import Employee
-# from app.schemas.attendanceLog import AttendanceLog
-# import logging
-
-# class SyncService:
-#     def __init__(self):
-#         self.zk_service = ZKService()
-#         self.employee_repo = EmployeeRepository()
-#         # AttendanceRepository expects a collection argument, though it overrides it internally.
-#         # We pass None to satisfy the signature.
-#         self.attendance_repo = AttendanceRepository(collection=None)
-    
-#     def sync_employees(self):
-#         try:
-#             users = self.zk_service.list_users()
-#             for user in users:
-#                 # Map ZK user to Employee schema
-#                 employee_data = Employee(
-#                     employee_code=user.user_id,
-#                     name=user.name,
-#                     privilege=user.privilege,
-#                     card=user.card
-#                 )
-#                 self.employee_repo.insert_employee(employee_data)
-#             return {"count": len(users)}
-#         except Exception as e:
-#             logging.error(f"Error syncing employees: {e}")
-#             raise e
-    
-#     def sync_attendances(self):
-#         try:
-#             attendances = self.zk_service.get_attendances()
-#             for att in attendances:
-#                 # Map ZK attendance to AttendanceLog schema
-#                 # ZK attendance user_id is typically a string in some SDKs, ensure it matches schema
-#                 log_data = AttendanceLog(
-#                     user_id=int(att.user_id),
-#                     timestamp=att.timestamp
-#                 )
-#                 self.attendance_repo.insert_log(log_data)
-#             return {"count": len(attendances)}
-#         except Exception as e:
-#             logging.error(f"Error syncing attendances: {e}")
-#             raise e
-
-#     def sync_all(self):
-#         emp_result = self.sync_employees()
-#         att_result = self.sync_attendances()
-#         return {
-#             "status": "success",
-#             "message": "All data synced successfully",
-#             "details": {
-#                 "employees_synced": emp_result["count"],
-#                 "attendance_logs_synced": att_result["count"]
-#             }
-#         }
-
-
 from app.services.zk_service import ZKService
 from app.repositories.employeeRepo import EmployeeRepository
 from app.repositories.attendanceRepo import AttendanceRepository
@@ -117,17 +56,35 @@ class SyncService:
 
     def sync_attendances(self):
         """
-        Sync attendance logs from the device.
+        Sync attendance logs from the device incrementally.
         """
         try:
+            # 1. Get the latest timestamp from DB
+            latest_timestamp = self.attendance_repo.get_latest_timestamp()
+            
+            # 2. Fetch all logs from device (ZK library limitation usually requires fetching all)
             attendances = self.zk_service.get_attendances()
+            
+            new_logs = []
             for att in attendances:
+                # If we have a latest_timestamp, skip logs that are older or equal
+                if latest_timestamp and att.timestamp <= latest_timestamp:
+                    continue
+                
                 log_data = AttendanceLog(
                     user_id=int(att.user_id),
                     timestamp=att.timestamp
                 )
-                self.attendance_repo.insert_log(log_data)
-            return {"attendance_logs_synced": len(attendances)}
+                new_logs.append(log_data)
+            
+            # 3. Bulk insert new logs
+            if new_logs:
+                self.attendance_repo.insert_many(new_logs)
+            
+            return {
+                "attendance_logs_synced": len(new_logs),
+                "total_device_logs": len(attendances)
+            }
 
         except Exception as e:
             logging.error(f"Error syncing attendances: {e}")

@@ -29,3 +29,12 @@ class AttendanceRepository:
 
     def get_all_logs(self):
         return list(self.collection.find())
+
+    def get_latest_timestamp(self):
+        """
+        Returns the timestamp of the most recent attendance log entry.
+        """
+        latest_log = self.collection.find_one(sort=[("timestamp", -1)])
+        if latest_log:
+            return latest_log["timestamp"]
+        return None

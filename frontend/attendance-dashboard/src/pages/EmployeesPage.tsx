@@ -191,6 +191,45 @@ export default function EmployeesPage() {
   };
 
 
+  const pollFingerprintStatus = async (uid: number) => {
+    const startTime = Date.now();
+    const timeout = 60000; // 60 seconds
+    const interval = 2000; // 2 seconds
+
+    const check = async () => {
+      if (Date.now() - startTime > timeout) {
+        toast({
+          title: "Enrollment check timed out",
+          description: "Could not verify fingerprint enrollment. Please check on the device.",
+          status: "warning",
+          duration: 5000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      try {
+        const res = await axios.get(`${BASE_URL}/device/users/${uid}/fingerprint-status`);
+        if (res.data.status === "enrolled" || res.data.fingerprint_count > 0) {
+          toast({
+            title: "Fingerprint Enrolled",
+            description: "Fingerprint successfully enrolled on device.",
+            status: "success",
+            duration: 5000,
+            isClosable: true,
+          });
+          return;
+        }
+      } catch (err) {
+        console.error("Polling error", err);
+      }
+
+      setTimeout(check, interval);
+    };
+
+    setTimeout(check, interval);
+  };
+
   const handleAddEmployee = async () => {
     setAddLoading(true);
     try {
@@ -201,8 +240,18 @@ export default function EmployeesPage() {
       });
 
       if (res.data.message) {
-        alert(res.data.message); // e.g., "User created successfully. Please enroll fingerprint."
+        toast({
+          title: "User Created",
+          description: res.data.message, // "User created. Please enroll fingerprint..."
+          status: "info",
+          duration: 6000,
+          isClosable: true,
+        });
+
         setIsAddOpen(false);
+
+        // Start polling for fingerprint
+        pollFingerprintStatus(Number(newEmployee.employee_code));
 
         // Refresh employees list
         const empRes = await axios.get(`${BASE_URL}/employee/`);
@@ -220,7 +269,13 @@ export default function EmployeesPage() {
       }
     } catch (err: any) {
       console.error(err);
-      alert("Failed to create employee: " + (err.response?.data?.message || err.message));
+      toast({
+        title: "Error creating employee",
+        description: err.response?.data?.message || err.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setAddLoading(false);
     }
@@ -349,7 +404,7 @@ export default function EmployeesPage() {
           <Box>
             <Heading size="md" pl="10">Employees</Heading>
             <Text fontSize="sm" color="gray.500" pl="10">
-              {filteredEmployees.length} employee(s) found
+              {filteredEmployees.filter((emp) => emp.is_active === true).length} employee(s) found
             </Text>
           </Box>
           <Button
@@ -382,7 +437,7 @@ export default function EmployeesPage() {
           >
             <option value="all">All privileges</option>
             <option value="0">User</option>
-            <option value="1">Admin</option>
+            <option value="14">Admin</option>
           </Select>
         </Flex>
 
@@ -485,10 +540,10 @@ export default function EmployeesPage() {
                 <Flex justify="space-between" align="center" mb={3}>
                   <Heading size="md">{emp.name}</Heading>
                   <Badge
-                    colorScheme={emp.privilege === 1 ? "green" : "blue"}
+                    colorScheme={emp.privilege === 14 ? "green" : "blue"}
                     fontSize="0.8em"
                   >
-                    {emp.privilege === 1 ? "Admin" : "User"}
+                    {emp.privilege === 14 ? "Admin" : "User"}
                   </Badge>
                 </Flex>
                 <Text fontSize="sm" mb={1}>

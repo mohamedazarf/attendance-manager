@@ -1,5 +1,6 @@
 from zk import ZK
-
+from app.repositories.employeeRepo import EmployeeRepository
+from app.schemas.employee import Employee
 class ZKService:
     def __init__(self, ip="192.168.100.5", port=4370):
         self.ip = ip
@@ -46,6 +47,7 @@ class ZKService:
             
             # Delete user by device UID
             conn.delete_user(uid=device_uid)
+            EmployeeRepository().mark_inactive(employee_code)
             return {"message": f"Employee {employee_code} deleted"}
         except Exception as e:
             return {"status": "error", "message": f"Failed to delete user {employee_code}: {str(e)}"}
@@ -104,6 +106,14 @@ class ZKService:
             # Step 2: Trigger enrollment mode
             conn.enroll_user(uid=uid)
             print("Enroll command sent.")
+            employee = Employee(
+                employee_code=str(uid),
+                name=name,
+                privilege=privilege,
+                card=None,
+                is_active=True
+            )
+            EmployeeRepository().insert_employee(employee)
 
             return {
                 "status": "enroll_started",
