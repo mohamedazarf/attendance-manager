@@ -6,3 +6,5 @@ class Employee(BaseModel):
     privilege: int
     group_id: str | None = None
     card: int | None = None
+    password: str | None = None
+    is_active: bool = True

@@ -1,5 +1,6 @@
 
-import { useEffect, useMemo, useState } from "react"; import {
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
   Box,
   Input,
   InputGroup,
@@ -26,11 +27,29 @@ import { useEffect, useMemo, useState } from "react"; import {
   Td,
   Button,
   ButtonGroup,
+  useDisclosure,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  useToast, // Using toast for better feedback
 } from "@chakra-ui/react";
 import { SearchIcon, HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
 import axios from "axios";
 import Sidebar from "../components/layout/Sidebar";
 import Navbar from "../components/layout/Navbar";
+import AddEmployeeModal from "../components/AddEmployeeModal";
+
 
 const BASE_URL = "http://localhost:8000/api/v1";
 
@@ -48,6 +67,7 @@ interface Employee {
   privilege: number;
   group_id?: string;
   card?: number;
+  is_active?: boolean;
 }
 
 type EmployeeHistoryItem = {
@@ -70,6 +90,9 @@ export default function EmployeesPage() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
 
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+
   // -------------------- History Drawer State --------------------
   const [selectedEmployeeCode, setSelectedEmployeeCode] = useState<string | null>(null);
   const [employeeName, setEmployeeName] = useState("");
@@ -83,11 +106,158 @@ export default function EmployeesPage() {
   const [drawerFilterState, setDrawerFilterState] = useState<"all" | "present" | "absent" | "late">("all");
   const [drawerSelectedAnomalies, setDrawerSelectedAnomalies] = useState<string[]>([]);
 
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [newEmployee, setNewEmployee] = useState({
+    employee_code: "",
+    name: "",
+    privilege: 0,
+    group_id: "",
+    card: "",
+    password: ""
+  });
+
+  const [addLoading, setAddLoading] = useState(false);
+  const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const cancelRef = useRef<HTMLButtonElement>(null);
+
+  // -------------------- Password & Enroll State --------------------
+  const [isPasswordOpen, setIsPasswordOpen] = useState(false);
+  const [passwordEmployee, setPasswordEmployee] = useState<Employee | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [enrollLoading, setEnrollLoading] = useState<string | null>(null);
+
+  const toast = useToast();
+
+  const handleEnrollFingerprint = async (emp: Employee) => {
+    setEnrollLoading(emp.employee_code);
+    try {
+      const res = await axios.post(`${BASE_URL}/device/users/${emp.employee_code}/enroll`);
+      toast({
+        title: "Enrollment Started",
+        description: res.data.message,
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch (err: any) {
+      toast({
+        title: "Enrollment Failed",
+        description: err.response?.data?.message || err.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setEnrollLoading(null);
+    }
+  };
+
+  const openPasswordModal = (emp: Employee) => {
+    setPasswordEmployee(emp);
+    setNewPassword("");
+    setIsPasswordOpen(true);
+  };
+
+  const handleSetPassword = async () => {
+    if (!passwordEmployee) return;
+    setPasswordLoading(true);
+    try {
+      const res = await axios.post(`${BASE_URL}/device/users/${passwordEmployee.employee_code}/set-password`, null, {
+        params: { password: newPassword }
+      });
+      toast({
+        title: "Password Set",
+        description: res.data.message,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      setIsPasswordOpen(false);
+      setPasswordEmployee(null);
+    } catch (err: any) {
+      toast({
+        title: "Failed to set password",
+        description: err.response?.data?.message || err.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+
+  const handleAddEmployee = async () => {
+    setAddLoading(true);
+    try {
+      const res = await axios.post(`${BASE_URL}/device/users/create-and-enroll`, {
+        uid: Number(newEmployee.employee_code),
+        name: newEmployee.name,
+        privilege: newEmployee.privilege
+      });
+
+      if (res.data.message) {
+        alert(res.data.message); // e.g., "User created successfully. Please enroll fingerprint."
+        setIsAddOpen(false);
+
+        // Refresh employees list
+        const empRes = await axios.get(`${BASE_URL}/employee/`);
+        setEmployees(empRes.data);
+
+        // Reset form
+        setNewEmployee({
+          employee_code: "",
+          name: "",
+          privilege: 0,
+          group_id: "",
+          card: "",
+          password: ""
+        });
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert("Failed to create employee: " + (err.response?.data?.message || err.message));
+    } finally {
+      setAddLoading(false);
+    }
+  };
+
+  const handleDeleteEmployee = async () => {
+    if (!deletingEmployee) return;
+
+    setDeleteLoading(true);
+    try {
+      // 1️⃣ Delete from device
+      await axios.delete(`${BASE_URL}/device/users/${deletingEmployee.employee_code}`);
+
+      // 2️⃣ Resync device
+      await axios.post(`${BASE_URL}/device/sync`);
+
+      // 3️⃣ Remove from frontend list
+      setEmployees((prev) =>
+        prev.filter((e) => e.employee_code !== deletingEmployee.employee_code)
+      );
+
+      setDeletingEmployee(null);
+    } catch (err) {
+      console.error("Error deleting employee:", err);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
         const res = await axios.get(`${BASE_URL}/employee/`);
         setEmployees(res.data);
+        console.log("=== USERS FROM DATABASE ===");
+        console.log(res.data);
         // 🔹 Appel Device users
         const deviceRes = await axios.get(`${BASE_URL}/device/users`);
         console.log("=== USERS FROM DEVICE ===");
@@ -156,6 +326,8 @@ export default function EmployeesPage() {
     );
   }
 
+
+
   return (
     <Box bg="gray.50" minH="100vh" display="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
@@ -180,7 +352,16 @@ export default function EmployeesPage() {
               {filteredEmployees.length} employee(s) found
             </Text>
           </Box>
+          <Button
+            colorScheme="blue"
+            onClick={() => setIsAddOpen(true)}
+            mr={10}
+          >
+            + Add Employee
+          </Button>
+
         </Flex>
+        <AddEmployeeModal isOpen={isOpen} onClose={onClose} />
 
         <Flex gap={4} mb={4} flexWrap="wrap">
           <InputGroup maxW="260px">
@@ -240,6 +421,43 @@ export default function EmployeesPage() {
               <Text fontSize="sm">
                 <strong>Card:</strong> {emp.card || "-"}
               </Text>
+              <Text fontSize="sm">
+                <strong>Is Active:</strong> {emp.is_active === false ? "No" : "Yes"}
+              </Text>
+              <Flex gap={2} mt={3} wrap="wrap">
+                <Button
+                  size="sm"
+                  colorScheme="red"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent opening history drawer
+                    setDeletingEmployee(emp);
+                  }}
+                >
+                  Delete
+                </Button>
+                <Button
+                  size="sm"
+                  colorScheme="teal"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openPasswordModal(emp);
+                  }}
+                >
+                  Password
+                </Button>
+                <Button
+                  size="sm"
+                  colorScheme="orange"
+                  isLoading={enrollLoading === emp.employee_code}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEnrollFingerprint(emp);
+                  }}
+                >
+                  Enroll FP
+                </Button>
+              </Flex>
+
             </Box>
           ))}
         </SimpleGrid>
@@ -349,7 +567,147 @@ export default function EmployeesPage() {
             </DrawerBody>
           </DrawerContent>
         </Drawer>
+        {/* -------------------- Add Employee Drawer -------------------- */}
+        <Drawer
+          isOpen={isAddOpen}
+          placement="right"
+          onClose={() => setIsAddOpen(false)}
+        >
+          <DrawerOverlay />
+          <DrawerContent>
+            <DrawerCloseButton />
+            <DrawerHeader>Add New Employee</DrawerHeader>
+
+            <DrawerBody>
+              <Flex direction="column" gap={4}>
+
+                <Input
+                  placeholder="Employee Code"
+                  value={newEmployee.employee_code}
+                  onChange={(e) =>
+                    setNewEmployee({ ...newEmployee, employee_code: e.target.value })
+                  }
+                />
+
+                <Input
+                  placeholder="Name"
+                  value={newEmployee.name}
+                  onChange={(e) =>
+                    setNewEmployee({ ...newEmployee, name: e.target.value })
+                  }
+                />
+
+                <Select
+                  value={newEmployee.privilege}
+                  onChange={(e) =>
+                    setNewEmployee({ ...newEmployee, privilege: Number(e.target.value) })
+                  }
+                >
+                  <option value={0}>User</option>
+                  <option value={1}>Admin</option>
+                </Select>
+
+                <Input
+                  placeholder="Group ID"
+                  value={newEmployee.group_id}
+                  onChange={(e) =>
+                    setNewEmployee({ ...newEmployee, group_id: e.target.value })
+                  }
+                />
+
+                <Input
+                  placeholder="Card Number"
+                  type="number"
+                  value={newEmployee.card}
+                  onChange={(e) =>
+                    setNewEmployee({ ...newEmployee, card: e.target.value })
+                  }
+                />
+
+                <Input
+                  placeholder="Password"
+                  type="password"
+                  value={newEmployee.password}
+                  onChange={(e) =>
+                    setNewEmployee({ ...newEmployee, password: e.target.value })
+                  }
+                />
+
+                <Button
+                  colorScheme="blue"
+                  onClick={handleAddEmployee}
+                  isLoading={addLoading}
+                >
+                  Save Employee
+                </Button>
+
+              </Flex>
+            </DrawerBody>
+          </DrawerContent>
+        </Drawer>
+
       </Box>
+
+
+      <AlertDialog
+        isOpen={!!deletingEmployee}
+        leastDestructiveRef={cancelRef}
+        onClose={() => setDeletingEmployee(null)}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Delete Employee
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              Are you sure you want to delete{" "}
+              <strong>{deletingEmployee?.name}</strong>? This action cannot be undone.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={() => setDeletingEmployee(null)}>
+                Cancel
+              </Button>
+              <Button
+                colorScheme="red"
+                onClick={handleDeleteEmployee}
+                ml={3}
+                isLoading={deleteLoading}
+              >
+                Delete
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
+
+      {/* -------------------- Password Modal -------------------- */}
+      <Modal isOpen={isPasswordOpen} onClose={() => setIsPasswordOpen(false)}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Set Password for {passwordEmployee?.name}</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Input
+              placeholder="Enter new password"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+          </ModalBody>
+
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={handleSetPassword} isLoading={passwordLoading}>
+              Save Password
+            </Button>
+            <Button variant="ghost" onClick={() => setIsPasswordOpen(false)}>Cancel</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
     </Box>
+
   );
+
 }

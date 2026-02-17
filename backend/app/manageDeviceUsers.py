@@ -114,6 +114,40 @@ def enroll_fingerprint(uid):
         conn.disconnect()
         return False
 
+def update_employee_name(uid, new_name):
+    conn = connect()
+
+    try:
+        users = conn.get_users()
+        user = next((u for u in users if u.uid == uid), None)
+
+        if user is None:
+            print(f"\n❌ No user with UID {uid} found on device")
+            return False
+
+        old_name = user.name
+
+        # Just update user info
+        conn.set_user(
+            uid=uid,
+            name=new_name,
+            privilege=user.privilege,
+            password='',  # or keep if you store it
+            group_id='',
+            user_id=user.user_id
+        )
+
+        print(f"\n✅ Successfully updated name from '{old_name}' to '{new_name}'")
+        return True
+
+    except Exception as e:
+        print(f"\n❌ Failed to update employee name: {e}")
+        return False
+
+    finally:
+        conn.disconnect()
+
+
 if __name__ == "__main__":
     print("🔧 ZKTeco Device User Management")
     print("=" * 40)
@@ -123,8 +157,9 @@ if __name__ == "__main__":
         print("2. ➕ Create test user")
         print("3. 🗑️ Delete user by UID")
         print("4. 👆 Enroll fingerprint")
-        print("5. � Check fingerprints")
-        print("6. �🚪 Exit")
+        print("5.  Check fingerprints")
+        print("6. ✏️ Update employee name")
+        print("7. 🚪 Exit")
         choice = input("\n👉 Choice: ").strip()
         
         if choice == "1":
@@ -157,5 +192,12 @@ if __name__ == "__main__":
                 check_fingerprints()
         
         elif choice == "6":
+            uid = int(input("   Enter UID to update: "))
+            new_name = input("   Enter new name: ")
+            update_employee_name(uid=uid, new_name=new_name)
+            print("\n🔍 Verifying... listing all users:")
+            list_users()
+        
+        elif choice == "7":
             print("👋 Bye!")
             break

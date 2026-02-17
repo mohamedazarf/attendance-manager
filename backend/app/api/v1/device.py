@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from app.services.zk_service import ZKService
 from app.services.SyncService import SyncService
+from app.schemas.employee import Employee
 
 router = APIRouter()
 zk_service = ZKService()
@@ -30,7 +31,44 @@ def create_user(uid: int, name: str):
 def delete_user(uid: int):
     return zk_service.delete_user(uid)
 
+@router.get("/sync")
+def sync_data():
+    return sync_service.sync_all()
 
 @router.post("/sync")
 def sync_data():
     return sync_service.sync_all()
+
+
+from pydantic import BaseModel
+from typing import Optional
+
+class CreateEnrollRequest(BaseModel):
+    uid: int
+    name: str
+    privilege: int = 0
+    password: Optional[str] = None
+
+@router.post("/users/create-and-enroll")
+def create_and_enroll(request: CreateEnrollRequest):
+    return zk_service.create_and_enroll_user(
+         uid=request.uid,
+        name=request.name,
+        privilege=request.privilege,
+        password=request.password or "",
+        user_id=str(request.uid)
+    )
+# def create_and_enroll(uid: int, name: str, privilege: int = 0):
+#     return zk_service.create_and_enroll_user(uid, name, privilege)
+
+@router.get("/users/{uid}/fingerprint-status")
+def fingerprint_status(uid: int):
+    return zk_service.check_fingerprints(uid)
+
+@router.post("/users/{uid}/enroll")
+def enroll_user(uid: int):
+    return zk_service.enroll_fingerprint(uid)
+
+@router.post("/users/{uid}/set-password")
+def set_password(uid: int, password: str):
+    return zk_service.set_user_password(uid, password)
