@@ -70,6 +70,21 @@ const anomalyColors: Record<string, string> = {
   sortie_sans_entree: "teal",
 };
 
+function getCurrentDate() {
+  // Create a new Date object for the current date and time
+  const today = new Date();
+
+  // Get individual components
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+  const day = String(today.getDate()).padStart(2, '0');
+
+  // Format as YYYY-MM-DD
+  const formattedDate = `${year}-${month}-${day}`;
+
+  return formattedDate; // Returns: "2026-02-18" (for example)
+}
+
 export default function EmployeesToday() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
@@ -112,7 +127,7 @@ export default function EmployeesToday() {
 
   // -------------------- Fetch dashboard --------------------
   useEffect(() => {
-    const today = "2026-01-26";
+    const today = getCurrentDate();
     fetch(`http://127.0.0.1:8000/api/v1/attendance/dashboard/day?day=${today}`)
       .then(res => res.json())
       .then(data => {
@@ -182,7 +197,7 @@ export default function EmployeesToday() {
         <Navbar />
         <Container maxW="100%" flex={1} p={6}>
           <Heading mb={4}>All Employees Today</Heading>
-          <Text color="gray.500" mb={6}>Date: 2026-01-26</Text>
+          <Text color="gray.500" mb={6}>Date:{dashboard?.date} </Text>
 
           {/* -------------------- Filtres employés -------------------- */}
           <Flex mb={4} align="center" justify="space-between" wrap="wrap" gap={4}>

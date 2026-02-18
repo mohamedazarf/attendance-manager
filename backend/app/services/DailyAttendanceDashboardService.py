@@ -11,6 +11,7 @@ class DailyAttendanceDashboardService:
         self.db = utils.get_db()
         self.logs_collection = self.db["attendance_logs"]
         self.employees_collection = self.db["employees"]
+        self.justifications_collection = self.db["attendance_justifications"]
         self.processor = AttendanceProcessingService()
 
     def get_today_data(self, target_date: date = None):
@@ -21,8 +22,16 @@ class DailyAttendanceDashboardService:
         end_dt = datetime.combine(target_date, time.max)
 
         employees = list(self.employees_collection.find(
-            {}, {"_id": 0, "employee_code": 1, "name": 1}
+            {"is_active": True},
+            {"_id": 0, "employee_code": 1, "name": 1}
         ))
+
+        # Récupérer les justifications du jour
+        justifications = {
+            j["employee_id"]: j for j in self.justifications_collection.find(
+                {"date": target_date.isoformat()}, {"_id": 0}
+            )
+        }
 
         # Récupérer les logs du jour
         logs = list(self.logs_collection.find({
@@ -99,7 +108,8 @@ class DailyAttendanceDashboardService:
                 "is_late": is_late,
                 "late_minutes": late_minutes,
                 "anomalies": anomalies,
-                "extra_hours": extra_hours
+                "extra_hours": extra_hours,
+                "justification": justifications.get(emp_id)
             })
 
         total_employees = len(employees)

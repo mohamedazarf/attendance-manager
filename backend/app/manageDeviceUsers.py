@@ -147,6 +147,12 @@ def update_employee_name(uid, new_name):
     finally:
         conn.disconnect()
 
+def get_logs():
+    conn = connect()
+    logs = conn.get_attendance()
+    conn.disconnect()
+    return logs
+
 
 if __name__ == "__main__":
     print("🔧 ZKTeco Device User Management")
@@ -159,7 +165,8 @@ if __name__ == "__main__":
         print("4. 👆 Enroll fingerprint")
         print("5.  Check fingerprints")
         print("6. ✏️ Update employee name")
-        print("7. 🚪 Exit")
+        print("7. 📜 Get logs")
+        print("8. 🚪 Exit")
         choice = input("\n👉 Choice: ").strip()
         
         if choice == "1":
@@ -199,5 +206,10 @@ if __name__ == "__main__":
             list_users()
         
         elif choice == "7":
+            logs = get_logs()
+            print("\n🔍 Verifying... getting logs:")
+            print(logs)
+        
+        elif choice == "8":
             print("👋 Bye!")
             break

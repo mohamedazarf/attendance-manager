@@ -10,22 +10,27 @@ router = APIRouter(tags=["Attendance Manual"])
 
 class ManualAttendance(BaseModel):
     employee_id: str
-    event_type: str
-    device_id: Optional[str] = None
-    match_score: Optional[float] = None
+    event_type: str  # "check_in" or "check_out"
     notes: Optional[str] = None
-    timestamp: str
+    timestamp: str  # ISO format
+
+class AbsenceJustification(BaseModel):
+    employee_id: str
+    date: str  # YYYY-MM-DD
+    reason: str
+    notes: Optional[str] = None
 
 # ==================== ENDPOINTS ====================
 
 @router.post("/manual")
 def record_manual_attendance(attendance: ManualAttendance):
     """
-    Record manual attendance entry from desktop app
+    Record manual attendance entry.
+    Stored in 'attendance_logs' to be visible in the dashboard.
     """
     try:
         db = get_db()
-        attendance_collection = db["attendances"]
+        logs_collection = db["attendance_logs"]
         
         # Parse timestamp
         try:
@@ -33,35 +38,56 @@ def record_manual_attendance(attendance: ManualAttendance):
         except:
             timestamp = datetime.now()
         
-        # Create attendance record
-        attendance_record = {
-            "user_id": attendance.employee_id,
+        # Create record compatible with DailyAttendanceDashboardService
+        # Note: status 1 = check in, 0 = check out typically in ZK devices
+        log_record = {
+            "user_id": int(attendance.employee_id),
             "timestamp": timestamp,
             "status": 1 if attendance.event_type.lower() == "check_in" else 0,
-            "punch": 0,  # 0 = check in/out, other values for break, overtime, etc.
-            "uid": attendance.employee_id,
-            "device_id": attendance.device_id or "DESKTOP_APP",
-            "match_score": attendance.match_score,
+            "punch": 0,
+            "source": "manual",
             "notes": attendance.notes,
-            "source": "desktop_app",
-            "created_at": datetime.now().isoformat()
+            "created_at": datetime.now()
         }
         
-        # Insert record
-        result = attendance_collection.insert_one(attendance_record)
+        # Insert into the main logs collection
+        result = logs_collection.insert_one(log_record)
         
         return {
             "success": True,
-            "message": f"Attendance recorded for {attendance.employee_id}",
-            "data": {
-                "id": str(result.inserted_id),
-                "employee_id": attendance.employee_id,
-                "timestamp": timestamp.isoformat(),
-                "event_type": attendance.event_type
-            }
+            "message": f"Manual {attendance.event_type} recorded for {attendance.employee_id}",
+            "id": str(result.inserted_id)
         }
     except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/confirm-absence")
+def confirm_absence(justification: AbsenceJustification):
+    """
+    Store a justification for an employee's absence.
+    """
+    try:
+        db = get_db()
+        justifications_collection = db["attendance_justifications"]
+        
+        record = {
+            "employee_id": int(justification.employee_id),
+            "date": justification.date,
+            "reason": justification.reason,
+            "notes": justification.notes,
+            "created_at": datetime.now()
         }
+        
+        # Use update_one with upsert: one justification per employee per day
+        justifications_collection.update_one(
+            {"employee_id": int(justification.employee_id), "date": justification.date},
+            {"$set": record},
+            upsert=True
+        )
+        
+        return {
+            "success": True,
+            "message": f"Absence confirmed for employee {justification.employee_id} on {justification.date}"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
