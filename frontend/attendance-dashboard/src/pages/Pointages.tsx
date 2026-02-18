@@ -133,6 +133,14 @@ function DailyAlerts({
                 </Badge>
               )}
 
+              {emp.anomalies.includes("early_departure") && (
+                <Badge colorScheme="pink">{t("Early departure")}</Badge>
+              )}
+              {emp.anomalies.includes("incomplete_day") && (
+                <Badge colorScheme="teal">{t("Incomplete day")}</Badge>
+              )}
+
+
               {emp.extra_hours && emp.extra_hours > 0 && (
                 <Badge colorScheme="blue">
                   {t("Extra hours")} +{emp.extra_hours}h
@@ -141,23 +149,25 @@ function DailyAlerts({
             </HStack>
 
             <HStack spacing={2} wrap="wrap">
-              <Button
-                size="sm"
-                colorScheme="blue"
-                onClick={() => onManualPunch({ id: emp.employee_id, name: emp.employee_name })}
-              >
-                {t("Manual punch")}
-              </Button>
-
-              <Button
-                size="sm"
-                colorScheme="red"
-                variant="outline"
-                onClick={() => onMarkAbsent({ id: emp.employee_id, name: emp.employee_name })}
-              >
-                {t("Mark absent")}
-              </Button>
-
+              {!emp.check_in_time && (
+                <Button
+                  size="sm"
+                  colorScheme="blue"
+                  onClick={() => onManualPunch({ id: emp.employee_id, name: emp.employee_name })}
+                >
+                  {t("Manual punch")}
+                </Button>
+              )}
+              {!emp.check_in_time && (
+                <Button
+                  size="sm"
+                  colorScheme="red"
+                  variant="outline"
+                  onClick={() => onMarkAbsent({ id: emp.employee_id, name: emp.employee_name })}
+                >
+                  {t("Mark absent")}
+                </Button>
+              )}
               {emp.anomalies.includes("retard") && (
                 <Button
                   size="sm"

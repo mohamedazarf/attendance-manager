@@ -129,6 +129,11 @@ export default function EmployeesPage() {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [enrollLoading, setEnrollLoading] = useState<string | null>(null);
 
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [editLoading, setEditLoading] = useState(false);
+
+
   const toast = useToast();
 
   const handleEnrollFingerprint = async (emp: Employee) => {
@@ -304,6 +309,57 @@ export default function EmployeesPage() {
       setDeleteLoading(false);
     }
   };
+
+
+  const handleUpdateEmployee = async () => {
+    if (!editingEmployee) return;
+
+    setEditLoading(true);
+
+    try {
+      const res = await axios.put(
+        `${BASE_URL}/device/users/${editingEmployee.employee_code}`,
+        null,
+        {
+          params: {
+            name: editingEmployee.name,
+            privilege: editingEmployee.privilege,
+          },
+        }
+      );
+
+      toast({
+        title: "Employee Updated",
+        description: res.data.message || "Employee updated successfully.",
+        status: "success",
+        duration: 4000,
+        isClosable: true,
+      });
+
+      // Update frontend list immediately (optimistic update)
+      setEmployees((prev) =>
+        prev.map((emp) =>
+          emp.employee_code === editingEmployee.employee_code
+            ? editingEmployee
+            : emp
+        )
+      );
+
+      setIsEditOpen(false);
+      setEditingEmployee(null);
+    } catch (err: any) {
+      toast({
+        title: "Update failed",
+        description: err.response?.data?.message || err.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
 
 
   useEffect(() => {
@@ -514,6 +570,18 @@ export default function EmployeesPage() {
                   >
                     Enroll FP
                   </Button>
+                  <Button
+                    size="sm"
+                    colorScheme="blue"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingEmployee({ ...emp });
+                      setIsEditOpen(true);
+                    }}
+                  >
+                    Edit
+                  </Button>
+
                 </Flex>
               </Box>
             ))}
@@ -707,6 +775,84 @@ export default function EmployeesPage() {
             </DrawerBody>
           </DrawerContent>
         </Drawer>
+        {/* -------------------- Edit Employee Drawer -------------------- */}
+        <Drawer
+          isOpen={isEditOpen}
+          placement="right"
+          onClose={() => setIsEditOpen(false)}
+        >
+          <DrawerOverlay />
+          <DrawerContent>
+            <DrawerCloseButton />
+            <DrawerHeader>Edit Employee</DrawerHeader>
+
+            <DrawerBody>
+              <Flex direction="column" gap={4}>
+
+                <Input
+                  placeholder="Employee Code"
+                  value={editingEmployee?.employee_code}
+                  onChange={(e) =>
+                    setEditingEmployee({ ...editingEmployee, employee_code: e.target.value })
+                  }
+                />
+
+                <Input
+                  placeholder="Name"
+                  value={editingEmployee?.name}
+                  onChange={(e) =>
+                    setEditingEmployee({ ...editingEmployee, name: e.target.value })
+                  }
+                />
+
+                <Select
+                  value={editingEmployee?.privilege}
+                  onChange={(e) =>
+                    setEditingEmployee({ ...editingEmployee, privilege: Number(e.target.value) })
+                  }
+                >
+                  <option value={0}>User</option>
+                  <option value={1}>Admin</option>
+                </Select>
+
+                <Input
+                  placeholder="Group ID"
+                  value={editingEmployee?.group_id}
+                  onChange={(e) =>
+                    setEditingEmployee({ ...editingEmployee, group_id: e.target.value })
+                  }
+                />
+
+                <Input
+                  placeholder="Card Number"
+                  type="number"
+                  value={editingEmployee?.card}
+                  onChange={(e) =>
+                    setEditingEmployee({ ...editingEmployee, card: e.target.value })
+                  }
+                />
+
+                <Input
+                  placeholder="Password"
+                  type="password"
+                  value={editingEmployee?.password}
+                  onChange={(e) =>
+                    setEditingEmployee({ ...editingEmployee, password: e.target.value })
+                  }
+                />
+
+                <Button
+                  colorScheme="blue"
+                  onClick={handleUpdateEmployee}
+                  isLoading={editLoading}
+                >
+                  Update Employee
+                </Button>
+
+              </Flex>
+            </DrawerBody>
+          </DrawerContent>
+        </Drawer>
 
       </Box>
 
@@ -767,9 +913,6 @@ export default function EmployeesPage() {
           </ModalFooter>
         </ModalContent>
       </Modal>
-
     </Box>
-
   );
-
 }
