@@ -72,3 +72,23 @@ def enroll_user(uid: int):
 @router.post("/users/{uid}/set-password")
 def set_password(uid: int, password: str):
     return zk_service.set_user_password(uid, password)
+
+@router.put("/users/{uid}")
+def update_user(uid: int, name: Optional[str] = None, privilege: Optional[int] = None):
+    # 1️⃣ Update sur le device et en DB (via update_user)
+    update_result = zk_service.update_user(uid, name, privilege)
+
+    # 2️⃣ Vérifie si l’update a réussi
+    if update_result.get("status") != "success":
+        return update_result  # retourne l’erreur directement
+
+    # 3️⃣ Resynchronisation DB ↔ Device
+    sync_result = sync_service.sync_employees()
+
+    # 4️⃣ Retour combiné pour le front
+    return {
+        "update": update_result,
+        "sync": sync_result
+    }
+
+    

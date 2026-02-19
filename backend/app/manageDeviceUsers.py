@@ -153,6 +153,27 @@ def get_logs():
     conn.disconnect()
     return logs
 
+# def check_password(uid):
+#     conn = connect()
+#     users = conn.get_users()
+#     user = next((u for u in users if u.uid == uid), None)
+#     conn.disconnect()
+#     return user.password
+
+def check_password(uid, entered_password):
+    conn = connect()
+    users = conn.get_users()
+    user = next((u for u in users if u.uid == uid), None)
+
+    if user is None:
+        conn.disconnect()
+        return False
+
+    result = user.password == entered_password
+    conn.disconnect()
+    return result
+
+
 
 if __name__ == "__main__":
     print("🔧 ZKTeco Device User Management")
@@ -166,7 +187,8 @@ if __name__ == "__main__":
         print("5.  Check fingerprints")
         print("6. ✏️ Update employee name")
         print("7. 📜 Get logs")
-        print("8. 🚪 Exit")
+        print("8. 📝 Check password")
+        print("9. 🚪 Exit")
         choice = input("\n👉 Choice: ").strip()
         
         if choice == "1":
@@ -209,7 +231,16 @@ if __name__ == "__main__":
             logs = get_logs()
             print("\n🔍 Verifying... getting logs:")
             print(logs)
-        
+
         elif choice == "8":
+            uid = int(input("   Enter UID to check password for: "))
+            entered_password = input("   Enter the password to verify: ")
+            is_correct = check_password(uid, entered_password)
+            if is_correct:
+                print(f"\n✅ Password is correct for UID {uid}")
+            else:
+                print(f"\n❌ Password is incorrect for UID {uid}")
+
+        elif choice == "9":
             print("👋 Bye!")
             break

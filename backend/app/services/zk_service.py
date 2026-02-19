@@ -55,16 +55,6 @@ class ZKService:
             if conn:
                 conn.disconnect()
 
-
-    # def delete_user(self, uid):
-    #     try:
-    #         conn = self._connect()
-    #         conn.delete_user(uid=uid)
-    #         conn.disconnect()
-    #         return {"message": "User deleted"}
-    #     except Exception as e:
-    #         return {"status": "error", "message": f"Failed to delete user {uid}: {str(e)}"}
-
     def enroll_fingerprint(self, uid):
         try:
             conn = self._connect()
@@ -162,16 +152,17 @@ class ZKService:
                     }
 
     def set_user_password(self, uid, password):
+        conn = None
         try:
             conn = self._connect()
-            user = next((u for u in conn.get_users() if u.user_id == uid), None)
+            # user_id is what the device uses for the employee code
+            user = next((u for u in conn.get_users() if u.user_id == str(uid)), None)
 
             if not user:
-                conn.disconnect()
-            return {
-                "status": "error",
-                "message": "User not found"
-            }
+                return {
+                    "status": "error",
+                    "message": "User not found"
+                }
 
             conn.set_user(
                 uid=user.uid,
@@ -180,8 +171,6 @@ class ZKService:
                 password=password,
                 user_id=user.user_id
             )
-
-            conn.disconnect()
 
             return {
                 "status": "success",
@@ -193,16 +182,75 @@ class ZKService:
                 "status": "error",
                 "message": str(e)
             }
+        finally:
+            if conn:
+                conn.disconnect()
 
+    @staticmethod
     def get_device_user_map(conn):
         """
         Returns a mapping of employee_code/UserID -> device UID
         Example: { '2': 1, '3': 2, ... }
         """
-        users = conn.get_users()  # returns list of dicts: [{'uid': 1, 'user_id': '2', 'name': 'amine am', ...}, ...]
+        users = conn.get_users()  
         mapping = {}
         for u in users:
-            mapping[u['user_id']] = u['uid']  # user_id = your employee_code
+            mapping[u.user_id] = u.uid  # u is typically an object, not a dict
         return mapping
 
     
+    def update_user(self, employee_code: str, name: str = None, privilege: int = None):
+        conn = None
+        try:
+            conn = self._connect()
+            users = conn.get_users()
+
+            # Find device user
+            user = next((u for u in users if u.user_id == str(employee_code)), None)
+
+            if not user:
+                return {
+                    "status": "error",
+                    "message": f"Employee {employee_code} not found on device"
+                }
+
+            # Keep old values if not provided
+            updated_name = name if name is not None else user.name
+            updated_privilege = privilege if privilege is not None else user.privilege
+            
+
+            # Update on device (overwrite)
+            conn.set_user(
+                uid=user.uid,
+                name=updated_name,
+                privilege=updated_privilege,
+                password=user.password if hasattr(user, "password") else "",
+                user_id=user.user_id
+            )
+            employee=Employee(
+                employee_code=str(employee_code),
+                name=updated_name,
+                privilege=updated_privilege,
+                card=user.card,
+                is_active=user.is_active
+            )
+
+            # Update in DB
+            EmployeeRepository().update_employee(
+                employee=employee
+            )
+
+            return {
+                "status": "success",
+                "message": f"Employee {employee_code} updated successfully"
+            }
+
+        except Exception as e:
+            return {
+                "status": "error",
+                "message": str(e)
+            }
+
+        finally:
+            if conn:
+                conn.disconnect()

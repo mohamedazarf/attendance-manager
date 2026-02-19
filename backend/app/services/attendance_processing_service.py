@@ -72,8 +72,11 @@ class AttendanceProcessingService:
         # Set check-in and check-out times
         if events:
             processed.check_in_time = to_datetime(events[0].timestamp)
-            processed.check_out_time = to_datetime(events[-1].timestamp) if len(events) > 1 else None
-        
+            # processed.check_out_time = to_datetime(events[-1].timestamp) if len(events) > 1 else None
+            if len(events) > 1 and events[-1].event_type == "out":
+                processed.check_out_time = to_datetime(events[-1].timestamp)
+            else:
+                processed.check_out_time = None
         # Calculate hours and detect anomalies
         self.calculate_hours(processed)
         self._detect_anomalies(processed)
