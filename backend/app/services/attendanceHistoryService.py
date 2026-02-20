@@ -41,6 +41,7 @@ class AttendanceHistoryService:
 
         history = []
         total_period_hours = 0
+        total_weekend_hours = 0
         for day, day_logs in sorted(logs_by_date.items()):
             day_logs.sort(key=lambda x: x["timestamp"])
 
@@ -64,6 +65,9 @@ class AttendanceHistoryService:
             self.processor._detect_anomalies(processed)
             if processed.total_hours_worked:
                 total_period_hours += processed.total_hours_worked
+                # Weekday() returns 5 for Saturday and 6 for Sunday
+                if day.weekday() >= 5:
+                    total_weekend_hours += processed.total_hours_worked
 
             history.append({
                 "date": day.isoformat(),
@@ -83,5 +87,6 @@ class AttendanceHistoryService:
             "date_from": date_from,
             "date_to": date_to,
             "history": history,
-            "total_period_hours": total_period_hours
+            "total_period_hours": total_period_hours,
+            "total_weekend_hours": total_weekend_hours
         }

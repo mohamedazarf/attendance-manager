@@ -98,6 +98,7 @@ export default function EmployeesPage() {
   const [employeeName, setEmployeeName] = useState("");
   const [history, setHistory] = useState<EmployeeHistoryItem[]>([]);
   const [totalPeriodHours, setTotalPeriodHours] = useState(0);
+  const [totalWeekendHours, setTotalWeekendHours] = useState(0);
   const [historyLoading, setHistoryLoading] = useState(false);
 
   const [dateFrom, setDateFrom] = useState("2026-01-01");
@@ -407,6 +408,7 @@ export default function EmployeesPage() {
         setEmployeeName(res.data.employee_name || emp.name);
         setHistory(res.data.history);
         setTotalPeriodHours(res.data.total_period_hours);
+        setTotalWeekendHours(res.data.total_weekend_hours || 0);
         setDrawerFilterState("all");
         setDrawerSelectedAnomalies([]);
       })
@@ -685,11 +687,19 @@ export default function EmployeesPage() {
                   </Table>
 
                   <Box mt={4} p={3} bg="gray.100" borderRadius="md">
-                    <Flex justify="space-between" align="center">
-                      <Text fontWeight="bold">Total Worked Hours in That Period:</Text>
-                      <Text fontWeight="bold" color="blue.600">
-                        {totalPeriodHours.toFixed(2)} h
-                      </Text>
+                    <Flex direction="column" gap={2}>
+                      <Flex justify="space-between" align="center">
+                        <Text fontWeight="bold">Total Worked Hours in That Period:</Text>
+                        <Text fontWeight="bold" color="blue.600">
+                          {totalPeriodHours.toFixed(2)} h
+                        </Text>
+                      </Flex>
+                      <Flex justify="space-between" align="center">
+                        <Text fontWeight="bold">Total Weekend Hours:</Text>
+                        <Text fontWeight="bold" color="orange.600">
+                          {totalWeekendHours.toFixed(2)} h
+                        </Text>
+                      </Flex>
                     </Flex>
                   </Box>
                 </Box>
