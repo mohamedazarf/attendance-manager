@@ -39,6 +39,14 @@ def sync_data():
 def sync_data():
     return sync_service.sync_all()
 
+@router.post("/sync/employees")
+def sync_employees():
+    return sync_service.sync_employees()
+
+@router.post("/sync/attendances")
+def sync_attendances():
+    return sync_service.sync_attendances()
+
 
 from pydantic import BaseModel
 from typing import Optional
@@ -49,17 +57,24 @@ class CreateEnrollRequest(BaseModel):
     privilege: int = 0
     password: Optional[str] = None
 
-@router.post("/users/create-and-enroll")
-def create_and_enroll(request: CreateEnrollRequest):
-    return zk_service.create_and_enroll_user(
-         uid=request.uid,
+# @router.post("/users/create-and-enroll")
+# def create_and_enroll(request: CreateEnrollRequest):
+#     return zk_service.create_and_enroll_user(
+#          uid=request.uid,
+#         name=request.name,
+#         privilege=request.privilege,
+#         password=request.password or "",
+#         user_id=str(request.uid)
+#     )
+@router.post("/users/create")
+def create_user(request: CreateEnrollRequest):
+    return zk_service.create_user(
+        uid=request.uid,
         name=request.name,
         privilege=request.privilege,
         password=request.password or "",
         user_id=str(request.uid)
     )
-# def create_and_enroll(uid: int, name: str, privilege: int = 0):
-#     return zk_service.create_and_enroll_user(uid, name, privilege)
 
 @router.get("/users/{uid}/fingerprint-status")
 def fingerprint_status(uid: int):

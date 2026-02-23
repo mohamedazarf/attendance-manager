@@ -75,27 +75,66 @@ class ZKService:
         conn.disconnect()
         return attendances
 
-    def create_and_enroll_user(self, uid, name, privilege=0,password:str="",user_id:str=None):
+    # def create_and_enroll_user(self, uid, name, privilege=0,password:str="",user_id:str=None):
+    #     conn = self._connect()
+    #     if user_id is None:
+    #         user_id = str(uid)
+
+    #     try:
+    #         print("Creating user on device...")
+    #         # Step 1: Create user
+    #         conn.set_user(
+    #             uid=uid,
+    #             name=name,
+    #             privilege=privilege,
+    #             password='',
+    #             user_id=user_id
+    #         )
+    #         print("User created successfully.")
+
+    #         print("Sending enroll command...")
+    #         # Step 2: Trigger enrollment mode
+    #         conn.enroll_user(uid=uid)
+    #         print("Enroll command sent.")
+    #         employee = Employee(
+    #             employee_code=str(uid),
+    #             name=name,
+    #             privilege=privilege,
+    #             card=None,
+    #             is_active=True
+    #         )
+    #         EmployeeRepository().insert_employee(employee)
+
+    #         return {
+    #             "status": "enroll_started",
+    #             "message": f"User {name} created. Please enroll fingerprint on device now."
+    #         }
+    #     except Exception as e:
+    #         print("ERROR during enrollment:", str(e))
+    #         raise e
+
+    #     finally:
+    #         conn.disconnect()
+
+    def create_user(self, uid, name, privilege=0, password: str = "", user_id: str = None):
         conn = self._connect()
+
         if user_id is None:
             user_id = str(uid)
 
         try:
             print("Creating user on device...")
-            # Step 1: Create user
+
             conn.set_user(
                 uid=uid,
                 name=name,
                 privilege=privilege,
-                password='',
+                password=password or "",
                 user_id=user_id
             )
+
             print("User created successfully.")
 
-            print("Sending enroll command...")
-            # Step 2: Trigger enrollment mode
-            conn.enroll_user(uid=uid)
-            print("Enroll command sent.")
             employee = Employee(
                 employee_code=str(uid),
                 name=name,
@@ -103,18 +142,40 @@ class ZKService:
                 card=None,
                 is_active=True
             )
+
             EmployeeRepository().insert_employee(employee)
 
             return {
-                "status": "enroll_started",
-                "message": f"User {name} created. Please enroll fingerprint on device now."
+                "status": "success",
+                "message": f"User {name} created successfully."
             }
+
         except Exception as e:
-            print("ERROR during enrollment:", str(e))
+            print("ERROR creating user:", str(e))
             raise e
 
         finally:
             conn.disconnect()
+
+        def enroll_fingerprint(self, uid: int):
+            conn = self._connect()
+
+            try:
+                print("Triggering enrollment mode...")
+
+                conn.enroll_user(uid=uid)
+
+                return {
+                    "status": "enroll_started",
+                    "message": f"Please enroll fingerprint for user {uid} on device."
+                }
+
+            except Exception as e:
+                print("ERROR during enrollment:", str(e))
+                raise e
+
+            finally:
+                conn.disconnect()
 
     def check_fingerprints(self, uid):
                 try:
