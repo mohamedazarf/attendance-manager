@@ -115,6 +115,7 @@ export default function EmployeesToday() {
   const [employeeName, setEmployeeName] = useState<string>("");
   const [history, setHistory] = useState<EmployeeHistory[]>([]);
   const [totalPeriodHours, setTotalPeriodHours] = useState<number>(0);
+  const [totalWeekendHours, setTotalWeekendHours] = useState<number>(0);
   const [historyLoading, setHistoryLoading] = useState(false);
 
   // Dates filtre pour l’historique
@@ -167,6 +168,7 @@ export default function EmployeesToday() {
         setEmployeeName(data.employee_name);
         setHistory(data.history);
         setTotalPeriodHours(data.total_period_hours);
+        setTotalWeekendHours(data.total_weekend_hours);
         console.log("Employee history:", data);
         setHistoryLoading(false);
         setDrawerFilterState("all");
@@ -377,6 +379,14 @@ export default function EmployeesToday() {
                         </Text>
                         <Text fontWeight="bold" color="blue.600">
                           {totalPeriodHours.toFixed(2)} h
+                        </Text>
+                      </Flex>
+                      <Flex justify="space-between" align="center">
+                        <Text fontWeight="bold">
+                          Total Extra Hours in That Period..:
+                        </Text>
+                        <Text fontWeight="bold" color="blue.600">
+                          {totalWeekendHours.toFixed(2)} h
                         </Text>
                       </Flex>
                     </Box>

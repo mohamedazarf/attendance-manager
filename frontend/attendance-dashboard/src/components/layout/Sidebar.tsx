@@ -96,6 +96,7 @@ import { Box, VStack, Text, Image, HStack, Button } from "@chakra-ui/react";
 import logo from "../../assets/logo.png";
 import { useNavigate } from "react-router-dom";
 import LanguageSwitcher from "./LanguageSwitcher";
+import { useAuth } from "../../context/AuthContext";
 
 interface SidebarProps {
   isSidebarOpen: boolean;
@@ -104,6 +105,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isSidebarOpen, toggleSidebar }: SidebarProps) {
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -140,12 +142,14 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }: SidebarProps) 
           Pointages
         </Text>
 
-        <Text
-          _hover={{ color: "#B98112", cursor: "pointer" }}
-          onClick={() => handleNavigate("/employees")}
-        >
-          Employés
-        </Text>
+        {isAdmin && (
+          <Text
+            _hover={{ color: "#B98112", cursor: "pointer" }}
+            onClick={() => handleNavigate("/employees")}
+          >
+            Employés
+          </Text>
+        )}
 
         {/* RAPPORTS MENU */}
         <Text
@@ -180,16 +184,15 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }: SidebarProps) 
           </Text>
         </VStack>
 
-      
-        <Text
-          _hover={{ color: "#B98112", cursor: "pointer" }}
-          onClick={() => handleNavigate("/inactive-employees")}
-        >
-          Employés inactifs
-        </Text>
+        {isAdmin && (
+          <Text
+            _hover={{ color: "#B98112", cursor: "pointer" }}
+            onClick={() => handleNavigate("/inactive-employees")}
+          >
+            Employés inactifs
+          </Text>
+        )}
       </VStack>
     </Box>
   );
 }
-
-
