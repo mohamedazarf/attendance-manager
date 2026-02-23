@@ -8,7 +8,8 @@ from app.api.v1.fingerprint import router as fingerprint_router
 from app.api.v1.users import router as users_router
 from app.api.v1.attendance_manual import router as attendance_manual_router
 from app.api.v1.device import router as device_router
-from app.api.v1.attendance_manual import router as attendance_manual_router
+from app.api.v1.auth import router as auth_router
+from app.api.v1.roles import router as roles_router
 app = FastAPI()
 
 # Allow your frontend origin
@@ -41,3 +42,6 @@ app.include_router(employee_router, prefix="/api/v1/employee")
 app.include_router(testConnexion, prefix="/api/v1/zk_test")
 app.include_router(device_router, prefix="/api/v1/device")
 app.include_router(attendance_manual_router, prefix="/api/v1/attendance")
+app.include_router(auth_router, prefix="/api/v1/auth")
+app.include_router(roles_router, prefix="/api/v1/roles")
+

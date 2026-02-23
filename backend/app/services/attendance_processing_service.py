@@ -230,8 +230,8 @@ class AttendanceProcessingService:
             hours_difference=processed.total_hours_worked - processed.expected_hours,
             anomalies=processed.anomalies,
             status=processed.status,
-             is_late=processed.is_late,
-    late_minutes=processed.late_minutes if processed.is_late else 0
+            is_late=processed.is_late,
+            late_minutes=processed.late_minutes if processed.is_late else 0
         )
         
         # Add employee info if available
