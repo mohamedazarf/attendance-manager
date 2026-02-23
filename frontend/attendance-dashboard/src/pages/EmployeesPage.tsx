@@ -68,6 +68,7 @@ interface Employee {
   group_id?: string;
   card?: number;
   is_active?: boolean;
+  fingerprint_count?: number;
 }
 
 type EmployeeHistoryItem = {
@@ -148,6 +149,54 @@ export default function EmployeesPage() {
         duration: 5000,
         isClosable: true,
       });
+
+      // 🔹 Polling avec timeout
+      const timeout = 30000; // 30 secondes max pour déposer le doigt
+      const interval = 2000; // vérification toutes les 2 secondes
+      const startTime = Date.now();
+
+      const checkFingerprint = async () => {
+        if (Date.now() - startTime > timeout) {
+          toast({
+            title: "Enrollment Timed Out",
+            description: "You did not place your finger on the device in time.",
+            status: "warning",
+            duration: 5000,
+            isClosable: true,
+          });
+          setEnrollLoading(null);
+          return;
+        }
+
+        try {
+          const res = await axios.get(`${BASE_URL}/users/${emp.employee_code}/fingerprint-status`);
+          if (res.data.status === "enrolled" || res.data.fingerprint_count > 0) {
+            toast({
+              title: "Fingerprint Enrolled",
+              description: "Fingerprint successfully enrolled on device.",
+              status: "success",
+              duration: 30000,
+              isClosable: true,
+            });
+            setEmployees((prev) =>
+              prev.map((e) =>
+                e.employee_code === emp.employee_code
+                  ? { ...e, fingerprint_count: 1 }  // tu peux mettre 1 ou 1+ si tu comptes plusieurs doigts
+                  : e
+              )
+            );
+            setEnrollLoading(null);
+            return;
+          }
+        } catch (err) {
+          console.error("Polling error:", err);
+        }
+
+        setTimeout(checkFingerprint, interval);
+      };
+
+      setTimeout(checkFingerprint, interval);
+
     } catch (err: any) {
       toast({
         title: "Enrollment Failed",
@@ -236,45 +285,95 @@ export default function EmployeesPage() {
     setTimeout(check, interval);
   };
 
+  // const handleAddEmployee = async () => {
+  //   setAddLoading(true);
+  //   try {
+  //     const res = await axios.post(`${BASE_URL}/device/users/create-and-enroll`, {
+  //       uid: Number(newEmployee.employee_code),
+  //       name: newEmployee.name,
+  //       privilege: newEmployee.privilege
+  //     });
+
+  //     if (res.data.message) {
+  //       toast({
+  //         title: "User Created",
+  //         description: res.data.message, // "User created. Please enroll fingerprint..."
+  //         status: "info",
+  //         duration: 6000,
+  //         isClosable: true,
+  //       });
+
+  //       setIsAddOpen(false);
+
+  //       // Start polling for fingerprint
+  //       pollFingerprintStatus(Number(newEmployee.employee_code));
+
+  //       // Refresh employees list
+  //       const empRes = await axios.get(`${BASE_URL}/employee/`);
+  //       setEmployees(empRes.data);
+
+  //       // Reset form
+  //       setNewEmployee({
+  //         employee_code: "",
+  //         name: "",
+  //         privilege: 0,
+  //         group_id: "",
+  //         card: "",
+  //         password: ""
+  //       });
+  //     }
+  //   } catch (err: any) {
+  //     console.error(err);
+  //     toast({
+  //       title: "Error creating employee",
+  //       description: err.response?.data?.message || err.message,
+  //       status: "error",
+  //       duration: 5000,
+  //       isClosable: true,
+  //     });
+  //   } finally {
+  //     setAddLoading(false);
+  //   }
+  // };
+
   const handleAddEmployee = async () => {
     setAddLoading(true);
+
     try {
-      const res = await axios.post(`${BASE_URL}/device/users/create-and-enroll`, {
+      const res = await axios.post(`${BASE_URL}/device/users/create`, {
         uid: Number(newEmployee.employee_code),
         name: newEmployee.name,
-        privilege: newEmployee.privilege
+        privilege: newEmployee.privilege,
+        password: newEmployee.password
+      });
+      await axios.post(`${BASE_URL}/device/sync`);
+
+
+      toast({
+        title: "User Created",
+        description: "User created successfully. You can now enroll fingerprint.",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
       });
 
-      if (res.data.message) {
-        toast({
-          title: "User Created",
-          description: res.data.message, // "User created. Please enroll fingerprint..."
-          status: "info",
-          duration: 6000,
-          isClosable: true,
-        });
+      setIsAddOpen(false);
 
-        setIsAddOpen(false);
+      // Refresh employees list
+      const empRes = await axios.get(`${BASE_URL}/employee/`);
+      setEmployees(empRes.data);
 
-        // Start polling for fingerprint
-        pollFingerprintStatus(Number(newEmployee.employee_code));
+      // Reset form
+      setNewEmployee({
+        employee_code: "",
+        name: "",
+        privilege: 0,
+        group_id: "",
+        card: "",
+        password: ""
+      });
 
-        // Refresh employees list
-        const empRes = await axios.get(`${BASE_URL}/employee/`);
-        setEmployees(empRes.data);
-
-        // Reset form
-        setNewEmployee({
-          employee_code: "",
-          name: "",
-          privilege: 0,
-          group_id: "",
-          card: "",
-          password: ""
-        });
-      }
     } catch (err: any) {
-      console.error(err);
       toast({
         title: "Error creating employee",
         description: err.response?.data?.message || err.message,
@@ -345,6 +444,7 @@ export default function EmployeesPage() {
             : emp
         )
       );
+      await axios.post(`${BASE_URL}/device/sync/employees`);
 
       setIsEditOpen(false);
       setEditingEmployee(null);
@@ -570,7 +670,7 @@ export default function EmployeesPage() {
                       handleEnrollFingerprint(emp);
                     }}
                   >
-                    Enroll FP
+                    {emp.fingerprint_count > 0 ? "enroll Fingerprint" : "add another fingerprint"}
                   </Button>
                   <Button
                     size="sm"

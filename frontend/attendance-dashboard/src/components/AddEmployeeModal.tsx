@@ -23,7 +23,7 @@ export default function AddEmployeeModal({ isOpen, onClose }: { isOpen: boolean;
 
     const toast = useToast();
 
-    const handleCreateAndEnroll = async () => {
+    const handleCreateUser = async () => {
         if (!uid || !name) {
             toast({
                 title: "Missing fields",
@@ -38,7 +38,7 @@ export default function AddEmployeeModal({ isOpen, onClose }: { isOpen: boolean;
         setLoading(true);
 
         try {
-            const res = await axios.post("http://localhost:8000/users/create-and-enroll", {
+            const res = await axios.post("http://localhost:8000/users/create", {
                 uid: Number(uid),
                 name,
                 privilege,
@@ -110,7 +110,7 @@ export default function AddEmployeeModal({ isOpen, onClose }: { isOpen: boolean;
 
                 <ModalFooter>
                     <Button variant="ghost" mr={3} onClick={onClose}>Cancel</Button>
-                    <Button colorScheme="blue" onClick={handleCreateAndEnroll} isLoading={loading}>
+                    <Button colorScheme="blue" onClick={handleCreateUser} isLoading={loading}>
                         Create & Enroll
                     </Button>
                 </ModalFooter>
