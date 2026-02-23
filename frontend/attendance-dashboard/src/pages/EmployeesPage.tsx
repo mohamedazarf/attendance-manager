@@ -285,56 +285,6 @@ export default function EmployeesPage() {
     setTimeout(check, interval);
   };
 
-  // const handleAddEmployee = async () => {
-  //   setAddLoading(true);
-  //   try {
-  //     const res = await axios.post(`${BASE_URL}/device/users/create-and-enroll`, {
-  //       uid: Number(newEmployee.employee_code),
-  //       name: newEmployee.name,
-  //       privilege: newEmployee.privilege
-  //     });
-
-  //     if (res.data.message) {
-  //       toast({
-  //         title: "User Created",
-  //         description: res.data.message, // "User created. Please enroll fingerprint..."
-  //         status: "info",
-  //         duration: 6000,
-  //         isClosable: true,
-  //       });
-
-  //       setIsAddOpen(false);
-
-  //       // Start polling for fingerprint
-  //       pollFingerprintStatus(Number(newEmployee.employee_code));
-
-  //       // Refresh employees list
-  //       const empRes = await axios.get(`${BASE_URL}/employee/`);
-  //       setEmployees(empRes.data);
-
-  //       // Reset form
-  //       setNewEmployee({
-  //         employee_code: "",
-  //         name: "",
-  //         privilege: 0,
-  //         group_id: "",
-  //         card: "",
-  //         password: ""
-  //       });
-  //     }
-  //   } catch (err: any) {
-  //     console.error(err);
-  //     toast({
-  //       title: "Error creating employee",
-  //       description: err.response?.data?.message || err.message,
-  //       status: "error",
-  //       duration: 5000,
-  //       isClosable: true,
-  //     });
-  //   } finally {
-  //     setAddLoading(false);
-  //   }
-  // };
 
   const handleAddEmployee = async () => {
     setAddLoading(true);
@@ -346,7 +296,8 @@ export default function EmployeesPage() {
         privilege: newEmployee.privilege,
         password: newEmployee.password
       });
-      await axios.post(`${BASE_URL}/device/sync`);
+      await axios.post(`${BASE_URL}/device/sync/employees`);
+
 
 
       toast({
@@ -395,7 +346,7 @@ export default function EmployeesPage() {
       await axios.delete(`${BASE_URL}/device/users/${deletingEmployee.employee_code}`);
 
       // 2️⃣ Resync device
-      await axios.post(`${BASE_URL}/device/sync`);
+      await axios.post(`${BASE_URL}/device/sync/employees`);
 
       // 3️⃣ Remove from frontend list
       setEmployees((prev) =>
@@ -470,10 +421,7 @@ export default function EmployeesPage() {
         setEmployees(res.data);
         console.log("=== USERS FROM DATABASE ===");
         console.log(res.data);
-        // 🔹 Appel Device users
-        const deviceRes = await axios.get(`${BASE_URL}/device/users`);
-        console.log("=== USERS FROM DEVICE ===");
-        console.log(deviceRes.data);
+
 
       } catch (err) {
         console.error("Error fetching employees:", err);
@@ -567,7 +515,16 @@ export default function EmployeesPage() {
           </Box>
           <Button
             colorScheme="blue"
-            onClick={() => setIsAddOpen(true)}
+            onClick={async () => {
+              try {
+                const res = await axios.get(`${BASE_URL}/employee/next-code`);
+                setNewEmployee(prev => ({ ...prev, employee_code: res.data.next_code }));
+                setIsAddOpen(true);
+              } catch (err) {
+                console.error("Error fetching next employee code", err);
+                setIsAddOpen(true);
+              }
+            }}
             mr={10}
           >
             + Add Employee
@@ -670,7 +627,7 @@ export default function EmployeesPage() {
                       handleEnrollFingerprint(emp);
                     }}
                   >
-                    {emp.fingerprint_count > 0 ? "enroll Fingerprint" : "add another fingerprint"}
+                    {emp.fingerprint_count > 0 ? "add another fingerprint" : "enroll fingerprint"}
                   </Button>
                   <Button
                     size="sm"
@@ -824,9 +781,8 @@ export default function EmployeesPage() {
                 <Input
                   placeholder="Employee Code"
                   value={newEmployee.employee_code}
-                  onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, employee_code: e.target.value })
-                  }
+                  isReadOnly
+                  bg="gray.100"
                 />
 
                 <Input
@@ -902,9 +858,8 @@ export default function EmployeesPage() {
                 <Input
                   placeholder="Employee Code"
                   value={editingEmployee?.employee_code}
-                  onChange={(e) =>
-                    setEditingEmployee({ ...editingEmployee, employee_code: e.target.value })
-                  }
+                  isReadOnly
+                  bg="gray.100"
                 />
 
                 <Input
