@@ -169,19 +169,19 @@ export default function EmployeesPage() {
         }
 
         try {
-          const res = await axios.get(`${BASE_URL}/users/${emp.employee_code}/fingerprint-status`);
+          const res = await axios.get(`${BASE_URL}/device/users/${emp.employee_code}/fingerprint-status`);
           if (res.data.status === "enrolled" || res.data.fingerprint_count > 0) {
             toast({
               title: "Fingerprint Enrolled",
-              description: "Fingerprint successfully enrolled on device.",
+              description: `Fingerprint successfully enrolled on device. Total: ${res.data.fingerprint_count}`,
               status: "success",
-              duration: 30000,
+              duration: 5000,
               isClosable: true,
             });
             setEmployees((prev) =>
               prev.map((e) =>
                 e.employee_code === emp.employee_code
-                  ? { ...e, fingerprint_count: 1 }  // tu peux mettre 1 ou 1+ si tu comptes plusieurs doigts
+                  ? { ...e, fingerprint_count: res.data.fingerprint_count }
                   : e
               )
             );
@@ -313,6 +313,12 @@ export default function EmployeesPage() {
       // Refresh employees list
       const empRes = await axios.get(`${BASE_URL}/employee/`);
       setEmployees(empRes.data);
+
+      // Trigger another fetch after a short delay to ensure everything is settled
+      setTimeout(async () => {
+        const refreshRes = await axios.get(`${BASE_URL}/employee/`);
+        setEmployees(refreshRes.data);
+      }, 2000);
 
       // Reset form
       setNewEmployee({

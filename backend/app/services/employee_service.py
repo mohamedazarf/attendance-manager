@@ -28,58 +28,75 @@ class EmployeeService:
         return employees
 
     def sync_employees(self):
-        # If collection is empty, fetch from ZK
-        if self.repo.count() == 0:
-            employees = self.fetch_from_zk()
-            self.repo.insert_many(employees)
+        """
+        Sync employees from device to DB.
+        """
+        employees = self.fetch_from_zk()
+        db_codes = self.repo.get_existing_codes()
+        
+        for emp in employees:
+            if emp.employee_code in db_codes:
+                self.repo.update_employee(emp)
+            else:
+                self.repo.insert_employee(emp)
 
-    # def get_all(self):
-    #     return self.repo.get_all_employees()
-
-
-    # def get_all(self):
-    #     employees = self.repo.get_all_employees()
-    #     device_users = self.zk.list_users()  # liste d'objets User
-
-    #     # Crée un mapping user_id -> device info
-    #     device_users_map = {str(u.user_id): u for u in device_users}  # converti en str pour correspondre à employee_code
-
-    #     for emp in employees:
-    #         # Ici on se base sur user_id (string) pour correspondre à employee_code
-    #         device_user = device_users_map.get(emp['employee_code'])
-    #         emp['fingerprint_count'] = getattr(device_user, 'fingerprint_count', 0) if device_user else 0
-
-    #     return employees
-    
-    # def get_all(self):
-    #     employees = self.repo.get_all_employees()
-    #     device_users = self.zk.list_users()   # objets User
-    #     templates = self.zk.list_templates()  # récupère toutes les empreintes
-
-    #     for emp in employees:
-    #         # trouve le user sur le device correspondant à employee_code
-    #         device_user = next((u for u in device_users if str(u.user_id) == emp['employee_code']), None)
-    #         if device_user:
-    #             # compte les templates pour cet UID
-    #             emp['fingerprint_count'] = len([t for t in templates if t.uid == device_user.uid])
-    #         else:
-    #             emp['fingerprint_count'] = 0
-
-    #     return employees
 
     def get_all(self):
         employees = self.repo.get_all_employees()
-        device_users = self.zk.list_users()  # objets User
+        device_users = self.zk.list_users()  # list of User objects
+        fingerprint_counts = self.zk.get_all_fingerprint_counts() # {uid: count} map
+
+        # Create a map of user_id (string) to uid (int) from device
+        id_to_uid_map = {str(u.user_id): u.uid for u in device_users}
 
         for emp in employees:
-            # trouve le device user correspondant à employee_code (user_id)
-            device_user = next((u for u in device_users if str(u.user_id) == emp['employee_code']), None)
-            if device_user:
-                # utilise check_fingerprints pour obtenir le nombre exact
-                result = self.zk.check_fingerprints(device_user.uid)
-                emp['fingerprint_count'] = result.get('fingerprint_count', 0)
+            employee_code = emp.get('employee_code')
+            uid = id_to_uid_map.get(employee_code)
+            
+            if uid is not None:
+                emp['fingerprint_count'] = fingerprint_counts.get(uid, 0)
             else:
                 emp['fingerprint_count'] = 0
 
         return employees
+
+    def get_next_employee_code(self) -> str:
+        """
+        Finds the smallest available positive integer not used as:
+        1. employee_code in the DB
+        2. UID on the device
+        3. UserID on the device
+        """
+        # 1. Get existing codes from DB
+        existing_db_codes = self.repo.get_existing_codes()
+        
+        # 2. Get all users from device to check UIDs and UserIDs
+        device_users = self.zk.list_users()
+        
+        # Collect all "taken" numeric values
+        taken_values = set()
+        
+        # From DB
+        for code in existing_db_codes:
+            try:
+                taken_values.add(int(code))
+            except ValueError:
+                continue
+                
+        # From Device
+        for user in device_users:
+            # Check UID
+            taken_values.add(user.uid)
+            # Check UserID (which is a string on device but represents our employee_code)
+            try:
+                taken_values.add(int(user.user_id))
+            except ValueError:
+                continue
+        
+        # Find the smallest gap starting from 1
+        next_code = 1
+        while next_code in taken_values:
+            next_code += 1
+                
+        return str(next_code)
 

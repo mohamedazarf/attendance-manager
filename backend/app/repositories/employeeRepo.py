@@ -51,3 +51,9 @@ class EmployeeRepository:
 
     def count(self):
         return self.collection.count_documents({})
+
+    def get_existing_codes(self) -> list[str]:
+        """
+        Fetch all existing employee codes from the database.
+        """
+        return [doc["employee_code"] for doc in self.collection.find({}, {"employee_code": 1, "_id": 0})]

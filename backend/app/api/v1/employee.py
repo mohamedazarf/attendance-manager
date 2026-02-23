@@ -24,6 +24,19 @@ def get_employees():
         )   
 
 
+@router.get("/next-code")
+def get_next_employee_code():
+    try:
+        repo = EmployeeRepository()
+        service = EmployeeService(repo)
+        return {"next_code": service.get_next_employee_code()}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error generating next employee code: {str(e)}"
+        )
+
+
 @router.get("/ingest-mock")
 @router.post("/ingest-mock")
 def ingest_employees_mock():

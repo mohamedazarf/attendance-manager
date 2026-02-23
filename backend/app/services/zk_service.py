@@ -75,46 +75,6 @@ class ZKService:
         conn.disconnect()
         return attendances
 
-    # def create_and_enroll_user(self, uid, name, privilege=0,password:str="",user_id:str=None):
-    #     conn = self._connect()
-    #     if user_id is None:
-    #         user_id = str(uid)
-
-    #     try:
-    #         print("Creating user on device...")
-    #         # Step 1: Create user
-    #         conn.set_user(
-    #             uid=uid,
-    #             name=name,
-    #             privilege=privilege,
-    #             password='',
-    #             user_id=user_id
-    #         )
-    #         print("User created successfully.")
-
-    #         print("Sending enroll command...")
-    #         # Step 2: Trigger enrollment mode
-    #         conn.enroll_user(uid=uid)
-    #         print("Enroll command sent.")
-    #         employee = Employee(
-    #             employee_code=str(uid),
-    #             name=name,
-    #             privilege=privilege,
-    #             card=None,
-    #             is_active=True
-    #         )
-    #         EmployeeRepository().insert_employee(employee)
-
-    #         return {
-    #             "status": "enroll_started",
-    #             "message": f"User {name} created. Please enroll fingerprint on device now."
-    #         }
-    #     except Exception as e:
-    #         print("ERROR during enrollment:", str(e))
-    #         raise e
-
-    #     finally:
-    #         conn.disconnect()
 
     def create_user(self, uid, name, privilege=0, password: str = "", user_id: str = None):
         conn = self._connect()
@@ -157,24 +117,38 @@ class ZKService:
         finally:
             conn.disconnect()
 
-        def enroll_fingerprint(self, uid: int):
+    def enroll_fingerprint(self, uid: int):
+        conn = self._connect()
+        try:
+            print("Triggering enrollment mode...")
+            conn.enroll_user(uid=uid)
+            return {
+                "status": "enroll_started",
+                "message": f"Please enroll fingerprint for user {uid} on device."
+            }
+        except Exception as e:
+            print("ERROR during enrollment:", str(e))
+            raise e
+        finally:
+            conn.disconnect()
+
+    def get_all_fingerprint_counts(self):
+        """
+        Fetches all fingerprint templates from the device and returns a map of {uid: count}
+        """
+        conn = None
+        try:
             conn = self._connect()
-
-            try:
-                print("Triggering enrollment mode...")
-
-                conn.enroll_user(uid=uid)
-
-                return {
-                    "status": "enroll_started",
-                    "message": f"Please enroll fingerprint for user {uid} on device."
-                }
-
-            except Exception as e:
-                print("ERROR during enrollment:", str(e))
-                raise e
-
-            finally:
+            templates = conn.get_templates()
+            counts = {}
+            for t in templates:
+                counts[t.uid] = counts.get(t.uid, 0) + 1
+            return counts
+        except Exception as e:
+            print(f"Error fetching templates: {e}")
+            return {}
+        finally:
+            if conn:
                 conn.disconnect()
 
     def check_fingerprints(self, uid):

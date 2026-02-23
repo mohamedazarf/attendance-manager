@@ -7,4 +7,5 @@ class Employee(BaseModel):
     group_id: str | None = None
     card: int | None = None
     password: str | None = None
+    fingerprint_count: int = 0
     is_active: bool = True
