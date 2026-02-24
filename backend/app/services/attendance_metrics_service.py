@@ -3,6 +3,7 @@ from typing import List, Dict, Optional
 from calendar import monthrange
 from app.repositories.attendanceRepo import AttendanceRepository
 from app import utils
+from app.services.attendance_processing_service import AttendanceProcessingService
 
 
 class AttendanceMetricsService:
@@ -149,7 +150,8 @@ class AttendanceMetricsService:
             "absence_rate": absence_rate,
             "attendance_count": len(logs),
             "weekend_days_worked": weekend_days,
-            "weekend_hours_worked": weekend_hours
+            "weekend_hours_worked": weekend_hours,
+            "monthly_hours_worked": self.get_monthly_hours_worked(employee_id, year, month)
         }
 
     def get_all_employees_metrics(
@@ -185,7 +187,33 @@ class AttendanceMetricsService:
         
         return metrics_list
 
-  
+    def get_monthly_hours_worked(self, employee_id: int, year: int, month: int) -> float:
+        """
+        Calculate total real hours worked by an employee during a given month.
+        Uses AttendanceProcessingService to pair in/out events and sum hours.
+        """
+        start_date = datetime(year, month, 1)
+        _, last_day = monthrange(year, month)
+        end_date = datetime(year, month, last_day, 23, 59, 59)
+
+        db = utils.get_db()
+        collection = db["attendance_logs"]
+        logs = list(collection.find({
+            "user_id": employee_id,
+            "timestamp": {"$gte": start_date, "$lte": end_date}
+        }))
+
+        if not logs:
+            return 0.0
+
+        processing_service = AttendanceProcessingService()
+        processed = processing_service.process_logs(logs)
+
+        total_hours = sum(
+            attendance.total_hours_worked
+            for attendance in processed.values()
+        )
+        return round(total_hours, 2)
 
     def get_employee_metrics_date_range(
         self,

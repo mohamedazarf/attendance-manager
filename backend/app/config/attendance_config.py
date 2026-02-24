@@ -1,5 +1,12 @@
 from datetime import time
 from typing import Dict, Any
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Chemin absolu vers le .env — robuste peu importe d'où on lance uvicorn
+_ENV_PATH = Path(__file__).resolve().parent.parent.parent / ".env"
+load_dotenv(dotenv_path=_ENV_PATH, override=True)
 
 class AttendanceConfig:
     """
@@ -12,14 +19,77 @@ class AttendanceConfig:
     END_TIME = time(17, 30)        # 5:30 PM
     
     # Pause/Break duration (in minutes)
-    PAUSE_DURATION = 60           # 1 hour lunch break
+    PAUSE_DURATION = 75           # 1 hour and 15 minutes lunch break
     
     # Tolerance for late arrival (in minutes)
     LATE_TOLERANCE = 0           # Allow 0 min grace period
     
     # Thresholds for anomalies
     EARLY_DEPARTURE_THRESHOLD = 30  # Leave more than 30 min early = anomaly
-    
+
+    # ── Overtime / Monthly Email Alert ─────────────────────────────────────
+    # Ces valeurs sont lues dynamiquement depuis os.environ à chaque appel
+    # pour éviter le problème de cache Python au moment de l'import.
+
+    @classmethod
+    def get_overtime_threshold(cls) -> float:
+        return float(os.getenv("OVERTIME_THRESHOLD_HOURS", "160.0"))
+
+    @classmethod
+    def get_admin_email(cls) -> str:
+        return os.getenv("ADMIN_EMAIL", "admin@example.com")
+
+    @classmethod
+    def get_smtp_host(cls) -> str:
+        return os.getenv("SMTP_HOST", "smtp.gmail.com")
+
+    @classmethod
+    def get_smtp_port(cls) -> int:
+        return int(os.getenv("SMTP_PORT", "587"))
+
+    @classmethod
+    def get_smtp_user(cls) -> str:
+        return os.getenv("SMTP_USER", "")
+
+    @classmethod
+    def get_smtp_password(cls) -> str:
+        return os.getenv("SMTP_PASSWORD", "")
+
+    @classmethod
+    def get_smtp_use_tls(cls) -> bool:
+        return os.getenv("SMTP_USE_TLS", "true").lower() == "true"
+
+    # Propriétés de classe pour la compatibilité avec le code existant
+    # (= appel dynamique à chaque accès)
+    @property
+    def OVERTIME_THRESHOLD_HOURS(self) -> float:
+        return self.get_overtime_threshold()
+
+    @property
+    def ADMIN_EMAIL(self) -> str:
+        return self.get_admin_email()
+
+    @property
+    def SMTP_HOST(self) -> str:
+        return self.get_smtp_host()
+
+    @property
+    def SMTP_PORT(self) -> int:
+        return self.get_smtp_port()
+
+    @property
+    def SMTP_USER(self) -> str:
+        return self.get_smtp_user()
+
+    @property
+    def SMTP_PASSWORD(self) -> str:
+        return self.get_smtp_password()
+
+    @property
+    def SMTP_USE_TLS(self) -> bool:
+        return self.get_smtp_use_tls()
+
+
     @staticmethod
     def get_expected_working_hours() -> float:
         """Calculate expected working hours per day"""
