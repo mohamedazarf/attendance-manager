@@ -21,6 +21,7 @@ interface ManualPunchModalProps {
     isOpen: boolean;
     onClose: () => void;
     employee: { id: number; name: string } | null;
+    date: string;
     onSuccess: () => void;
 }
 
@@ -28,26 +29,33 @@ export const ManualPunchModal: React.FC<ManualPunchModalProps> = ({
     isOpen,
     onClose,
     employee,
+    date,
     onSuccess,
 }) => {
     const { t } = useTranslation();
     const toast = useToast();
     const [loading, setLoading] = useState(false);
     const [eventType, setEventType] = useState("check_in");
-    const [time, setTime] = useState(new Date().toISOString().slice(0, 16));
+    const [time, setTime] = useState(() => {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, "0");
+        const minutes = String(now.getMinutes()).padStart(2, "0");
+        return `${hours}:${minutes}`;
+    });
     const [notes, setNotes] = useState("");
 
     const handleSubmit = async () => {
         if (!employee) return;
         setLoading(true);
         try {
+            const timestamp = `${date}T${time}:00`;
             const response = await fetch("http://127.0.0.1:8000/api/v1/attendance/manual", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     employee_id: employee.id.toString(),
                     event_type: eventType,
-                    timestamp: time,
+                    timestamp,
                     notes,
                 }),
             });
@@ -84,6 +92,10 @@ export const ManualPunchModal: React.FC<ManualPunchModalProps> = ({
                 <ModalCloseButton />
                 <ModalBody>
                     <FormControl mb={4}>
+                        <FormLabel>{t("Date")}</FormLabel>
+                        <Input type="date" value={date} isReadOnly />
+                    </FormControl>
+                    <FormControl mb={4}>
                         <FormLabel>{t("Event Type")}</FormLabel>
                         <Select value={eventType} onChange={(e) => setEventType(e.target.value)}>
                             <option value="check_in">{t("Check-In")}</option>
@@ -93,7 +105,7 @@ export const ManualPunchModal: React.FC<ManualPunchModalProps> = ({
                     <FormControl mb={4}>
                         <FormLabel>{t("Time")}</FormLabel>
                         <Input
-                            type="datetime-local"
+                            type="time"
                             value={time}
                             onChange={(e) => setTime(e.target.value)}
                         />

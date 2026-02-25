@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
@@ -34,7 +33,6 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
-
   Modal,
   ModalOverlay,
   ModalContent,
@@ -49,7 +47,6 @@ import axios from "axios";
 import Sidebar from "../components/layout/Sidebar";
 import Navbar from "../components/layout/Navbar";
 import AddEmployeeModal from "../components/AddEmployeeModal";
-
 
 const BASE_URL = "http://localhost:8000/api/v1";
 
@@ -96,7 +93,9 @@ export default function EmployeesPage() {
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
 
   // -------------------- History Drawer State --------------------
-  const [selectedEmployeeCode, setSelectedEmployeeCode] = useState<string | null>(null);
+  const [selectedEmployeeCode, setSelectedEmployeeCode] = useState<
+    string | null
+  >(null);
   const [employeeName, setEmployeeName] = useState("");
   const [history, setHistory] = useState<EmployeeHistoryItem[]>([]);
   const [totalPeriodHours, setTotalPeriodHours] = useState(0);
@@ -106,8 +105,12 @@ export default function EmployeesPage() {
   const [dateFrom, setDateFrom] = useState("2026-01-01");
   const [dateTo, setDateTo] = useState("2026-01-31");
 
-  const [drawerFilterState, setDrawerFilterState] = useState<"all" | "present" | "absent" | "late">("all");
-  const [drawerSelectedAnomalies, setDrawerSelectedAnomalies] = useState<string[]>([]);
+  const [drawerFilterState, setDrawerFilterState] = useState<
+    "all" | "present" | "absent" | "late"
+  >("all");
+  const [drawerSelectedAnomalies, setDrawerSelectedAnomalies] = useState<
+    string[]
+  >([]);
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [newEmployee, setNewEmployee] = useState({
@@ -116,18 +119,22 @@ export default function EmployeesPage() {
     privilege: 0,
     group_id: "",
     card: "",
-    password: ""
+    password: "",
   });
 
   const [addLoading, setAddLoading] = useState(false);
-  const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(null);
+  const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(
+    null,
+  );
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   // -------------------- Password & Enroll State --------------------
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
-  const [passwordEmployee, setPasswordEmployee] = useState<Employee | null>(null);
+  const [passwordEmployee, setPasswordEmployee] = useState<Employee | null>(
+    null,
+  );
   const [newPassword, setNewPassword] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [enrollLoading, setEnrollLoading] = useState<string | null>(null);
@@ -136,13 +143,14 @@ export default function EmployeesPage() {
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [editLoading, setEditLoading] = useState(false);
 
-
   const toast = useToast();
 
   const handleEnrollFingerprint = async (emp: Employee) => {
     setEnrollLoading(emp.employee_code);
     try {
-      const res = await axios.post(`${BASE_URL}/device/users/${emp.employee_code}/enroll`);
+      const res = await axios.post(
+        `${BASE_URL}/device/users/${emp.employee_code}/enroll`,
+      );
       toast({
         title: "Enrollment Started",
         description: res.data.message,
@@ -152,7 +160,7 @@ export default function EmployeesPage() {
       });
 
       // 🔹 Polling avec timeout
-      const timeout = 30000; // 30 secondes max pour déposer le doigt
+      const timeout = 10000; // 30 secondes max pour déposer le doigt
       const interval = 2000; // vérification toutes les 2 secondes
       const startTime = Date.now();
 
@@ -170,8 +178,13 @@ export default function EmployeesPage() {
         }
 
         try {
-          const res = await axios.get(`${BASE_URL}/device/users/${emp.employee_code}/fingerprint-status`);
-          if (res.data.status === "enrolled" || res.data.fingerprint_count > 0) {
+          const res = await axios.get(
+            `${BASE_URL}/device/users/${emp.employee_code}/fingerprint-status`,
+          );
+          if (
+            res.data.status === "enrolled" ||
+            res.data.fingerprint_count > 0
+          ) {
             toast({
               title: "Fingerprint Enrolled",
               description: `Fingerprint successfully enrolled on device. Total: ${res.data.fingerprint_count}`,
@@ -183,8 +196,8 @@ export default function EmployeesPage() {
               prev.map((e) =>
                 e.employee_code === emp.employee_code
                   ? { ...e, fingerprint_count: res.data.fingerprint_count }
-                  : e
-              )
+                  : e,
+              ),
             );
             setEnrollLoading(null);
             return;
@@ -197,7 +210,6 @@ export default function EmployeesPage() {
       };
 
       setTimeout(checkFingerprint, interval);
-
     } catch (err: any) {
       toast({
         title: "Enrollment Failed",
@@ -221,9 +233,13 @@ export default function EmployeesPage() {
     if (!passwordEmployee) return;
     setPasswordLoading(true);
     try {
-      const res = await axios.post(`${BASE_URL}/device/users/${passwordEmployee.employee_code}/set-password`, null, {
-        params: { password: newPassword }
-      });
+      const res = await axios.post(
+        `${BASE_URL}/device/users/${passwordEmployee.employee_code}/set-password`,
+        null,
+        {
+          params: { password: newPassword },
+        },
+      );
       toast({
         title: "Password Set",
         description: res.data.message,
@@ -246,7 +262,6 @@ export default function EmployeesPage() {
     }
   };
 
-
   const pollFingerprintStatus = async (uid: number) => {
     const startTime = Date.now();
     const timeout = 60000; // 60 seconds
@@ -256,7 +271,8 @@ export default function EmployeesPage() {
       if (Date.now() - startTime > timeout) {
         toast({
           title: "Enrollment check timed out",
-          description: "Could not verify fingerprint enrollment. Please check on the device.",
+          description:
+            "Could not verify fingerprint enrollment. Please check on the device.",
           status: "warning",
           duration: 5000,
           isClosable: true,
@@ -265,7 +281,9 @@ export default function EmployeesPage() {
       }
 
       try {
-        const res = await axios.get(`${BASE_URL}/device/users/${uid}/fingerprint-status`);
+        const res = await axios.get(
+          `${BASE_URL}/device/users/${uid}/fingerprint-status`,
+        );
         if (res.data.status === "enrolled" || res.data.fingerprint_count > 0) {
           toast({
             title: "Fingerprint Enrolled",
@@ -286,7 +304,6 @@ export default function EmployeesPage() {
     setTimeout(check, interval);
   };
 
-
   const handleAddEmployee = async () => {
     setAddLoading(true);
 
@@ -295,15 +312,14 @@ export default function EmployeesPage() {
         uid: Number(newEmployee.employee_code),
         name: newEmployee.name,
         privilege: newEmployee.privilege,
-        password: newEmployee.password
+        password: newEmployee.password,
       });
       await axios.post(`${BASE_URL}/device/sync/employees`);
 
-
-
       toast({
         title: "User Created",
-        description: "User created successfully. You can now enroll fingerprint.",
+        description:
+          "User created successfully. You can now enroll fingerprint.",
         status: "success",
         duration: 5000,
         isClosable: true,
@@ -328,9 +344,8 @@ export default function EmployeesPage() {
         privilege: 0,
         group_id: "",
         card: "",
-        password: ""
+        password: "",
       });
-
     } catch (err: any) {
       toast({
         title: "Error creating employee",
@@ -350,14 +365,16 @@ export default function EmployeesPage() {
     setDeleteLoading(true);
     try {
       // 1️⃣ Delete from device
-      await axios.delete(`${BASE_URL}/device/users/${deletingEmployee.employee_code}`);
+      await axios.delete(
+        `${BASE_URL}/device/users/${deletingEmployee.employee_code}`,
+      );
 
       // 2️⃣ Resync device
       await axios.post(`${BASE_URL}/device/sync/employees`);
 
       // 3️⃣ Remove from frontend list
       setEmployees((prev) =>
-        prev.filter((e) => e.employee_code !== deletingEmployee.employee_code)
+        prev.filter((e) => e.employee_code !== deletingEmployee.employee_code),
       );
 
       setDeletingEmployee(null);
@@ -367,7 +384,6 @@ export default function EmployeesPage() {
       setDeleteLoading(false);
     }
   };
-
 
   const handleUpdateEmployee = async () => {
     if (!editingEmployee) return;
@@ -383,7 +399,7 @@ export default function EmployeesPage() {
             name: editingEmployee.name,
             privilege: editingEmployee.privilege,
           },
-        }
+        },
       );
 
       toast({
@@ -399,8 +415,8 @@ export default function EmployeesPage() {
         prev.map((emp) =>
           emp.employee_code === editingEmployee.employee_code
             ? editingEmployee
-            : emp
-        )
+            : emp,
+        ),
       );
       await axios.post(`${BASE_URL}/device/sync/employees`);
 
@@ -419,8 +435,6 @@ export default function EmployeesPage() {
     }
   };
 
-
-
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
@@ -428,8 +442,6 @@ export default function EmployeesPage() {
         setEmployees(res.data);
         console.log("=== USERS FROM DATABASE ===");
         console.log(res.data);
-
-
       } catch (err) {
         console.error("Error fetching employees:", err);
       } finally {
@@ -494,8 +506,6 @@ export default function EmployeesPage() {
     );
   }
 
-
-
   return (
     <Box bg="gray.50" minH="100vh" display="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
@@ -516,9 +526,12 @@ export default function EmployeesPage() {
 
         <Flex justify="space-between" p={5} align="center" mb={6}>
           <Box>
-            <Heading size="md" pl="10">Employees</Heading>
+            <Heading size="md" pl="10">
+              Employees
+            </Heading>
             <Text fontSize="sm" color="gray.500" pl="10">
-              {filteredEmployees.filter((emp) => emp.is_active === true).length} employee(s) found
+              {filteredEmployees.filter((emp) => emp.is_active === true).length}{" "}
+              employee(s) found
             </Text>
           </Box>
           <Button
@@ -526,7 +539,10 @@ export default function EmployeesPage() {
             onClick={async () => {
               try {
                 const res = await axios.get(`${BASE_URL}/employee/next-code`);
-                setNewEmployee(prev => ({ ...prev, employee_code: res.data.next_code }));
+                setNewEmployee((prev) => ({
+                  ...prev,
+                  employee_code: res.data.next_code,
+                }));
                 setIsAddOpen(true);
               } catch (err) {
                 console.error("Error fetching next employee code", err);
@@ -537,12 +553,9 @@ export default function EmployeesPage() {
           >
             + Add Employee
           </Button>
-
         </Flex>
         <AddEmployeeModal isOpen={isOpen} onClose={onClose} />
 
-
-       
         <Flex
           justify="space-between"
           align="center"
@@ -550,7 +563,6 @@ export default function EmployeesPage() {
           direction={{ base: "column", md: "row" }}
           gap={4}
         >
-
           <Flex gap={4} align="center">
             <InputGroup maxW="260px">
               <InputLeftElement pointerEvents="none">
@@ -588,13 +600,10 @@ export default function EmployeesPage() {
               Table
             </Button>
           </ButtonGroup>
-
         </Flex>
-
 
         {viewMode === "cards" ? (
           <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={5}>
-
             {/* Active Employees */}
             {filteredEmployees
               .filter((emp) => emp.is_active !== false) // Active first
@@ -633,7 +642,6 @@ export default function EmployeesPage() {
                     <strong>Card:</strong> {emp.card || "-"}
                   </Text>
 
-
                   <Flex gap={2} mt={3} wrap="wrap">
                     <Button
                       size="sm"
@@ -664,7 +672,9 @@ export default function EmployeesPage() {
                         handleEnrollFingerprint(emp);
                       }}
                     >
-                      {emp.fingerprint_count > 0 ? "add another fingerprint" : "enroll fingerprint"}
+                      {emp.fingerprint_count > 0
+                        ? "add another fingerprint"
+                        : "enroll fingerprint"}
                     </Button>
                     <Button
                       size="sm"
@@ -677,15 +687,11 @@ export default function EmployeesPage() {
                     >
                       Edit
                     </Button>
-
                   </Flex>
                 </Box>
               ))}
-
-
-
-
-          </SimpleGrid>) : (
+          </SimpleGrid>
+        ) : (
           <Box bg="white" borderRadius="lg" shadow="md" overflowX="auto">
             <Table size="sm">
               <Thead bg="gray.100">
@@ -711,7 +717,9 @@ export default function EmployeesPage() {
                       <Td fontWeight="semibold">{emp.name}</Td>
                       <Td>{emp.employee_code}</Td>
                       <Td>
-                        <Badge colorScheme={emp.privilege === 14 ? "green" : "blue"}>
+                        <Badge
+                          colorScheme={emp.privilege === 14 ? "green" : "blue"}
+                        >
                           {emp.privilege === 14 ? "Admin" : "User"}
                         </Badge>
                       </Td>
@@ -754,29 +762,41 @@ export default function EmployeesPage() {
           </Box>
         )}
 
-
         {/* -------------------- Employee History Drawer -------------------- */}
-        <Drawer isOpen={!!selectedEmployeeCode} placement="right" onClose={closeDrawer} size="full">
+        <Drawer
+          isOpen={!!selectedEmployeeCode}
+          placement="right"
+          onClose={closeDrawer}
+          size="full"
+        >
           <DrawerOverlay />
           <DrawerContent>
             <DrawerCloseButton />
             <DrawerHeader>
               Employee History {employeeName && `- ${employeeName}`}
-
               <Flex gap={2} mt={2} align="center">
-                <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-                <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+                <Input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                />
+                <Input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                />
                 <Button
                   size="sm"
                   onClick={() => {
-                    const emp = employees.find((e) => e.employee_code === selectedEmployeeCode);
+                    const emp = employees.find(
+                      (e) => e.employee_code === selectedEmployeeCode,
+                    );
                     if (emp) openEmployeeHistory(emp);
                   }}
                 >
                   Filter
                 </Button>
               </Flex>
-
               <Flex gap={2} mt={2} align="center" wrap="wrap">
                 <ButtonGroup size="sm">
                   {(["all", "present", "absent", "late"] as const).map((f) => (
@@ -793,11 +813,15 @@ export default function EmployeesPage() {
                 {Object.keys(anomalyColors).map((a) => (
                   <Button
                     key={a}
-                    colorScheme={drawerSelectedAnomalies.includes(a) ? "blue" : "gray"}
+                    colorScheme={
+                      drawerSelectedAnomalies.includes(a) ? "blue" : "gray"
+                    }
                     size="sm"
                     onClick={() =>
                       setDrawerSelectedAnomalies((prev) =>
-                        prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]
+                        prev.includes(a)
+                          ? prev.filter((x) => x !== a)
+                          : [...prev, a],
                       )
                     }
                   >
@@ -836,7 +860,11 @@ export default function EmployeesPage() {
                           <Td>{h.late_minutes}</Td>
                           <Td>
                             {h.anomalies.map((a) => (
-                              <Badge key={a} colorScheme={anomalyColors[a] || "gray"} mr={1}>
+                              <Badge
+                                key={a}
+                                colorScheme={anomalyColors[a] || "gray"}
+                                mr={1}
+                              >
                                 {a.replace("_", " ")}
                               </Badge>
                             ))}
@@ -850,7 +878,9 @@ export default function EmployeesPage() {
                   <Box mt={4} p={3} bg="gray.100" borderRadius="md">
                     <Flex direction="column" gap={2}>
                       <Flex justify="space-between" align="center">
-                        <Text fontWeight="bold">Total Worked Hours in That Period:</Text>
+                        <Text fontWeight="bold">
+                          Total Worked Hours in That Period:
+                        </Text>
                         <Text fontWeight="bold" color="blue.600">
                           {totalPeriodHours.toFixed(2)} h
                         </Text>
@@ -881,7 +911,6 @@ export default function EmployeesPage() {
 
             <DrawerBody>
               <Flex direction="column" gap={4}>
-
                 <Input
                   placeholder="Employee Code"
                   value={newEmployee.employee_code}
@@ -900,7 +929,10 @@ export default function EmployeesPage() {
                 <Select
                   value={newEmployee.privilege}
                   onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, privilege: Number(e.target.value) })
+                    setNewEmployee({
+                      ...newEmployee,
+                      privilege: Number(e.target.value),
+                    })
                   }
                 >
                   <option value={0}>User</option>
@@ -940,7 +972,6 @@ export default function EmployeesPage() {
                 >
                   Save Employee
                 </Button>
-
               </Flex>
             </DrawerBody>
           </DrawerContent>
@@ -958,7 +989,6 @@ export default function EmployeesPage() {
 
             <DrawerBody>
               <Flex direction="column" gap={4}>
-
                 <Input
                   placeholder="Employee Code"
                   value={editingEmployee?.employee_code}
@@ -970,14 +1000,20 @@ export default function EmployeesPage() {
                   placeholder="Name"
                   value={editingEmployee?.name}
                   onChange={(e) =>
-                    setEditingEmployee({ ...editingEmployee, name: e.target.value })
+                    setEditingEmployee({
+                      ...editingEmployee,
+                      name: e.target.value,
+                    })
                   }
                 />
 
                 <Select
                   value={editingEmployee?.privilege}
                   onChange={(e) =>
-                    setEditingEmployee({ ...editingEmployee, privilege: Number(e.target.value) })
+                    setEditingEmployee({
+                      ...editingEmployee,
+                      privilege: Number(e.target.value),
+                    })
                   }
                 >
                   <option value={0}>User</option>
@@ -988,7 +1024,10 @@ export default function EmployeesPage() {
                   placeholder="Group ID"
                   value={editingEmployee?.group_id}
                   onChange={(e) =>
-                    setEditingEmployee({ ...editingEmployee, group_id: e.target.value })
+                    setEditingEmployee({
+                      ...editingEmployee,
+                      group_id: e.target.value,
+                    })
                   }
                 />
 
@@ -997,7 +1036,10 @@ export default function EmployeesPage() {
                   type="number"
                   value={editingEmployee?.card}
                   onChange={(e) =>
-                    setEditingEmployee({ ...editingEmployee, card: e.target.value })
+                    setEditingEmployee({
+                      ...editingEmployee,
+                      card: e.target.value,
+                    })
                   }
                 />
 
@@ -1006,7 +1048,10 @@ export default function EmployeesPage() {
                   type="password"
                   value={editingEmployee?.password}
                   onChange={(e) =>
-                    setEditingEmployee({ ...editingEmployee, password: e.target.value })
+                    setEditingEmployee({
+                      ...editingEmployee,
+                      password: e.target.value,
+                    })
                   }
                 />
 
@@ -1017,14 +1062,11 @@ export default function EmployeesPage() {
                 >
                   Update Employee
                 </Button>
-
               </Flex>
             </DrawerBody>
           </DrawerContent>
         </Drawer>
-
       </Box>
-
 
       <AlertDialog
         isOpen={!!deletingEmployee}
@@ -1039,7 +1081,8 @@ export default function EmployeesPage() {
 
             <AlertDialogBody>
               Are you sure you want to delete{" "}
-              <strong>{deletingEmployee?.name}</strong>? This action cannot be undone.
+              <strong>{deletingEmployee?.name}</strong>? This action cannot be
+              undone.
             </AlertDialogBody>
 
             <AlertDialogFooter>
@@ -1075,10 +1118,17 @@ export default function EmployeesPage() {
           </ModalBody>
 
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={handleSetPassword} isLoading={passwordLoading}>
+            <Button
+              colorScheme="blue"
+              mr={3}
+              onClick={handleSetPassword}
+              isLoading={passwordLoading}
+            >
               Save Password
             </Button>
-            <Button variant="ghost" onClick={() => setIsPasswordOpen(false)}>Cancel</Button>
+            <Button variant="ghost" onClick={() => setIsPasswordOpen(false)}>
+              Cancel
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

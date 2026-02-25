@@ -51,9 +51,20 @@ def send_monthly_report_job():
         logger.error(f"[Scheduler] Erreur lors du rapport mensuel : {e}")
 
 
+def auto_sync_attendance_job():
+    """Synchronise automatiquement les pointages depuis la pointeuse ZKTeco."""
+    from app.services.SyncService import SyncService
+    try:
+        result = SyncService().sync_attendances()
+        logger.info(f"[AutoSync] Pointages synchronisés : {result}")
+    except Exception as e:
+        logger.error(f"[AutoSync] Erreur lors de la synchronisation : {e}")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """FastAPI lifespan — démarre le scheduler au startup, l'arrête au shutdown."""
+    # Rapport mensuel heures supplémentaires (1er du mois à 08h50)
     scheduler.add_job(
         send_monthly_report_job,
         trigger="cron",
@@ -63,8 +74,16 @@ async def lifespan(app: FastAPI):
         id="monthly_overtime_report",
         replace_existing=True,
     )
+    # Synchronisation automatique des pointages toutes les 5 minutes
+    scheduler.add_job(
+        auto_sync_attendance_job,
+        trigger="interval",
+        minutes=5,
+        id="auto_sync_attendance",
+        replace_existing=True,
+    )
     scheduler.start()
-    logger.info("[Scheduler] APScheduler démarré — rapport mensuel le 1er à 08h00")
+    logger.info("[Scheduler] APScheduler démarré — rapport mensuel le 1er à 08h00, sync pointages toutes les 5 min")
     yield
     scheduler.shutdown(wait=False)
     logger.info("[Scheduler] APScheduler arrêté")

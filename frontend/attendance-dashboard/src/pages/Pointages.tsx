@@ -12,6 +12,7 @@ import {
   HStack,
   IconButton,
   useDisclosure,
+  Input,
 } from "@chakra-ui/react";
 import Navbar from "../components/layout/Navbar";
 import Sidebar from "../components/layout/Sidebar";
@@ -20,9 +21,11 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { CloseIcon } from "@chakra-ui/icons/Close";
 import { HamburgerIcon } from "@chakra-ui/icons/Hamburger";
-import { ManualPunchModal, MarkAbsentModal } from "../components/AttendanceModals";
+import {
+  ManualPunchModal,
+  MarkAbsentModal,
+} from "../components/AttendanceModals";
 import { getCurrentDate } from "../../utils";
-
 
 /* -------------------- Types -------------------- */
 type Employee = {
@@ -83,11 +86,11 @@ const StatCard = ({
 function DailyAlerts({
   employees,
   onManualPunch,
-  onMarkAbsent
+  onMarkAbsent,
 }: {
-  employees: Employee[],
-  onManualPunch: (emp: { id: number, name: string }) => void,
-  onMarkAbsent: (emp: { id: number, name: string }) => void
+  employees: Employee[];
+  onManualPunch: (emp: { id: number; name: string }) => void;
+  onMarkAbsent: (emp: { id: number; name: string }) => void;
 }) {
   const { t } = useTranslation();
 
@@ -117,7 +120,9 @@ function DailyAlerts({
 
           <HStack mt={3} justify="space-between" align="start" wrap="wrap">
             <HStack spacing={2} wrap="wrap">
-              {emp.status === "absent" && <Badge colorScheme="red">{t("Absent")}</Badge>}
+              {emp.status === "absent" && (
+                <Badge colorScheme="red">{t("Absent")}</Badge>
+              )}
 
               {emp.anomalies.includes("entree_sans_sortie") && (
                 <Badge colorScheme="orange">{t("Missing check-out")}</Badge>
@@ -140,7 +145,6 @@ function DailyAlerts({
                 <Badge colorScheme="teal">{t("Incomplete day")}</Badge>
               )}
 
-
               {emp.extra_hours && emp.extra_hours > 0 && (
                 <Badge colorScheme="blue">
                   {t("Extra hours")} +{emp.extra_hours}h
@@ -153,7 +157,12 @@ function DailyAlerts({
                 <Button
                   size="sm"
                   colorScheme="blue"
-                  onClick={() => onManualPunch({ id: emp.employee_id, name: emp.employee_name })}
+                  onClick={() =>
+                    onManualPunch({
+                      id: emp.employee_id,
+                      name: emp.employee_name,
+                    })
+                  }
                 >
                   {t("Manual punch")}
                 </Button>
@@ -163,7 +172,12 @@ function DailyAlerts({
                   size="sm"
                   colorScheme="red"
                   variant="outline"
-                  onClick={() => onMarkAbsent({ id: emp.employee_id, name: emp.employee_name })}
+                  onClick={() =>
+                    onMarkAbsent({
+                      id: emp.employee_id,
+                      name: emp.employee_name,
+                    })
+                  }
                 >
                   {t("Mark absent")}
                 </Button>
@@ -200,27 +214,30 @@ export default function Pointages() {
 
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState<string>(getCurrentDate());
 
   // Modals state
   const {
     isOpen: isManualOpen,
     onOpen: onManualOpen,
-    onClose: onManualClose
+    onClose: onManualClose,
   } = useDisclosure();
   const {
     isOpen: isAbsentOpen,
     onOpen: onAbsentOpen,
-    onClose: onAbsentClose
+    onClose: onAbsentClose,
   } = useDisclosure();
 
-  const [selectedEmp, setSelectedEmp] = useState<{ id: number, name: string } | null>(null);
+  const [selectedEmp, setSelectedEmp] = useState<{
+    id: number;
+    name: string;
+  } | null>(null);
 
   const navigate = useNavigate();
 
-  const fetchDashboard = useCallback(() => {
-    const TEST_DATE = getCurrentDate();
+  const fetchDashboard = useCallback((day: string) => {
     setLoading(true);
-    fetch(`http://127.0.0.1:8000/api/v1/attendance/dashboard/day?day=${TEST_DATE}`)
+    fetch(`http://127.0.0.1:8000/api/v1/attendance/dashboard/day?day=${day}`)
       .then((res) => res.json())
       .then((data) => {
         setDashboard(data);
@@ -233,15 +250,15 @@ export default function Pointages() {
   }, []);
 
   useEffect(() => {
-    fetchDashboard();
-  }, [fetchDashboard]);
+    fetchDashboard(selectedDate);
+  }, [fetchDashboard, selectedDate]);
 
-  const handleManualPunch = (emp: { id: number, name: string }) => {
+  const handleManualPunch = (emp: { id: number; name: string }) => {
     setSelectedEmp(emp);
     onManualOpen();
   };
 
-  const handleMarkAbsent = (emp: { id: number, name: string }) => {
+  const handleMarkAbsent = (emp: { id: number; name: string }) => {
     setSelectedEmp(emp);
     onAbsentOpen();
   };
@@ -249,9 +266,13 @@ export default function Pointages() {
   if (loading && !dashboard) return <Spinner size="lg" />;
 
   const negativeAlerts =
-    dashboard?.employees.filter((emp) => emp.status === "absent" || emp.anomalies.length > 0) ?? [];
+    dashboard?.employees.filter(
+      (emp) => emp.status === "absent" || emp.anomalies.length > 0,
+    ) ?? [];
   const positiveAlerts =
-    dashboard?.employees.filter((emp) => emp.extra_hours && emp.extra_hours > 0) ?? [];
+    dashboard?.employees.filter(
+      (emp) => emp.extra_hours && emp.extra_hours > 0,
+    ) ?? [];
 
   return (
     <Box display="flex" minH="100vh" bg="gray.50">
@@ -276,14 +297,39 @@ export default function Pointages() {
             <Text color="gray.500">
               {t("Date")}: {dashboard?.date}
             </Text>
+            <HStack spacing={3}>
+              <Input
+                type="date"
+                value={selectedDate}
+                max={getCurrentDate()}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                size="sm"
+                bg="white"
+              />
+            </HStack>
             {loading && <Spinner size="sm" />}
           </HStack>
 
           <SimpleGrid columns={{ base: 1, md: 4 }} spacing={6} mb={8}>
-            <StatCard label={t("Total Employees")} value={dashboard?.global.total_employees ?? 0} onClick={() => navigate("/employeesToday")} />
-            <StatCard label={t("Present Today")} value={dashboard?.global.present_today ?? 0} onClick={() => navigate("/employeesToday?filter=present")} />
-            <StatCard label={t("Absent Today")} value={dashboard?.global.absent_today ?? 0} onClick={() => navigate("/employeesToday?filter=absent")} />
-            <StatCard label={t("Attendance Rate")} value={`${dashboard?.global.attendance_rate ?? 0}%`} />
+            <StatCard
+              label={t("Total Employees")}
+              value={dashboard?.global.total_employees ?? 0}
+              onClick={() => navigate("/employeesToday")}
+            />
+            <StatCard
+              label={t("Present Today")}
+              value={dashboard?.global.present_today ?? 0}
+              onClick={() => navigate("/employeesToday?filter=present")}
+            />
+            <StatCard
+              label={t("Absent Today")}
+              value={dashboard?.global.absent_today ?? 0}
+              onClick={() => navigate("/employeesToday?filter=absent")}
+            />
+            <StatCard
+              label={t("Attendance Rate")}
+              value={`${dashboard?.global.attendance_rate ?? 0}%`}
+            />
           </SimpleGrid>
 
           <Box bg="white" p={6} borderRadius="lg" boxShadow="sm">
@@ -327,16 +373,16 @@ export default function Pointages() {
         isOpen={isManualOpen}
         onClose={onManualClose}
         employee={selectedEmp}
-        onSuccess={fetchDashboard}
+        date={selectedDate}
+        onSuccess={() => fetchDashboard(selectedDate)}
       />
       <MarkAbsentModal
         isOpen={isAbsentOpen}
         onClose={onAbsentClose}
         employee={selectedEmp}
-        date={dashboard?.date || ""}
-        onSuccess={fetchDashboard}
+        date={selectedDate}
+        onSuccess={() => fetchDashboard(selectedDate)}
       />
     </Box>
   );
 }
-
