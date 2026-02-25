@@ -93,6 +93,7 @@ export default function EmployeesPage() {
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
 
   // -------------------- History Drawer State --------------------
   const [selectedEmployeeCode, setSelectedEmployeeCode] = useState<string | null>(null);
@@ -512,6 +513,7 @@ export default function EmployeesPage() {
 
       <Box flex={1} ml={["0", "250px"]} display="flex" flexDirection="column">
         <Navbar />
+
         <Flex justify="space-between" p={5} align="center" mb={6}>
           <Box>
             <Heading size="md" pl="10">Employees</Heading>
@@ -539,7 +541,8 @@ export default function EmployeesPage() {
         </Flex>
         <AddEmployeeModal isOpen={isOpen} onClose={onClose} />
 
-        <Flex gap={4} mb={4} flexWrap="wrap">
+
+        {/* <Flex gap={4} mb={4} flexWrap="wrap">
           <InputGroup maxW="260px">
             <InputLeftElement pointerEvents="none">
               <SearchIcon color="gray.400" />
@@ -561,100 +564,231 @@ export default function EmployeesPage() {
             <option value="14">Admin</option>
           </Select>
         </Flex>
+        <ButtonGroup size="sm" isAttached variant="outline">
+          <Button
+            colorScheme={viewMode === "cards" ? "blue" : "gray"}
+            onClick={() => setViewMode("cards")}
+          >
+            Cards
+          </Button>
+          <Button
+            colorScheme={viewMode === "table" ? "blue" : "gray"}
+            onClick={() => setViewMode("table")}
+          >
+            Table
+          </Button>
+        </ButtonGroup> */}
 
-        <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={5}>
+        <Flex
+          justify="space-between"
+          align="center"
+          mb={4}
+          direction={{ base: "column", md: "row" }}
+          gap={4}
+        >
 
-          {/* Active Employees */}
-          {filteredEmployees
-            .filter((emp) => emp.is_active !== false) // Active first
-            .map((emp) => (
-              <Box
-                key={emp.employee_code}
-                borderWidth="1px"
-                borderRadius="lg"
-                p={5}
-                bg="white"
-                shadow="md"
-                cursor="pointer"
-                onClick={() => openEmployeeHistory(emp)}
-                _hover={{
-                  shadow: "xl",
-                  transform: "translateY(-2px)",
-                  transition: "all 0.2s",
-                }}
-              >
-                <Flex justify="space-between" align="center" mb={3}>
-                  <Heading size="md">{emp.name}</Heading>
-                  <Badge
-                    colorScheme={emp.privilege === 14 ? "green" : "blue"}
-                    fontSize="0.8em"
-                  >
-                    {emp.privilege === 14 ? "Admin" : "User"}
-                  </Badge>
-                </Flex>
-                <Text fontSize="sm" mb={1}>
-                  <strong>Code:</strong> {emp.employee_code}
-                </Text>
-                <Text fontSize="sm" mb={1}>
-                  <strong>Group:</strong> {emp.group_id || "-"}
-                </Text>
-                <Text fontSize="sm">
-                  <strong>Card:</strong> {emp.card || "-"}
-                </Text>
+          <Flex gap={4} align="center">
+            <InputGroup maxW="260px">
+              <InputLeftElement pointerEvents="none">
+                <SearchIcon color="gray.400" />
+              </InputLeftElement>
+              <Input
+                placeholder="Search employee..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </InputGroup>
 
+            <Select
+              maxW="200px"
+              value={privilege}
+              onChange={(e) => setPrivilege(e.target.value)}
+            >
+              <option value="all">All privileges</option>
+              <option value="0">User</option>
+              <option value="14">Admin</option>
+            </Select>
+          </Flex>
 
-                <Flex gap={2} mt={3} wrap="wrap">
-                  <Button
-                    size="sm"
-                    colorScheme="red"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeletingEmployee(emp);
-                    }}
-                  >
-                    Delete
-                  </Button>
-                  <Button
-                    size="sm"
-                    colorScheme="teal"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openPasswordModal(emp);
-                    }}
-                  >
-                    Password
-                  </Button>
-                  <Button
-                    size="sm"
-                    colorScheme="orange"
-                    isLoading={enrollLoading === emp.employee_code}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEnrollFingerprint(emp);
-                    }}
-                  >
-                    {emp.fingerprint_count > 0 ? "add another fingerprint" : "enroll fingerprint"}
-                  </Button>
-                  <Button
-                    size="sm"
-                    colorScheme="blue"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditingEmployee({ ...emp });
-                      setIsEditOpen(true);
-                    }}
-                  >
-                    Edit
-                  </Button>
+          <ButtonGroup size="sm" isAttached variant="outline">
+            <Button
+              colorScheme={viewMode === "cards" ? "blue" : "gray"}
+              onClick={() => setViewMode("cards")}
+            >
+              Cards
+            </Button>
+            <Button
+              colorScheme={viewMode === "table" ? "blue" : "gray"}
+              onClick={() => setViewMode("table")}
+            >
+              Table
+            </Button>
+          </ButtonGroup>
 
-                </Flex>
-              </Box>
-            ))}
+        </Flex>
 
 
+        {viewMode === "cards" ? (
+          <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={5}>
+
+            {/* Active Employees */}
+            {filteredEmployees
+              .filter((emp) => emp.is_active !== false) // Active first
+              .map((emp) => (
+                <Box
+                  key={emp.employee_code}
+                  borderWidth="1px"
+                  borderRadius="lg"
+                  p={5}
+                  bg="white"
+                  shadow="md"
+                  cursor="pointer"
+                  onClick={() => openEmployeeHistory(emp)}
+                  _hover={{
+                    shadow: "xl",
+                    transform: "translateY(-2px)",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  <Flex justify="space-between" align="center" mb={3}>
+                    <Heading size="md">{emp.name}</Heading>
+                    <Badge
+                      colorScheme={emp.privilege === 14 ? "green" : "blue"}
+                      fontSize="0.8em"
+                    >
+                      {emp.privilege === 14 ? "Admin" : "User"}
+                    </Badge>
+                  </Flex>
+                  <Text fontSize="sm" mb={1}>
+                    <strong>Code:</strong> {emp.employee_code}
+                  </Text>
+                  <Text fontSize="sm" mb={1}>
+                    <strong>Group:</strong> {emp.group_id || "-"}
+                  </Text>
+                  <Text fontSize="sm">
+                    <strong>Card:</strong> {emp.card || "-"}
+                  </Text>
 
 
-        </SimpleGrid>
+                  <Flex gap={2} mt={3} wrap="wrap">
+                    <Button
+                      size="sm"
+                      colorScheme="red"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeletingEmployee(emp);
+                      }}
+                    >
+                      Delete
+                    </Button>
+                    <Button
+                      size="sm"
+                      colorScheme="teal"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openPasswordModal(emp);
+                      }}
+                    >
+                      Password
+                    </Button>
+                    <Button
+                      size="sm"
+                      colorScheme="orange"
+                      isLoading={enrollLoading === emp.employee_code}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEnrollFingerprint(emp);
+                      }}
+                    >
+                      {emp.fingerprint_count > 0 ? "add another fingerprint" : "enroll fingerprint"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      colorScheme="blue"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingEmployee({ ...emp });
+                        setIsEditOpen(true);
+                      }}
+                    >
+                      Edit
+                    </Button>
+
+                  </Flex>
+                </Box>
+              ))}
+
+
+
+
+          </SimpleGrid>) : (
+          <Box bg="white" borderRadius="lg" shadow="md" overflowX="auto">
+            <Table size="sm">
+              <Thead bg="gray.100">
+                <Tr>
+                  <Th>Name</Th>
+                  <Th>Code</Th>
+                  <Th>Privilege</Th>
+                  <Th>Group</Th>
+                  <Th>Card</Th>
+                  <Th>Fingerprint</Th>
+                  <Th>Actions</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {filteredEmployees
+                  .filter((emp) => emp.is_active !== false)
+                  .map((emp) => (
+                    <Tr
+                      key={emp.employee_code}
+                      _hover={{ bg: "gray.50", cursor: "pointer" }}
+                      onClick={() => openEmployeeHistory(emp)}
+                    >
+                      <Td fontWeight="semibold">{emp.name}</Td>
+                      <Td>{emp.employee_code}</Td>
+                      <Td>
+                        <Badge colorScheme={emp.privilege === 14 ? "green" : "blue"}>
+                          {emp.privilege === 14 ? "Admin" : "User"}
+                        </Badge>
+                      </Td>
+                      <Td>{emp.group_id || "-"}</Td>
+                      <Td>{emp.card || "-"}</Td>
+                      <Td>
+                        {emp.fingerprint_count > 0
+                          ? `${emp.fingerprint_count} enrolled`
+                          : "None"}
+                      </Td>
+                      <Td>
+                        <Flex gap={2}>
+                          <Button
+                            size="xs"
+                            colorScheme="red"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeletingEmployee(emp);
+                            }}
+                          >
+                            Delete
+                          </Button>
+                          <Button
+                            size="xs"
+                            colorScheme="blue"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingEmployee({ ...emp });
+                              setIsEditOpen(true);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                        </Flex>
+                      </Td>
+                    </Tr>
+                  ))}
+              </Tbody>
+            </Table>
+          </Box>
+        )}
 
 
         {/* -------------------- Employee History Drawer -------------------- */}
