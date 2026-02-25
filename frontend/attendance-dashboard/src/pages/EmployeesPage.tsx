@@ -542,43 +542,7 @@ export default function EmployeesPage() {
         <AddEmployeeModal isOpen={isOpen} onClose={onClose} />
 
 
-        {/* <Flex gap={4} mb={4} flexWrap="wrap">
-          <InputGroup maxW="260px">
-            <InputLeftElement pointerEvents="none">
-              <SearchIcon color="gray.400" />
-            </InputLeftElement>
-            <Input
-              placeholder="Search employee..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </InputGroup>
-
-          <Select
-            maxW="200px"
-            value={privilege}
-            onChange={(e) => setPrivilege(e.target.value)}
-          >
-            <option value="all">All privileges</option>
-            <option value="0">User</option>
-            <option value="14">Admin</option>
-          </Select>
-        </Flex>
-        <ButtonGroup size="sm" isAttached variant="outline">
-          <Button
-            colorScheme={viewMode === "cards" ? "blue" : "gray"}
-            onClick={() => setViewMode("cards")}
-          >
-            Cards
-          </Button>
-          <Button
-            colorScheme={viewMode === "table" ? "blue" : "gray"}
-            onClick={() => setViewMode("table")}
-          >
-            Table
-          </Button>
-        </ButtonGroup> */}
-
+       
         <Flex
           justify="space-between"
           align="center"
