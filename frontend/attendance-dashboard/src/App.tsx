@@ -14,7 +14,6 @@
 // import InactiveEmployeesPage from "./pages/InactiveEmployeesPage";
 // import "./i18n";
 
-
 // export default function App() {
 //   return (
 //     <ChakraProvider>
@@ -113,8 +112,14 @@ export default function App() {
             <Route path="/rapports/charts" element={<RapportsChartsPage />} />
             <Route path="/employeesToday" element={<EmployeesToday />} />
             <Route path="/test-i18n" element={<TestI18nPage />} />
-            <Route path="/inactive-employees" element={<InactiveEmployeesPage />} />
-            <Route path="/charts/hoursByEmployee" element={<HoursByEmployeeChart />} />
+            <Route
+              path="/inactive-employees"
+              element={<InactiveEmployeesPage />}
+            />
+            <Route
+              path="/charts/hoursByEmployee"
+              element={<HoursByEmployeeChart />}
+            />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

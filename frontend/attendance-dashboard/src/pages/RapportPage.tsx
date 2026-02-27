@@ -91,14 +91,21 @@ export default function RapportPage() {
   const [loading, setLoading] = useState(false);
 
   // -------------------- Employee History Drawer --------------------
-  const [selectedEmployee, setSelectedEmployee] = useState<AttendanceMetric | null>(null);
-  const [employeeHistory, setEmployeeHistory] = useState<EmployeeHistoryItem[]>([]);
+  const [selectedEmployee, setSelectedEmployee] =
+    useState<AttendanceMetric | null>(null);
+  const [employeeHistory, setEmployeeHistory] = useState<EmployeeHistoryItem[]>(
+    [],
+  );
   const [totalPeriodHours, setTotalPeriodHours] = useState(0);
   const [totalWeekendHours, setTotalWeekendHours] = useState(0);
   const [historyLoading, setHistoryLoading] = useState(false);
 
-  const [drawerFilterState, setDrawerFilterState] = useState<"all" | "present" | "absent" | "late">("all");
-  const [drawerSelectedAnomalies, setDrawerSelectedAnomalies] = useState<string[]>([]);
+  const [drawerFilterState, setDrawerFilterState] = useState<
+    "all" | "present" | "absent" | "late"
+  >("all");
+  const [drawerSelectedAnomalies, setDrawerSelectedAnomalies] = useState<
+    string[]
+  >([]);
   const [dateFrom, setDateFrom] = useState("2025-03-01");
   const [dateTo, setDateTo] = useState("2025-04-16");
 
@@ -112,14 +119,17 @@ export default function RapportPage() {
 
         const metricsPromises = employees.map((emp: any) =>
           axios
-            .get(`${BASE_URL}/attendance/metrics/employee/${emp.employee_code}/range`, {
-              params: { start_date: startDate, end_date: endDate },
-            })
+            .get(
+              `${BASE_URL}/attendance/metrics/employee/${emp.employee_code}/range`,
+              {
+                params: { start_date: startDate, end_date: endDate },
+              },
+            )
             .then((res) => ({
               employee_id: emp.employee_code,
               employee_name: emp.name,
               ...res.data.data,
-            }))
+            })),
         );
 
         const allMetrics = await Promise.all(metricsPromises);
@@ -143,7 +153,7 @@ export default function RapportPage() {
         `${BASE_URL}/employee/${employee.employee_id}/history`,
         {
           params: { date_from: dateFrom, date_to: dateTo },
-        }
+        },
       );
 
       const history = res.data.history.map((item: any) => ({
@@ -174,11 +184,11 @@ export default function RapportPage() {
 
   // -------------------- Drawer filtering --------------------
   const filteredHistory = employeeHistory
-    .filter(h => {
+    .filter((h) => {
       if (drawerSelectedAnomalies.length === 0) return true;
-      return h.anomalies.some(a => drawerSelectedAnomalies.includes(a));
+      return h.anomalies.some((a) => drawerSelectedAnomalies.includes(a));
     })
-    .filter(h => {
+    .filter((h) => {
       if (drawerFilterState === "present") return h.status === "normal";
       if (drawerFilterState === "absent") return h.status === "absent";
       if (drawerFilterState === "late") return h.is_late;
@@ -190,30 +200,45 @@ export default function RapportPage() {
     if (!data || data.length === 0) return;
 
     const headers = [
-      "ID", "Name", "Period", "Working Days", "Presences", "Absences", "Presence %", "Absence %", "Weekend Days", "Weekend Hours"
+      "ID",
+      "Name",
+      "Period",
+      "Working Days",
+      "Presences",
+      "Absences",
+      "Presence %",
+      "Absence %",
+      "Weekend Days",
+      "Weekend Hours",
     ];
 
     const csvContent =
       "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...data.map(row =>
-        [
-          row.employee_id,
-          `"${row.employee_name}"`,
-          `"${row.start_date} -> ${row.end_date}"`,
-          row.total_working_days,
-          row.days_present,
-          row.days_absent,
-          row.presence_rate.toFixed(1),
-          row.absence_rate.toFixed(1),
-          row.weekend_days_worked,
-          row.weekend_hours_worked
-        ].join(",")
-      )].join("\n");
+      [
+        headers.join(","),
+        ...data.map((row) =>
+          [
+            row.employee_id,
+            `"${row.employee_name}"`,
+            `"${row.start_date} -> ${row.end_date}"`,
+            row.total_working_days,
+            row.days_present,
+            row.days_absent,
+            row.presence_rate.toFixed(1),
+            row.absence_rate.toFixed(1),
+            row.weekend_days_worked,
+            row.weekend_hours_worked,
+          ].join(","),
+        ),
+      ].join("\n");
 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `attendance_report_${startDate}_${endDate}.csv`);
+    link.setAttribute(
+      "download",
+      `attendance_report_${startDate}_${endDate}.csv`,
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -221,13 +246,13 @@ export default function RapportPage() {
 
   const downloadAllEmployeesExcel = () => {
     if (!data || data.length === 0) return;
-    const sheetData = data.map(emp => ({
-      "ID": emp.employee_id,
-      "Name": emp.employee_name,
-      "Period": `${emp.start_date} → ${emp.end_date}`,
+    const sheetData = data.map((emp) => ({
+      ID: emp.employee_id,
+      Name: emp.employee_name,
+      Period: `${emp.start_date} → ${emp.end_date}`,
       "Working Days": emp.total_working_days,
-      "Presences": emp.days_present,
-      "Absences": emp.days_absent,
+      Presences: emp.days_present,
+      Absences: emp.days_absent,
       "Presence %": emp.presence_rate.toFixed(1),
       "Absence %": emp.absence_rate.toFixed(1),
       "Weekend Days": emp.weekend_days_worked,
@@ -236,35 +261,51 @@ export default function RapportPage() {
     const ws = XLSX.utils.json_to_sheet(sheetData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Attendance");
-    XLSX.writeFile(wb, `attendance_all_employees_${startDate}_to_${endDate}.xlsx`);
+    XLSX.writeFile(
+      wb,
+      `attendance_all_employees_${startDate}_to_${endDate}.xlsx`,
+    );
   };
 
   const downloadEmployeeHistoryCSV = () => {
     if (!selectedEmployee || employeeHistory.length === 0) return;
 
     const headers = [
-      "Date", "Check-in", "Check-out", "Worked Hours", "Late", "Late Minutes", "Anomalies", "Status"
+      "Date",
+      "Check-in",
+      "Check-out",
+      "Worked Hours",
+      "Late",
+      "Late Minutes",
+      "Anomalies",
+      "Status",
     ];
 
     const csvContent =
       "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...employeeHistory.map(h =>
-        [
-          h.date,
-          h.check_in_time?.split("T")[1] ?? "-",
-          h.check_out_time?.split("T")[1] ?? "-",
-          h.worked_hours.toFixed(2),
-          h.is_late ? "Yes" : "No",
-          h.late_minutes,
-          `"${h.anomalies.join("; ")}"`,
-          h.status
-        ].join(",")
-      )].join("\n");
+      [
+        headers.join(","),
+        ...employeeHistory.map((h) =>
+          [
+            h.date,
+            h.check_in_time?.split("T")[1] ?? "-",
+            h.check_out_time?.split("T")[1] ?? "-",
+            h.worked_hours.toFixed(2),
+            h.is_late ? "Yes" : "No",
+            h.late_minutes,
+            `"${h.anomalies.join("; ")}"`,
+            h.status,
+          ].join(","),
+        ),
+      ].join("\n");
 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `attendance_${selectedEmployee.employee_name}_${dateFrom}_to_${dateTo}.csv`);
+    link.setAttribute(
+      "download",
+      `attendance_${selectedEmployee.employee_name}_${dateFrom}_to_${dateTo}.csv`,
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -272,7 +313,7 @@ export default function RapportPage() {
 
   const downloadEmployeeExcel = () => {
     if (!selectedEmployee || employeeHistory.length === 0) return;
-    const sheetData = employeeHistory.map(h => ({
+    const sheetData = employeeHistory.map((h) => ({
       Date: h.date,
       "Check-in": h.check_in_time?.slice(11, 16) ?? "-",
       "Check-out": h.check_out_time?.slice(11, 16) ?? "-",
@@ -280,23 +321,39 @@ export default function RapportPage() {
       Late: h.is_late ? "Yes" : "No",
       "Late Minutes": h.late_minutes,
       Anomalies: h.anomalies.join("; "),
-      Status: h.status
+      Status: h.status,
     }));
     const ws = XLSX.utils.json_to_sheet(sheetData);
-    XLSX.utils.sheet_add_aoa(ws, [[`Employee: ${selectedEmployee.employee_name}`, `Period: ${dateFrom} → ${dateTo}`], []], { origin: "A1" });
-    XLSX.utils.sheet_add_json(ws, sheetData, { skipHeader: true, origin: "A3" });
+    XLSX.utils.sheet_add_aoa(
+      ws,
+      [
+        [
+          `Employee: ${selectedEmployee.employee_name}`,
+          `Period: ${dateFrom} → ${dateTo}`,
+        ],
+        [],
+      ],
+      { origin: "A1" },
+    );
+    XLSX.utils.sheet_add_json(ws, sheetData, {
+      skipHeader: true,
+      origin: "A3",
+    });
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Attendance");
-    XLSX.writeFile(wb, `attendance_${selectedEmployee.employee_name}_${dateFrom}_to_${dateTo}.xlsx`);
+    XLSX.writeFile(
+      wb,
+      `attendance_${selectedEmployee.employee_name}_${dateFrom}_to_${dateTo}.xlsx`,
+    );
   };
 
   // -------------------- Graphs data --------------------
   const totalPresence = data.reduce((acc, e) => acc + e.days_present, 0);
   const totalAbsence = data.reduce((acc, e) => acc + e.days_absent, 0);
 
-  const anomaliesCount = Object.keys(anomalyColors).map(a => ({
+  const anomaliesCount = Object.keys(anomalyColors).map((a) => ({
     anomaly: a.replace("_", " "),
-    count: employeeHistory.filter(h => h.anomalies.includes(a)).length
+    count: employeeHistory.filter((h) => h.anomalies.includes(a)).length,
   }));
 
   return (
@@ -315,87 +372,43 @@ export default function RapportPage() {
       <VStack flex={1} spacing={0} ml={["0", "250px"]}>
         <Navbar />
         <Container maxW="100%" flex={1} p={6}>
-          <Text fontSize="xl" fontWeight="bold" mb={4}>Attendance Report</Text>
+          <Text fontSize="xl" fontWeight="bold" mb={4}>
+            Attendance Report
+          </Text>
 
           {/* Date filters + export buttons */}
           <HStack spacing={2} mb={4} justifyContent="space-between">
             <HStack>
               <Text>Start Date:</Text>
-              <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
               <Text>End Date:</Text>
-              <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
             </HStack>
             <HStack>
-              <Button leftIcon={<DownloadIcon />} colorScheme="green" onClick={downloadCSV}>Export CSV</Button>
-              <Button leftIcon={<DownloadIcon />} colorScheme="green" onClick={downloadAllEmployeesExcel}>Export Excel</Button>
+              <Button
+                leftIcon={<DownloadIcon />}
+                colorScheme="green"
+                onClick={downloadCSV}
+              >
+                Export CSV
+              </Button>
+              <Button
+                leftIcon={<DownloadIcon />}
+                colorScheme="green"
+                onClick={downloadAllEmployeesExcel}
+              >
+                Export Excel
+              </Button>
             </HStack>
           </HStack>
-
-          {/* -------------------- GRAPHS -------------------- */}
-          {data.length > 0 && (
-            <>
-              {/* Bar chart Presence vs Absence */}
-              <Box mb={6} p={4} bg="white" borderRadius="md" shadow="sm">
-                <Text fontSize="lg" fontWeight="bold" mb={2}>Presence vs Absence per Employee</Text>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="employee_name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="days_present" name="Presences" fill="#38A169" />
-                    <Bar dataKey="days_absent" name="Absences" fill="#E53E3E" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Box>
-
-              {/* Pie chart global presence */}
-              <Box mb={6} p={4} bg="white" borderRadius="md" shadow="sm">
-                <Text fontSize="lg" fontWeight="bold" mb={2}>Global Presence Rate</Text>
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={[
-                        { name: "Present", value: totalPresence },
-                        { name: "Absent", value: totalAbsence },
-                      ]}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      label
-                    >
-                      <Cell fill="#38A169" />
-                      <Cell fill="#E53E3E" />
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </Box>
-
-              {/* Bar chart anomalies */}
-              {selectedEmployee && (
-                <Box mb={6} p={4} bg="white" borderRadius="md" shadow="sm">
-                  <Text fontSize="lg" fontWeight="bold" mb={2}>Anomalies Count (Selected Employee)</Text>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={anomaliesCount} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="anomaly" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="count">
-                        {anomaliesCount.map((a, idx) => (
-                          <Cell key={a.anomaly} fill={Object.values(anomalyColors)[idx % Object.values(anomalyColors).length]} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </Box>
-              )}
-            </>
-          )}
 
           {/* -------------------- Table -------------------- */}
           {loading ? (
@@ -443,34 +456,88 @@ export default function RapportPage() {
           )}
 
           {/* -------------------- Employee History Drawer -------------------- */}
-          <Drawer isOpen={!!selectedEmployee} placement="right" onClose={closeDrawer} size="full">
+          <Drawer
+            isOpen={!!selectedEmployee}
+            placement="right"
+            onClose={closeDrawer}
+            size="full"
+          >
             <DrawerOverlay />
             <DrawerContent>
               <DrawerCloseButton />
               <DrawerHeader>
                 <Flex justifyContent="space-between">
-                  <Text>Employee History {selectedEmployee?.employee_name && `- ${selectedEmployee.employee_name}`}</Text>
+                  <Text>
+                    Employee History{" "}
+                    {selectedEmployee?.employee_name &&
+                      `- ${selectedEmployee.employee_name}`}
+                  </Text>
                   <HStack mr={10}>
-                    <Button leftIcon={<DownloadIcon />} colorScheme="green" onClick={downloadEmployeeHistoryCSV}>Export CSV</Button>
-                    <Button leftIcon={<DownloadIcon />} colorScheme="blue" onClick={downloadEmployeeExcel}>Export Excel</Button>
+                    <Button
+                      leftIcon={<DownloadIcon />}
+                      colorScheme="green"
+                      onClick={downloadEmployeeHistoryCSV}
+                    >
+                      Export CSV
+                    </Button>
+                    <Button
+                      leftIcon={<DownloadIcon />}
+                      colorScheme="blue"
+                      onClick={downloadEmployeeExcel}
+                    >
+                      Export Excel
+                    </Button>
                   </HStack>
                 </Flex>
                 <Flex gap={2} mt={2}>
-                  <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
-                  <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
-                  <Button size="sm" onClick={() => selectedEmployee && fetchEmployeeHistory(selectedEmployee)}>Filter</Button>
+                  <Input
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) => setDateFrom(e.target.value)}
+                  />
+                  <Input
+                    type="date"
+                    value={dateTo}
+                    onChange={(e) => setDateTo(e.target.value)}
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() =>
+                      selectedEmployee && fetchEmployeeHistory(selectedEmployee)
+                    }
+                  >
+                    Filter
+                  </Button>
                 </Flex>
                 <Flex gap={2} mt={2}>
                   <ButtonGroup size="sm">
-                    {["all", "present", "absent", "late"].map(f => (
-                      <Button key={f} colorScheme={drawerFilterState === f ? "yellow" : "gray"} onClick={() => setDrawerFilterState(f as any)}>
+                    {["all", "present", "absent", "late"].map((f) => (
+                      <Button
+                        key={f}
+                        colorScheme={
+                          drawerFilterState === f ? "yellow" : "gray"
+                        }
+                        onClick={() => setDrawerFilterState(f as any)}
+                      >
                         {f.charAt(0).toUpperCase() + f.slice(1)}
                       </Button>
                     ))}
                   </ButtonGroup>
-                  {Object.keys(anomalyColors).map(a => (
-                    <Button key={a} size="sm" colorScheme={drawerSelectedAnomalies.includes(a) ? "blue" : "gray"}
-                      onClick={() => setDrawerSelectedAnomalies(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a])}>
+                  {Object.keys(anomalyColors).map((a) => (
+                    <Button
+                      key={a}
+                      size="sm"
+                      colorScheme={
+                        drawerSelectedAnomalies.includes(a) ? "blue" : "gray"
+                      }
+                      onClick={() =>
+                        setDrawerSelectedAnomalies((prev) =>
+                          prev.includes(a)
+                            ? prev.filter((x) => x !== a)
+                            : [...prev, a],
+                        )
+                      }
+                    >
                       {a.replace("_", " ")}
                     </Button>
                   ))}
@@ -496,7 +563,7 @@ export default function RapportPage() {
                         </Tr>
                       </Thead>
                       <Tbody>
-                        {filteredHistory.map(h => (
+                        {filteredHistory.map((h) => (
                           <Tr key={h.date + h.status}>
                             <Td>{h.date}</Td>
                             <Td>{h.check_in_time?.split("T")[1] ?? "-"}</Td>
@@ -505,8 +572,14 @@ export default function RapportPage() {
                             <Td>{h.is_late ? "Yes" : "No"}</Td>
                             <Td>{h.late_minutes}</Td>
                             <Td>
-                              {h.anomalies.map(a => (
-                                <Badge key={a} colorScheme={anomalyColors[a] || "gray"} mr={1}>{a.replace("_", " ")}</Badge>
+                              {h.anomalies.map((a) => (
+                                <Badge
+                                  key={a}
+                                  colorScheme={anomalyColors[a] || "gray"}
+                                  mr={1}
+                                >
+                                  {a.replace("_", " ")}
+                                </Badge>
                               ))}
                             </Td>
                             <Td>{h.status}</Td>
@@ -517,12 +590,20 @@ export default function RapportPage() {
 
                     <Box mt={4} p={3} bg="gray.100" borderRadius="md">
                       <Flex justify="space-between" align="center">
-                        <Text fontWeight="bold">Total Worked Hours in That Period:</Text>
-                        <Text fontWeight="bold" color="blue.600">{totalPeriodHours.toFixed(2)} h</Text>
+                        <Text fontWeight="bold">
+                          Total Worked Hours in That Period:
+                        </Text>
+                        <Text fontWeight="bold" color="blue.600">
+                          {totalPeriodHours.toFixed(2)} h
+                        </Text>
                       </Flex>
                       <Flex justify="space-between" align="center">
-                        <Text fontWeight="bold">Total weekend Worked Hours in That Period:</Text>
-                        <Text fontWeight="bold" color="blue.600">{totalWeekendHours.toFixed(2)} h</Text>
+                        <Text fontWeight="bold">
+                          Total weekend Worked Hours in That Period:
+                        </Text>
+                        <Text fontWeight="bold" color="blue.600">
+                          {totalWeekendHours.toFixed(2)} h
+                        </Text>
                       </Flex>
                     </Box>
                   </Box>
