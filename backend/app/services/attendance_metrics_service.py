@@ -4,7 +4,7 @@ from calendar import monthrange
 from app.repositories.attendanceRepo import AttendanceRepository
 from app import utils
 from app.services.attendance_processing_service import AttendanceProcessingService
-
+from app.config.attendance_config import AttendanceConfig
 
 class AttendanceMetricsService:
     """
@@ -16,6 +16,7 @@ class AttendanceMetricsService:
         db = utils.get_db()
         self.attendance_repo = AttendanceRepository(db["attendance_logs"])
         self.db = db
+        self.config=AttendanceConfig()
 
     def _is_weekend(self, date_obj: date) -> bool:
         """Check if date is Saturday (5) or Sunday (6)"""
@@ -137,7 +138,12 @@ class AttendanceMetricsService:
         else:
             presence_rate = round((days_present / working_days) * 100, 2)
             absence_rate = round((days_absent / working_days) * 100, 2)
-        
+        monthly_hours = self.get_monthly_hours_worked(employee_id, year, month)
+
+        overtime_hours = max(
+            0,
+            monthly_hours - self.config.OVERTIME_THRESHOLD_HOURS
+        )
         return {
             "employee_id": employee_id,
             "year": year,
@@ -151,7 +157,8 @@ class AttendanceMetricsService:
             "attendance_count": len(logs),
             "weekend_days_worked": weekend_days,
             "weekend_hours_worked": weekend_hours,
-            "monthly_hours_worked": self.get_monthly_hours_worked(employee_id, year, month)
+            "monthly_hours_worked": monthly_hours,
+            "overtime_hours" : round(overtime_hours)
         }
 
     def get_all_employees_metrics(

@@ -119,7 +119,18 @@ class OvertimeReportService:
         if admin_email is None:
             admin_email = self.config.ADMIN_EMAIL
 
-        period = f"{year}-{month:02d}"
+        # period = f"{year}-{month:02d}"
+        from datetime import datetime
+        from calendar import monthrange
+
+        start_date = datetime(year, month, 1)
+        _, last_day = monthrange(year, month)
+        end_date = datetime(year, month, last_day)
+
+        period = (
+            f"{start_date.strftime('%d-%m-%Y')} / "
+            f"{end_date.strftime('%d-%m-%Y')}"
+        )
 
         logger.info(
             f"Génération du rapport heures sup — période {period}, "

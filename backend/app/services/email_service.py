@@ -34,7 +34,7 @@ class EmailService:
                     {emp.get('monthly_hours_worked', 0):.1f}h
                 </td>
                 <td style="padding:8px 12px; border-bottom:1px solid #e2e8f0; text-align:center; color:#718096;">
-                    {emp.get('days_present', 0)} / {emp.get('total_working_days', 0)} jours
+                    {emp.get('overtime_hours', 0):.1f}h
                 </td>
             </tr>"""
 
@@ -67,7 +67,7 @@ class EmailService:
                     <th style="padding:10px 12px; text-align:left; color:#4a5568;">Employé</th>
                     <th style="padding:10px 12px; text-align:center; color:#4a5568;">ID</th>
                     <th style="padding:10px 12px; text-align:center; color:#4a5568;">Heures travaillées</th>
-                    <th style="padding:10px 12px; text-align:center; color:#4a5568;">Présence</th>
+                    <th style="padding:10px 12px; text-align:center; color:#4a5568;">  Heures supplémentaires</th>
                   </tr>
                 </thead>
                 <tbody>
