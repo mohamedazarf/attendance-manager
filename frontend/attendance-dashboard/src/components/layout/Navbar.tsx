@@ -1,30 +1,37 @@
 import { Flex, Text, Spacer, Box, Button } from "@chakra-ui/react";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useNavigate } from "react-router-dom";
-import { FiArrowLeft, FiArrowRight } from 'react-icons/fi';
+import { FiArrowLeft, FiArrowRight } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const goBack = () => {
-    navigate(-1); // -1 goes back to previous page in history
+    navigate(-1);
   };
+
   const goForward = () => {
-    navigate(1); // 1 goes forward to the next page in history
+    navigate(1);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
   };
 
   return (
     <Flex
       bg="white"
-      p={{ base: 3, md: 4 }}  // Responsive padding
+      p={{ base: 3, md: 4 }}
       shadow="sm"
-      ml={{ base: '50px', md: 0 }}
+      ml={{ base: "50px", md: 0 }}
       align="center"
       w="full"
     >
       <Button
-        display={{ base: 'none', md: 'flex' }}
+        display={{ base: "none", md: "flex" }}
         height="50px"
         width="50px"
         borderRadius="full"
@@ -37,7 +44,7 @@ export default function Navbar() {
       </Button>
 
       <Button
-        display={{ base: 'none', md: 'flex' }}
+        display={{ base: "none", md: "flex" }}
         height="50px"
         width="50px"
         borderRadius="full"
@@ -49,21 +56,24 @@ export default function Navbar() {
         <FiArrowRight />
       </Button>
 
-      <Text
-        fontWeight="bold"
-        fontSize={{ base: 'md', md: 'lg' }}  // Responsive text size
-      >
+      <Text fontWeight="bold" fontSize={{ base: "md", md: "lg" }}>
         Dashboard RH
       </Text>
 
       <Spacer />
 
-      {/* Zone de droite */}
-      <Flex align="center" gap={{ base: 2, md: 4 }}>  {/* Responsive gap */}
-        <Text display={{ base: 'none', sm: 'block' }}>Admin</Text>  {/* Hide on very small screens */}
+      <Flex align="center" gap={{ base: 2, md: 4 }}>
+        {user && (
+          <Text display={{ base: "none", sm: "block" }}>
+            {user.username}
+          </Text>
+        )}
         <Box>
           <LanguageSwitcher />
         </Box>
+        <Button size="sm" variant="outline" colorScheme="red" onClick={handleLogout}>
+          Logout
+        </Button>
       </Flex>
     </Flex>
   );
