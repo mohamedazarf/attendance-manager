@@ -4,7 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { FiArrowLeft, FiArrowRight } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 
+import { useTranslation } from "react-i18next";
+
 export default function Navbar() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
@@ -57,22 +60,25 @@ export default function Navbar() {
       </Button>
 
       <Text fontWeight="bold" fontSize={{ base: "md", md: "lg" }}>
-        Dashboard RH
+        {t("Dashboard RH")}
       </Text>
 
       <Spacer />
 
       <Flex align="center" gap={{ base: 2, md: 4 }}>
         {user && (
-          <Text display={{ base: "none", sm: "block" }}>
-            {user.username}
-          </Text>
+          <Text display={{ base: "none", sm: "block" }}>{user.username}</Text>
         )}
         <Box>
           <LanguageSwitcher />
         </Box>
-        <Button size="sm" variant="outline" colorScheme="red" onClick={handleLogout}>
-          Logout
+        <Button
+          size="sm"
+          variant="outline"
+          colorScheme="red"
+          onClick={handleLogout}
+        >
+          {t("Logout")}
         </Button>
       </Flex>
     </Flex>

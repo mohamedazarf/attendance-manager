@@ -22,60 +22,87 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
 
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
 
-            <Route path="/test-i18n" element={
-              <ProtectedRoute>
-                <TestI18nPage />
-              </ProtectedRoute>
-            } />
+            <Route
+              path="/test-i18n"
+              element={
+                <ProtectedRoute>
+                  <TestI18nPage />
+                </ProtectedRoute>
+              }
+            />
 
-            <Route path="/employees" element={
-              <ProtectedRoute allowedRoles={["admin"]}>
-              {/* <ProtectedRoute> */}
-                <EmployeesPage />
-              </ProtectedRoute>
-            } />
+            <Route
+              path="/employees"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  {/* <ProtectedRoute> */}
+                  <EmployeesPage />
+                </ProtectedRoute>
+              }
+            />
 
-            <Route path="/employeesToday" element={
-              <ProtectedRoute>
-                <EmployeesToday />
-              </ProtectedRoute>
-            } />
+            <Route
+              path="/employeesToday"
+              element={
+                <ProtectedRoute>
+                  <EmployeesToday />
+                </ProtectedRoute>
+              }
+            />
 
-            <Route path="/pointages" element={
-              <ProtectedRoute>
-                <Pointages />
-              </ProtectedRoute>
-            } />
+            <Route
+              path="/pointages"
+              element={
+                <ProtectedRoute>
+                  <Pointages />
+                </ProtectedRoute>
+              }
+            />
 
-            <Route path="/rapports" element={
-              <ProtectedRoute>
-                <RapportPage />
-              </ProtectedRoute>
-            } />
+            <Route
+              path="/rapports"
+              element={
+                <ProtectedRoute>
+                  <RapportPage />
+                </ProtectedRoute>
+              }
+            />
 
-            <Route path="/rapports/charts" element={
-              <ProtectedRoute>
-                <RapportsChartsPage />
-              </ProtectedRoute>
-            } />
+            <Route
+              path="/rapports/charts"
+              element={
+                <ProtectedRoute>
+                  <RapportsChartsPage />
+                </ProtectedRoute>
+              }
+            />
 
-            <Route path="/charts/hoursByEmployee" element={
-              <ProtectedRoute>
-                <HoursByEmployeeChart />
-              </ProtectedRoute>
-            } />
+            <Route
+              path="/charts/hoursByEmployee"
+              element={
+                <ProtectedRoute>
+                  <HoursByEmployeeChart />
+                </ProtectedRoute>
+              }
+            />
 
-            <Route path="/inactive-employees" element={
-              <ProtectedRoute allowedRoles={["admin"]}>
-                <InactiveEmployeesPage />
-              </ProtectedRoute>
-            } />
+            <Route
+              path="/inactive-employees"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <InactiveEmployeesPage />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

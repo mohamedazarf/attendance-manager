@@ -5,7 +5,6 @@ import {
   Input,
   IconButton,
   Collapse,
-  HStack,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -14,8 +13,10 @@ import {
   ModalBody,
   Text,
   useDisclosure,
+  Container,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import axios from "axios";
 import {
   BarChart,
@@ -38,6 +39,7 @@ interface ChartRow {
 }
 
 export default function HoursByEmployeeChart() {
+  const { t } = useTranslation();
   const [data, setData] = useState<ChartRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
@@ -45,7 +47,7 @@ export default function HoursByEmployeeChart() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState<ChartRow | null>(
-    null
+    null,
   );
 
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -76,7 +78,9 @@ export default function HoursByEmployeeChart() {
   // Filter by name and date
   const filteredData = data.filter((emp) => {
     const empName = emp.name || "";
-    const matchesName = empName.toLowerCase().includes(filterName.toLowerCase() || "");
+    const matchesName = empName
+      .toLowerCase()
+      .includes(filterName.toLowerCase() || "");
     const matchesDate =
       (!startDate || (emp.date && emp.date >= startDate)) &&
       (!endDate || (emp.date && emp.date <= endDate));
@@ -95,7 +99,7 @@ export default function HoursByEmployeeChart() {
       onClick={() => setExpanded(!expanded)}
     >
       <Heading size="md" mb={4}>
-        Heures travaillées vs attendues
+        {t("Worked vs Expected Hours")}
         <IconButton
           aria-label="Toggle chart size"
           icon={expanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
@@ -112,7 +116,7 @@ export default function HoursByEmployeeChart() {
       <Collapse in={expanded} animateOpacity>
         <HStack mb={4} spacing={2}>
           <Input
-            placeholder="Filtrer par employé..."
+            placeholder={t("Filter by employee...")}
             value={filterName}
             onChange={(e) => setFilterName(e.target.value)}
             onClick={(e) => e.stopPropagation()}
@@ -138,11 +142,11 @@ export default function HoursByEmployeeChart() {
           <XAxis dataKey="name" />
           <YAxis />
           <Tooltip
-            formatter={(value: number, name: string, props: any) => {
+            formatter={(value: any, name: string, props: any) => {
               if (name === "worked") {
                 return [
                   `${value} h`,
-                  `Travaillées (attendu: ${props.payload.expected} h)`,
+                  `${t("Worked Hours")} (${t("Expected hours")}: ${props.payload.expected} h)`,
                 ];
               }
               return value;
@@ -174,13 +178,17 @@ export default function HoursByEmployeeChart() {
             <ModalHeader>{selectedEmployee.name}</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
-              <Text>Heures travaillées : {selectedEmployee.worked} h</Text>
-              <Text>Heures attendues : {selectedEmployee.expected} h</Text>
               <Text>
-                Statut :{" "}
+                {t("Worked Hours")} : {selectedEmployee.worked} h
+              </Text>
+              <Text>
+                {t("Expected hours")} : {selectedEmployee.expected} h
+              </Text>
+              <Text>
+                {t("Status")} :{" "}
                 {selectedEmployee.worked >= selectedEmployee.expected
                   ? "✅ OK"
-                  : "❌ Insuffisant"}
+                  : `❌ ${t("Insufficient")}`}
               </Text>
               {selectedEmployee.date && (
                 <Text>Date : {selectedEmployee.date}</Text>
@@ -192,4 +200,3 @@ export default function HoursByEmployeeChart() {
     </Box>
   );
 }
-

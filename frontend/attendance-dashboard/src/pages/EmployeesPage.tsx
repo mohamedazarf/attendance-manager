@@ -79,7 +79,10 @@ type EmployeeHistoryItem = {
   status: string;
 };
 
+import { useTranslation } from "react-i18next";
+
 export default function EmployeesPage() {
+  const { t } = useTranslation();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -152,7 +155,7 @@ export default function EmployeesPage() {
         `${BASE_URL}/device/users/${emp.employee_code}/enroll`,
       );
       toast({
-        title: "Enrollment Started",
+        title: t("Enrollment Started"),
         description: res.data.message,
         status: "success",
         duration: 5000,
@@ -167,7 +170,7 @@ export default function EmployeesPage() {
       const checkFingerprint = async () => {
         if (Date.now() - startTime > timeout) {
           toast({
-            title: "Enrollment Timed Out",
+            title: t("Enrollment Timed Out"),
             description: "You did not place your finger on the device in time.",
             status: "warning",
             duration: 5000,
@@ -186,7 +189,7 @@ export default function EmployeesPage() {
             res.data.fingerprint_count > 0
           ) {
             toast({
-              title: "Fingerprint Enrolled",
+              title: t("Fingerprint Enrolled"),
               description: `Fingerprint successfully enrolled on device. Total: ${res.data.fingerprint_count}`,
               status: "success",
               duration: 5000,
@@ -212,7 +215,7 @@ export default function EmployeesPage() {
       setTimeout(checkFingerprint, interval);
     } catch (err: any) {
       toast({
-        title: "Enrollment Failed",
+        title: t("Enrollment Failed"),
         description: err.response?.data?.message || err.message,
         status: "error",
         duration: 5000,
@@ -241,7 +244,7 @@ export default function EmployeesPage() {
         },
       );
       toast({
-        title: "Password Set",
+        title: t("Password Set"),
         description: res.data.message,
         status: "success",
         duration: 3000,
@@ -251,7 +254,7 @@ export default function EmployeesPage() {
       setPasswordEmployee(null);
     } catch (err: any) {
       toast({
-        title: "Failed to set password",
+        title: t("Failed to set password"),
         description: err.response?.data?.message || err.message,
         status: "error",
         duration: 5000,
@@ -317,7 +320,7 @@ export default function EmployeesPage() {
       await axios.post(`${BASE_URL}/device/sync/employees`);
 
       toast({
-        title: "User Created",
+        title: t("User Created"),
         description:
           "User created successfully. You can now enroll fingerprint.",
         status: "success",
@@ -348,7 +351,7 @@ export default function EmployeesPage() {
       });
     } catch (err: any) {
       toast({
-        title: "Error creating employee",
+        title: t("Error creating employee"),
         description: err.response?.data?.message || err.message,
         status: "error",
         duration: 5000,
@@ -403,7 +406,7 @@ export default function EmployeesPage() {
       );
 
       toast({
-        title: "Employee Updated",
+        title: t("Employee Updated"),
         description: res.data.message || "Employee updated successfully.",
         status: "success",
         duration: 4000,
@@ -424,7 +427,7 @@ export default function EmployeesPage() {
       setEditingEmployee(null);
     } catch (err: any) {
       toast({
-        title: "Update failed",
+        title: t("Update failed"),
         description: err.response?.data?.message || err.message,
         status: "error",
         duration: 5000,
@@ -527,11 +530,11 @@ export default function EmployeesPage() {
         <Flex justify="space-between" p={5} align="center" mb={6}>
           <Box>
             <Heading size="md" pl="10">
-              Employees
+              {t("Employees")}
             </Heading>
             <Text fontSize="sm" color="gray.500" pl="10">
               {filteredEmployees.filter((emp) => emp.is_active === true).length}{" "}
-              employee(s) found
+              {t("employee(s) found")}
             </Text>
           </Box>
           <Button
@@ -551,7 +554,7 @@ export default function EmployeesPage() {
             }}
             mr={10}
           >
-            + Add Employee
+            + {t("Add Employee")}
           </Button>
         </Flex>
         <AddEmployeeModal isOpen={isOpen} onClose={onClose} />
@@ -569,7 +572,7 @@ export default function EmployeesPage() {
                 <SearchIcon color="gray.400" />
               </InputLeftElement>
               <Input
-                placeholder="Search employee..."
+                placeholder={t("Search employee...")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -580,9 +583,9 @@ export default function EmployeesPage() {
               value={privilege}
               onChange={(e) => setPrivilege(e.target.value)}
             >
-              <option value="all">All privileges</option>
-              <option value="0">User</option>
-              <option value="14">Admin</option>
+              <option value="all">{t("All privileges")}</option>
+              <option value="0">{t("User")}</option>
+              <option value="14">{t("Admin")}</option>
             </Select>
           </Flex>
 
@@ -591,13 +594,13 @@ export default function EmployeesPage() {
               colorScheme={viewMode === "cards" ? "blue" : "gray"}
               onClick={() => setViewMode("cards")}
             >
-              Cards
+              {t("Cards")}
             </Button>
             <Button
               colorScheme={viewMode === "table" ? "blue" : "gray"}
               onClick={() => setViewMode("table")}
             >
-              Table
+              {t("Table")}
             </Button>
           </ButtonGroup>
         </Flex>
@@ -629,17 +632,17 @@ export default function EmployeesPage() {
                       colorScheme={emp.privilege === 14 ? "green" : "blue"}
                       fontSize="0.8em"
                     >
-                      {emp.privilege === 14 ? "Admin" : "User"}
+                      {emp.privilege === 14 ? t("Admin") : t("User")}
                     </Badge>
                   </Flex>
                   <Text fontSize="sm" mb={1}>
-                    <strong>Code:</strong> {emp.employee_code}
+                    <strong>{t("Code")}:</strong> {emp.employee_code}
                   </Text>
                   <Text fontSize="sm" mb={1}>
-                    <strong>Group:</strong> {emp.group_id || "-"}
+                    <strong>{t("Group")}:</strong> {emp.group_id || "-"}
                   </Text>
                   <Text fontSize="sm">
-                    <strong>Card:</strong> {emp.card || "-"}
+                    <strong>{t("Card")}:</strong> {emp.card || "-"}
                   </Text>
 
                   <Flex gap={2} mt={3} wrap="wrap">
@@ -651,7 +654,7 @@ export default function EmployeesPage() {
                         setDeletingEmployee(emp);
                       }}
                     >
-                      Delete
+                      {t("Delete")}
                     </Button>
                     <Button
                       size="sm"
@@ -661,7 +664,7 @@ export default function EmployeesPage() {
                         openPasswordModal(emp);
                       }}
                     >
-                      Password
+                      {t("Password")}
                     </Button>
                     <Button
                       size="sm"
@@ -673,8 +676,8 @@ export default function EmployeesPage() {
                       }}
                     >
                       {emp.fingerprint_count > 0
-                        ? "add another fingerprint"
-                        : "enroll fingerprint"}
+                        ? t("Add Another Fingerprint")
+                        : t("Enroll Fingerprint")}
                     </Button>
                     <Button
                       size="sm"
@@ -685,7 +688,7 @@ export default function EmployeesPage() {
                         setIsEditOpen(true);
                       }}
                     >
-                      Edit
+                      {t("Edit")}
                     </Button>
                   </Flex>
                 </Box>
@@ -696,13 +699,13 @@ export default function EmployeesPage() {
             <Table size="sm">
               <Thead bg="gray.100">
                 <Tr>
-                  <Th>Name</Th>
-                  <Th>Code</Th>
-                  <Th>Privilege</Th>
-                  <Th>Group</Th>
-                  <Th>Card</Th>
-                  <Th>Fingerprint</Th>
-                  <Th>Actions</Th>
+                  <Th>{t("Name")}</Th>
+                  <Th>{t("Code")}</Th>
+                  <Th>{t("Privilege")}</Th>
+                  <Th>{t("Group")}</Th>
+                  <Th>{t("Card")}</Th>
+                  <Th>{t("Fingerprint")}</Th>
+                  <Th>{t("Actions")}</Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -720,15 +723,15 @@ export default function EmployeesPage() {
                         <Badge
                           colorScheme={emp.privilege === 14 ? "green" : "blue"}
                         >
-                          {emp.privilege === 14 ? "Admin" : "User"}
+                          {emp.privilege === 14 ? t("Admin") : t("User")}
                         </Badge>
                       </Td>
                       <Td>{emp.group_id || "-"}</Td>
                       <Td>{emp.card || "-"}</Td>
                       <Td>
                         {emp.fingerprint_count > 0
-                          ? `${emp.fingerprint_count} enrolled`
-                          : "None"}
+                          ? `${emp.fingerprint_count} ${t("enrolled")}`
+                          : t("None")}
                       </Td>
                       <Td>
                         <Flex gap={2}>
@@ -773,7 +776,7 @@ export default function EmployeesPage() {
           <DrawerContent>
             <DrawerCloseButton />
             <DrawerHeader>
-              Employee History {employeeName && `- ${employeeName}`}
+              {t("Employee History")} {employeeName && `- ${employeeName}`}
               <Flex gap={2} mt={2} align="center">
                 <Input
                   type="date"
@@ -794,7 +797,7 @@ export default function EmployeesPage() {
                     if (emp) openEmployeeHistory(emp);
                   }}
                 >
-                  Filter
+                  {t("Filter")}
                 </Button>
               </Flex>
               <Flex gap={2} mt={2} align="center" wrap="wrap">
@@ -805,7 +808,7 @@ export default function EmployeesPage() {
                       colorScheme={drawerFilterState === f ? "yellow" : "gray"}
                       onClick={() => setDrawerFilterState(f)}
                     >
-                      {f.charAt(0).toUpperCase() + f.slice(1)}
+                      {t(f.charAt(0).toUpperCase() + f.slice(1))}
                     </Button>
                   ))}
                 </ButtonGroup>
@@ -839,14 +842,14 @@ export default function EmployeesPage() {
                   <Table size="sm">
                     <Thead>
                       <Tr>
-                        <Th>Date</Th>
-                        <Th>Check-in</Th>
-                        <Th>Check-out</Th>
-                        <Th>Worked Hours</Th>
-                        <Th>Late</Th>
-                        <Th>Late Minutes</Th>
-                        <Th>Anomalies</Th>
-                        <Th>Status</Th>
+                        <Th>{t("Date")}</Th>
+                        <Th>{t("Check-in")}</Th>
+                        <Th>{t("Check-out")}</Th>
+                        <Th>{t("Worked Hours")}</Th>
+                        <Th>{t("Late")}</Th>
+                        <Th>{t("Late Minutes")}</Th>
+                        <Th>{t("Anomalies")}</Th>
+                        <Th>{t("Status")}</Th>
                       </Tr>
                     </Thead>
                     <Tbody>
@@ -856,7 +859,7 @@ export default function EmployeesPage() {
                           <Td>{h.check_in_time?.split("T")[1] ?? "-"}</Td>
                           <Td>{h.check_out_time?.split("T")[1] ?? "-"}</Td>
                           <Td>{h.worked_hours.toFixed(2)}</Td>
-                          <Td>{h.is_late ? "Yes" : "No"}</Td>
+                          <Td>{h.is_late ? t("Yes") : t("No")}</Td>
                           <Td>{h.late_minutes}</Td>
                           <Td>
                             {h.anomalies.map((a) => (
@@ -879,14 +882,16 @@ export default function EmployeesPage() {
                     <Flex direction="column" gap={2}>
                       <Flex justify="space-between" align="center">
                         <Text fontWeight="bold">
-                          Total Worked Hours in That Period:
+                          {t("Total Worked Hours in That Period")}:
                         </Text>
                         <Text fontWeight="bold" color="blue.600">
                           {totalPeriodHours.toFixed(2)} h
                         </Text>
                       </Flex>
                       <Flex justify="space-between" align="center">
-                        <Text fontWeight="bold">Total Weekend Hours:</Text>
+                        <Text fontWeight="bold">
+                          {t("Total Weekend Hours")}:
+                        </Text>
                         <Text fontWeight="bold" color="orange.600">
                           {totalWeekendHours.toFixed(2)} h
                         </Text>
@@ -907,19 +912,19 @@ export default function EmployeesPage() {
           <DrawerOverlay />
           <DrawerContent>
             <DrawerCloseButton />
-            <DrawerHeader>Add New Employee</DrawerHeader>
+            <DrawerHeader>{t("Add Employee")}</DrawerHeader>
 
             <DrawerBody>
               <Flex direction="column" gap={4}>
                 <Input
-                  placeholder="Employee Code"
+                  placeholder={t("Code")}
                   value={newEmployee.employee_code}
                   isReadOnly
                   bg="gray.100"
                 />
 
                 <Input
-                  placeholder="Name"
+                  placeholder={t("Name")}
                   value={newEmployee.name}
                   onChange={(e) =>
                     setNewEmployee({ ...newEmployee, name: e.target.value })
@@ -935,12 +940,12 @@ export default function EmployeesPage() {
                     })
                   }
                 >
-                  <option value={0}>User</option>
-                  <option value={1}>Admin</option>
+                  <option value={0}>{t("User")}</option>
+                  <option value={1}>{t("Admin")}</option>
                 </Select>
 
                 <Input
-                  placeholder="Group ID"
+                  placeholder={t("Group")}
                   value={newEmployee.group_id}
                   onChange={(e) =>
                     setNewEmployee({ ...newEmployee, group_id: e.target.value })
@@ -948,7 +953,7 @@ export default function EmployeesPage() {
                 />
 
                 <Input
-                  placeholder="Card Number"
+                  placeholder={t("Card")}
                   type="number"
                   value={newEmployee.card}
                   onChange={(e) =>
@@ -957,7 +962,7 @@ export default function EmployeesPage() {
                 />
 
                 <Input
-                  placeholder="Password"
+                  placeholder={t("Password")}
                   type="password"
                   value={newEmployee.password}
                   onChange={(e) =>
@@ -970,7 +975,7 @@ export default function EmployeesPage() {
                   onClick={handleAddEmployee}
                   isLoading={addLoading}
                 >
-                  Save Employee
+                  {t("Save Employee")}
                 </Button>
               </Flex>
             </DrawerBody>
@@ -985,19 +990,19 @@ export default function EmployeesPage() {
           <DrawerOverlay />
           <DrawerContent>
             <DrawerCloseButton />
-            <DrawerHeader>Edit Employee</DrawerHeader>
+            <DrawerHeader>{t("Edit")}</DrawerHeader>
 
             <DrawerBody>
               <Flex direction="column" gap={4}>
                 <Input
-                  placeholder="Employee Code"
+                  placeholder={t("Code")}
                   value={editingEmployee?.employee_code}
                   isReadOnly
                   bg="gray.100"
                 />
 
                 <Input
-                  placeholder="Name"
+                  placeholder={t("Name")}
                   value={editingEmployee?.name}
                   onChange={(e) =>
                     setEditingEmployee({
@@ -1016,12 +1021,12 @@ export default function EmployeesPage() {
                     })
                   }
                 >
-                  <option value={0}>User</option>
-                  <option value={1}>Admin</option>
+                  <option value={0}>{t("User")}</option>
+                  <option value={1}>{t("Admin")}</option>
                 </Select>
 
                 <Input
-                  placeholder="Group ID"
+                  placeholder={t("Group")}
                   value={editingEmployee?.group_id}
                   onChange={(e) =>
                     setEditingEmployee({
@@ -1032,7 +1037,7 @@ export default function EmployeesPage() {
                 />
 
                 <Input
-                  placeholder="Card Number"
+                  placeholder={t("Card")}
                   type="number"
                   value={editingEmployee?.card}
                   onChange={(e) =>
@@ -1044,7 +1049,7 @@ export default function EmployeesPage() {
                 />
 
                 <Input
-                  placeholder="Password"
+                  placeholder={t("Password")}
                   type="password"
                   value={editingEmployee?.password}
                   onChange={(e) =>
@@ -1060,7 +1065,7 @@ export default function EmployeesPage() {
                   onClick={handleUpdateEmployee}
                   isLoading={editLoading}
                 >
-                  Update Employee
+                  {t("Update Employee")}
                 </Button>
               </Flex>
             </DrawerBody>
@@ -1076,18 +1081,18 @@ export default function EmployeesPage() {
         <AlertDialogOverlay>
           <AlertDialogContent>
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Delete Employee
+              {t("Delete")}
             </AlertDialogHeader>
 
             <AlertDialogBody>
-              Are you sure you want to delete{" "}
-              <strong>{deletingEmployee?.name}</strong>? This action cannot be
-              undone.
+              {t("Are you sure you want to delete")}{" "}
+              <strong>{deletingEmployee?.name}</strong>?{" "}
+              {t("This action cannot be undone")}
             </AlertDialogBody>
 
             <AlertDialogFooter>
               <Button ref={cancelRef} onClick={() => setDeletingEmployee(null)}>
-                Cancel
+                {t("Cancel")}
               </Button>
               <Button
                 colorScheme="red"
@@ -1095,7 +1100,7 @@ export default function EmployeesPage() {
                 ml={3}
                 isLoading={deleteLoading}
               >
-                Delete
+                {t("Delete")}
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -1106,11 +1111,13 @@ export default function EmployeesPage() {
       <Modal isOpen={isPasswordOpen} onClose={() => setIsPasswordOpen(false)}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Set Password for {passwordEmployee?.name}</ModalHeader>
+          <ModalHeader>
+            {t("Password")} - {passwordEmployee?.name}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <Input
-              placeholder="Enter new password"
+              placeholder={t("Enter new password")}
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
@@ -1124,10 +1131,10 @@ export default function EmployeesPage() {
               onClick={handleSetPassword}
               isLoading={passwordLoading}
             >
-              Save Password
+              {t("Save Password")}
             </Button>
             <Button variant="ghost" onClick={() => setIsPasswordOpen(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
           </ModalFooter>
         </ModalContent>

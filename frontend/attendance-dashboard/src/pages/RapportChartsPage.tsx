@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   VStack,
@@ -36,6 +37,7 @@ type AttendanceMetric = {
 };
 
 export default function GraphiquesPage() {
+  const { t } = useTranslation();
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
 
@@ -99,19 +101,19 @@ export default function GraphiquesPage() {
         <Navbar />
         <Container maxW="100%" flex={1} p={6}>
           <Text fontSize="2xl" fontWeight="bold" mb={4}>
-            Graphiques Attendance
+            {t("Attendance Charts")}
           </Text>
 
           {loading ? (
             <Spinner />
           ) : data.length === 0 ? (
-            <Text>No data available</Text>
+            <Text>{t("No data available")}</Text>
           ) : (
             <>
               {/* Bar chart Presence vs Absence */}
               <Box mb={6} p={4} bg="white" borderRadius="md" shadow="sm">
                 <Text fontSize="lg" fontWeight="bold" mb={2}>
-                  Presence vs Absence per Employee
+                  {t("Presence vs Absence per Employee")}
                 </Text>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart
@@ -125,10 +127,14 @@ export default function GraphiquesPage() {
                     <Legend />
                     <Bar
                       dataKey="days_present"
-                      name="Presences"
+                      name={t("Presences")}
                       fill="#38A169"
                     />
-                    <Bar dataKey="days_absent" name="Absences" fill="#E53E3E" />
+                    <Bar
+                      dataKey="days_absent"
+                      name={t("Absences")}
+                      fill="#E53E3E"
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </Box>
@@ -136,14 +142,14 @@ export default function GraphiquesPage() {
               {/* Pie chart global presence */}
               <Box mb={6} p={4} bg="white" borderRadius="md" shadow="sm">
                 <Text fontSize="lg" fontWeight="bold" mb={2}>
-                  Global Presence Rate
+                  {t("Global Presence Rate")}
                 </Text>
                 <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
                     <Pie
                       data={[
-                        { name: "Present", value: totalPresence },
-                        { name: "Absent", value: totalAbsence },
+                        { name: t("Present"), value: totalPresence },
+                        { name: t("Absent"), value: totalAbsence },
                       ]}
                       dataKey="value"
                       nameKey="name"

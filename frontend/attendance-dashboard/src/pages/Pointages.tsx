@@ -87,10 +87,12 @@ function DailyAlerts({
   employees,
   onManualPunch,
   onMarkAbsent,
+  onConfirmLate,
 }: {
   employees: Employee[];
   onManualPunch: (emp: { id: number; name: string }) => void;
   onMarkAbsent: (emp: { id: number; name: string }) => void;
+  onConfirmLate: (id: number) => void;
 }) {
   const { t } = useTranslation();
 
@@ -187,7 +189,7 @@ function DailyAlerts({
                   size="sm"
                   colorScheme="yellow"
                   variant="outline"
-                  onClick={() => console.log("Confirm late", emp.employee_id)}
+                  onClick={() => onConfirmLate(emp.employee_id)}
                 >
                   {t("Confirm late")}
                 </Button>
@@ -196,7 +198,7 @@ function DailyAlerts({
           </HStack>
           {emp.justification?.notes && (
             <Text fontSize="xs" color="gray.600" mt={2} fontStyle="italic">
-              Note: {emp.justification.notes}
+              {t("Note")}: {emp.justification.notes}
             </Text>
           )}
         </Box>
@@ -333,19 +335,20 @@ export default function Pointages() {
           </SimpleGrid>
 
           <Box bg="white" p={6} borderRadius="lg" boxShadow="sm">
-            <Heading size="md" mb={6}>
+            <Heading size="md" mb={4}>
               {t("Daily Alerts")}
             </Heading>
 
             <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
               <Box>
                 <Heading size="sm" mb={3} color="red.500">
-                  🚨 {t("Alertes de pointage")}
+                  🚨 {t("Attendance Alerts")}
                 </Heading>
                 <DailyAlerts
                   employees={negativeAlerts}
                   onManualPunch={handleManualPunch}
                   onMarkAbsent={handleMarkAbsent}
+                  onConfirmLate={(id) => console.log("Confirm late", id)}
                 />
               </Box>
 
@@ -358,6 +361,7 @@ export default function Pointages() {
                     employees={positiveAlerts}
                     onManualPunch={handleManualPunch}
                     onMarkAbsent={handleMarkAbsent}
+                    onConfirmLate={(id) => console.log("Confirm late", id)}
                   />
                 ) : (
                   <Text color="gray.500">{t("No alerts 🎉")}</Text>

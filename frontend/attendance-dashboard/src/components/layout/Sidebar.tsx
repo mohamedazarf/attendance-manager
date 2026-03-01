@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useAuth } from "../../context/AuthContext";
 
+import { useTranslation } from "react-i18next";
+
 interface SidebarProps {
   isSidebarOpen: boolean;
   toggleSidebar: () => void;
@@ -13,6 +15,7 @@ export default function Sidebar({
   isSidebarOpen,
   toggleSidebar,
 }: SidebarProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
 
@@ -41,14 +44,14 @@ export default function Sidebar({
           _hover={{ color: "#B98112", cursor: "pointer" }}
           onClick={() => handleNavigate("/")}
         >
-          Dashboard
+          {t("Dashboard")}
         </Text>
 
         <Text
           _hover={{ color: "#B98112", cursor: "pointer" }}
           onClick={() => handleNavigate("/pointages")}
         >
-          Pointages
+          {t("Pointages")}
         </Text>
 
         {isAdmin && (
@@ -56,7 +59,7 @@ export default function Sidebar({
             _hover={{ color: "#B98112", cursor: "pointer" }}
             onClick={() => handleNavigate("/employees")}
           >
-            Employés
+            {t("Employees")}
           </Text>
         )}
 
@@ -65,7 +68,7 @@ export default function Sidebar({
             _hover={{ color: "#B98112", cursor: "pointer" }}
             onClick={() => handleNavigate("/inactive-employees")}
           >
-            Employés inactifs
+            {t("Inactive Employees")}
           </Text>
         )}
 
@@ -78,7 +81,7 @@ export default function Sidebar({
           textTransform="uppercase"
           fontSize="sm"
         >
-          Rapports
+          {t("Reports")}
         </Text>
 
         {/* SUBMENU */}
@@ -89,7 +92,7 @@ export default function Sidebar({
             _hover={{ color: "#B98112", cursor: "pointer" }}
             onClick={() => handleNavigate("/rapports/charts")}
           >
-            • Graphiques
+            • {t("Charts")}
           </Text>
 
           <Text
@@ -98,7 +101,7 @@ export default function Sidebar({
             _hover={{ color: "#B98112", cursor: "pointer" }}
             onClick={() => handleNavigate("/rapports")}
           >
-            • Rapport mensuel
+            • {t("Monthly Report")}
           </Text>
         </VStack>
       </VStack>

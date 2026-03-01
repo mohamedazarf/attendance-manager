@@ -8,6 +8,7 @@ import {
   HStack,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import axios from "axios";
 import {
   BarChart,
@@ -28,6 +29,7 @@ interface ChartRow {
 }
 
 export default function WeekendHoursByEmployeeChart() {
+  const { t } = useTranslation();
   const [data, setData] = useState<ChartRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
@@ -36,9 +38,7 @@ export default function WeekendHoursByEmployeeChart() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get(
-          `${BASE_URL}/attendance/metrics/weekend`
-        );
+        const res = await axios.get(`${BASE_URL}/attendance/metrics/weekend`);
 
         const chartData = res.data.map((emp: any) => ({
           name: emp.employee_name,
@@ -57,7 +57,7 @@ export default function WeekendHoursByEmployeeChart() {
   }, []);
 
   const filteredData = data.filter((emp) =>
-    emp.name.toLowerCase().includes(filterName.toLowerCase())
+    emp.name.toLowerCase().includes(filterName.toLowerCase()),
   );
 
   if (loading) return <Spinner size="xl" />;
@@ -72,7 +72,7 @@ export default function WeekendHoursByEmployeeChart() {
       onClick={() => setExpanded(!expanded)}
     >
       <Heading size="md" mb={4}>
-        Heures travaillées le week-end
+        {t("Weekend Worked Hours")}
         <IconButton
           aria-label="Toggle chart size"
           icon={expanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
@@ -88,7 +88,7 @@ export default function WeekendHoursByEmployeeChart() {
       <Collapse in={expanded} animateOpacity>
         <HStack mb={4} spacing={2}>
           <Input
-            placeholder="Filtrer par employé..."
+            placeholder={t("Filter by employee...")}
             value={filterName}
             onChange={(e) => setFilterName(e.target.value)}
             onClick={(e) => e.stopPropagation()}
@@ -101,7 +101,7 @@ export default function WeekendHoursByEmployeeChart() {
           <XAxis dataKey="name" />
           <YAxis />
           <Tooltip
-            formatter={(value: number) => [`${value} h`, "Heures week-end"]}
+            formatter={(value: any) => [`${value} h`, t("Weekend hours")]}
           />
           <Bar dataKey="weekendHours">
             {filteredData.map((entry, index) => (

@@ -1,4 +1,5 @@
 import { Box, Heading, Spinner } from "@chakra-ui/react";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -20,6 +21,7 @@ interface AnomalyData {
 }
 
 export default function MostAnomaliesPieChart() {
+  const { t } = useTranslation();
   const [data, setData] = useState<AnomalyData[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,7 +43,7 @@ export default function MostAnomaliesPieChart() {
         });
 
         const chartData: AnomalyData[] = Object.entries(anomalyCounts).map(
-          ([name, value]) => ({ name, value })
+          ([name, value]) => ({ name, value }),
         );
 
         setData(chartData);
@@ -60,7 +62,7 @@ export default function MostAnomaliesPieChart() {
   return (
     <Box bg="white" p={6} borderRadius="lg" shadow="sm">
       <Heading size="md" mb={4}>
-        Répartition des anomalies
+        {t("Most Anomalies")}
       </Heading>
       <ResponsiveContainer width="100%" height={400}>
         <PieChart>
@@ -75,7 +77,10 @@ export default function MostAnomaliesPieChart() {
             label
           >
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              <Cell
+                key={`cell-${index}`}
+                fill={COLORS[index % COLORS.length]}
+              />
             ))}
           </Pie>
           <Tooltip />

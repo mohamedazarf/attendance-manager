@@ -30,19 +30,6 @@ import Sidebar from "../components/layout/Sidebar";
 import { HamburgerIcon, CloseIcon, DownloadIcon } from "@chakra-ui/icons";
 import axios from "axios";
 import * as XLSX from "xlsx";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-} from "recharts";
 
 const BASE_URL = "http://localhost:8000/api/v1";
 
@@ -80,7 +67,10 @@ type EmployeeHistoryItem = {
   status: string;
 };
 
+import { useTranslation } from "react-i18next";
+
 export default function RapportPage() {
+  const { t } = useTranslation();
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
 
@@ -348,13 +338,6 @@ export default function RapportPage() {
   };
 
   // -------------------- Graphs data --------------------
-  const totalPresence = data.reduce((acc, e) => acc + e.days_present, 0);
-  const totalAbsence = data.reduce((acc, e) => acc + e.days_absent, 0);
-
-  const anomaliesCount = Object.keys(anomalyColors).map((a) => ({
-    anomaly: a.replace("_", " "),
-    count: employeeHistory.filter((h) => h.anomalies.includes(a)).length,
-  }));
 
   return (
     <Box display="flex" minH="100vh" bg="gray.50">
@@ -373,19 +356,19 @@ export default function RapportPage() {
         <Navbar />
         <Container maxW="100%" flex={1} p={6}>
           <Text fontSize="xl" fontWeight="bold" mb={4}>
-            Attendance Report
+            {t("Attendance Report")}
           </Text>
 
           {/* Date filters + export buttons */}
           <HStack spacing={2} mb={4} justifyContent="space-between">
             <HStack>
-              <Text>Start Date:</Text>
+              <Text>{t("Start Date")}:</Text>
               <Input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
               />
-              <Text>End Date:</Text>
+              <Text>{t("End Date")}:</Text>
               <Input
                 type="date"
                 value={endDate}
@@ -398,14 +381,14 @@ export default function RapportPage() {
                 colorScheme="green"
                 onClick={downloadCSV}
               >
-                Export CSV
+                {t("Export CSV")}
               </Button>
               <Button
                 leftIcon={<DownloadIcon />}
                 colorScheme="green"
                 onClick={downloadAllEmployeesExcel}
               >
-                Export Excel
+                {t("Export Excel")}
               </Button>
             </HStack>
           </HStack>
@@ -418,16 +401,16 @@ export default function RapportPage() {
               <Table size="sm">
                 <Thead>
                   <Tr>
-                    <Th>ID</Th>
-                    <Th>Name</Th>
-                    <Th>Period</Th>
-                    <Th isNumeric>Working Days</Th>
-                    <Th isNumeric>Presences</Th>
-                    <Th isNumeric>Absences</Th>
-                    <Th isNumeric>Presence %</Th>
-                    <Th isNumeric>Absence %</Th>
-                    <Th isNumeric>Weekend Days</Th>
-                    <Th isNumeric>Weekend Hours</Th>
+                    <Th>{t("Employee ID")}</Th>
+                    <Th>{t("Name")}</Th>
+                    <Th>{t("Period")}</Th>
+                    <Th isNumeric>{t("Working Days")}</Th>
+                    <Th isNumeric>{t("Presences")}</Th>
+                    <Th isNumeric>{t("Absences")}</Th>
+                    <Th isNumeric>{t("Presence %")}</Th>
+                    <Th isNumeric>{t("Absence %")}</Th>
+                    <Th isNumeric>{t("Weekend Days")}</Th>
+                    <Th isNumeric>{t("Weekend Hours")}</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
@@ -468,7 +451,7 @@ export default function RapportPage() {
               <DrawerHeader>
                 <Flex justifyContent="space-between">
                   <Text>
-                    Employee History{" "}
+                    {t("Employee History")}{" "}
                     {selectedEmployee?.employee_name &&
                       `- ${selectedEmployee.employee_name}`}
                   </Text>
@@ -478,14 +461,14 @@ export default function RapportPage() {
                       colorScheme="green"
                       onClick={downloadEmployeeHistoryCSV}
                     >
-                      Export CSV
+                      {t("Export CSV")}
                     </Button>
                     <Button
                       leftIcon={<DownloadIcon />}
                       colorScheme="blue"
                       onClick={downloadEmployeeExcel}
                     >
-                      Export Excel
+                      {t("Export Excel")}
                     </Button>
                   </HStack>
                 </Flex>
@@ -506,7 +489,7 @@ export default function RapportPage() {
                       selectedEmployee && fetchEmployeeHistory(selectedEmployee)
                     }
                   >
-                    Filter
+                    {t("Filter")}
                   </Button>
                 </Flex>
                 <Flex gap={2} mt={2}>
@@ -519,7 +502,7 @@ export default function RapportPage() {
                         }
                         onClick={() => setDrawerFilterState(f as any)}
                       >
-                        {f.charAt(0).toUpperCase() + f.slice(1)}
+                        {t(f.charAt(0).toUpperCase() + f.slice(1))}
                       </Button>
                     ))}
                   </ButtonGroup>
@@ -552,14 +535,14 @@ export default function RapportPage() {
                     <Table size="sm">
                       <Thead>
                         <Tr>
-                          <Th>Date</Th>
-                          <Th>Check-in</Th>
-                          <Th>Check-out</Th>
-                          <Th>Worked Hours</Th>
-                          <Th>Late</Th>
-                          <Th>Late Minutes</Th>
-                          <Th>Anomalies</Th>
-                          <Th>Status</Th>
+                          <Th>{t("Date")}</Th>
+                          <Th>{t("Check-in")}</Th>
+                          <Th>{t("Check-out")}</Th>
+                          <Th>{t("Worked Hours")}</Th>
+                          <Th>{t("Late")}</Th>
+                          <Th>{t("Late Minutes")}</Th>
+                          <Th>{t("Anomalies")}</Th>
+                          <Th>{t("Status")}</Th>
                         </Tr>
                       </Thead>
                       <Tbody>
@@ -569,7 +552,7 @@ export default function RapportPage() {
                             <Td>{h.check_in_time?.split("T")[1] ?? "-"}</Td>
                             <Td>{h.check_out_time?.split("T")[1] ?? "-"}</Td>
                             <Td>{h.worked_hours.toFixed(2)}</Td>
-                            <Td>{h.is_late ? "Yes" : "No"}</Td>
+                            <Td>{h.is_late ? t("Yes") : t("No")}</Td>
                             <Td>{h.late_minutes}</Td>
                             <Td>
                               {h.anomalies.map((a) => (
@@ -591,7 +574,7 @@ export default function RapportPage() {
                     <Box mt={4} p={3} bg="gray.100" borderRadius="md">
                       <Flex justify="space-between" align="center">
                         <Text fontWeight="bold">
-                          Total Worked Hours in That Period:
+                          {t("Total Worked Hours in That Period")}:
                         </Text>
                         <Text fontWeight="bold" color="blue.600">
                           {totalPeriodHours.toFixed(2)} h
@@ -599,7 +582,7 @@ export default function RapportPage() {
                       </Flex>
                       <Flex justify="space-between" align="center">
                         <Text fontWeight="bold">
-                          Total weekend Worked Hours in That Period:
+                          {t("Total weekend Worked Hours in That Period")}:
                         </Text>
                         <Text fontWeight="bold" color="blue.600">
                           {totalWeekendHours.toFixed(2)} h

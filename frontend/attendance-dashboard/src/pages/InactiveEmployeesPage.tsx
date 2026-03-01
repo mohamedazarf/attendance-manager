@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   SimpleGrid,
@@ -66,6 +67,7 @@ type EmployeeHistoryItem = {
 };
 
 export default function InactiveEmployeesPage() {
+  const { t } = useTranslation();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -200,20 +202,20 @@ export default function InactiveEmployeesPage() {
             direction={{ base: "column", md: "row" }}
             gap={4}
           >
-            <Heading>Inactive Employees</Heading>
+            <Heading>{t("Inactive Employees")}</Heading>
 
             <ButtonGroup size="sm" isAttached variant="outline">
               <Button
                 colorScheme={viewMode === "cards" ? "blue" : "gray"}
                 onClick={() => setViewMode("cards")}
               >
-                Cards
+                {t("Cards")}
               </Button>
               <Button
                 colorScheme={viewMode === "table" ? "blue" : "gray"}
                 onClick={() => setViewMode("table")}
               >
-                Table
+                {t("Table")}
               </Button>
             </ButtonGroup>
           </Flex>
@@ -223,14 +225,14 @@ export default function InactiveEmployeesPage() {
                 <SearchIcon color="gray.400" />
               </InputLeftElement>
               <Input
-                placeholder="Search employee..."
+                placeholder={t("Search employee...")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </InputGroup>
           </Flex>
           {employees.length === 0 ? (
-            <Text>No inactive employees found.</Text>
+            <Text>{t("No inactive employees found")}.</Text>
           ) : viewMode === "cards" ? (
             /* 🔹 CARDS VIEW */
             <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={5}>
@@ -261,13 +263,13 @@ export default function InactiveEmployeesPage() {
                   </Flex>
 
                   <Text fontSize="sm" mb={1}>
-                    <strong>Code:</strong> {emp.employee_code}
+                    <strong>{t("Code")}:</strong> {emp.employee_code}
                   </Text>
                   <Text fontSize="sm" mb={1}>
-                    <strong>Group:</strong> {emp.group_id || "-"}
+                    <strong>{t("Group")}:</strong> {emp.group_id || "-"}
                   </Text>
                   <Text fontSize="sm">
-                    <strong>Card:</strong> {emp.card || "-"}
+                    <strong>{t("Card")}:</strong> {emp.card || "-"}
                   </Text>
                 </Box>
               ))}
@@ -278,11 +280,11 @@ export default function InactiveEmployeesPage() {
               <Table variant="simple">
                 <Thead bg="gray.100">
                   <Tr>
-                    <Th>Name</Th>
-                    <Th>Code</Th>
-                    <Th>Privilege</Th>
-                    <Th>Group</Th>
-                    <Th>Card</Th>
+                    <Th>{t("Name")}</Th>
+                    <Th>{t("Code")}</Th>
+                    <Th>{t("Privilege")}</Th>
+                    <Th>{t("Group")}</Th>
+                    <Th>{t("Card")}</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
@@ -299,7 +301,7 @@ export default function InactiveEmployeesPage() {
                         <Badge
                           colorScheme={emp.privilege === 1 ? "green" : "blue"}
                         >
-                          {emp.privilege === 1 ? "Admin" : "User"}
+                          {emp.privilege === 1 ? t("Admin") : t("User")}
                         </Badge>
                       </Td>
                       <Td>{emp.group_id || "-"}</Td>
@@ -324,7 +326,8 @@ export default function InactiveEmployeesPage() {
         <DrawerContent>
           <DrawerCloseButton />
           <DrawerHeader>
-            Employee History {selectedEmployee && `- ${selectedEmployee.name}`}
+            {t("Employee History")}{" "}
+            {selectedEmployee && `- ${selectedEmployee.name}`}
             {/* Date filter */}
             <Flex gap={2} mt={2} align="center">
               <Input
@@ -343,7 +346,7 @@ export default function InactiveEmployeesPage() {
                   if (selectedEmployee) fetchEmployeeHistory(selectedEmployee);
                 }}
               >
-                Filter
+                {t("Filter")}
               </Button>
             </Flex>
             {/* Status & anomaly filters */}
@@ -355,7 +358,7 @@ export default function InactiveEmployeesPage() {
                     colorScheme={drawerFilterState === f ? "yellow" : "gray"}
                     onClick={() => setDrawerFilterState(f)}
                   >
-                    {f.charAt(0).toUpperCase() + f.slice(1)}
+                    {t(f.charAt(0).toUpperCase() + f.slice(1))}
                   </Button>
                 ))}
               </ButtonGroup>
@@ -389,14 +392,14 @@ export default function InactiveEmployeesPage() {
                 <Table size="sm">
                   <Thead>
                     <Tr>
-                      <Th>Date</Th>
-                      <Th>Check-in</Th>
-                      <Th>Check-out</Th>
-                      <Th>Worked Hours</Th>
-                      <Th>Late</Th>
-                      <Th>Late Minutes</Th>
-                      <Th>Anomalies</Th>
-                      <Th>Status</Th>
+                      <Th>{t("Date")}</Th>
+                      <Th>{t("Check-in")}</Th>
+                      <Th>{t("Check-out")}</Th>
+                      <Th>{t("Worked Hours")}</Th>
+                      <Th>{t("Late")}</Th>
+                      <Th>{t("Late Minutes")}</Th>
+                      <Th>{t("Anomalies")}</Th>
+                      <Th>{t("Status")}</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
@@ -406,7 +409,7 @@ export default function InactiveEmployeesPage() {
                         <Td>{h.check_in_time?.split("T")[1] ?? "-"}</Td>
                         <Td>{h.check_out_time?.split("T")[1] ?? "-"}</Td>
                         <Td>{h.worked_hours.toFixed(2)}</Td>
-                        <Td>{h.is_late ? "Yes" : "No"}</Td>
+                        <Td>{h.is_late ? t("Yes") : t("No")}</Td>
                         <Td>{h.late_minutes}</Td>
                         <Td>
                           {h.anomalies.map((a) => (
@@ -430,14 +433,14 @@ export default function InactiveEmployeesPage() {
                   <Flex direction="column" gap={2}>
                     <Flex justify="space-between" align="center">
                       <Text fontWeight="bold">
-                        Total Worked Hours in That Period:
+                        {t("Total Worked Hours in That Period")}:
                       </Text>
                       <Text fontWeight="bold" color="blue.600">
                         {totalPeriodHours.toFixed(2)} h
                       </Text>
                     </Flex>
                     <Flex justify="space-between" align="center">
-                      <Text fontWeight="bold">Total Weekend Hours:</Text>
+                      <Text fontWeight="bold">{t("Total Weekend Hours")}:</Text>
                       <Text fontWeight="bold" color="orange.600">
                         {totalWeekendHours.toFixed(2)} h
                       </Text>
