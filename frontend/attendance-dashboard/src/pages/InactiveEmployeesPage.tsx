@@ -71,7 +71,7 @@ export default function InactiveEmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
+  const [viewMode, setViewMode] = useState<"cards" | "table">("table");
 
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
   const toast = useToast();

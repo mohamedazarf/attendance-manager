@@ -67,6 +67,7 @@ interface Employee {
   is_active?: boolean;
   fingerprint_count?: number;
   department?: string;
+  password?: string;
 }
 
 type EmployeeHistoryItem = {
@@ -94,7 +95,7 @@ export default function EmployeesPage() {
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
+  const [viewMode, setViewMode] = useState<"cards" | "table">("table");
 
   // -------------------- History Drawer State --------------------
   const [selectedEmployeeCode, setSelectedEmployeeCode] = useState<
@@ -950,7 +951,9 @@ export default function EmployeesPage() {
                       ...newEmployee,
                       privilege: selectedPrivilege,
                       department:
-                        selectedPrivilege === 14 ? "administration" : "employee",
+                        selectedPrivilege === 14
+                          ? "administration"
+                          : "employee",
                     });
                   }}
                 >
@@ -983,14 +986,19 @@ export default function EmployeesPage() {
                     setNewEmployee({ ...newEmployee, card: e.target.value })
                   }
                 />
-
                 <Input
                   placeholder={t("Password")}
                   type="password"
                   value={newEmployee.password}
-                  onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, password: e.target.value })
-                  }
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  onChange={(e) => {
+                    const value = e.target.value;
+
+                    if (/^\d*$/.test(value)) {
+                      setNewEmployee({ ...newEmployee, password: value });
+                    }
+                  }}
                 />
 
                 <Button
@@ -1094,7 +1102,7 @@ export default function EmployeesPage() {
                   }
                 />
 
-                <Input
+                {/* <Input
                   placeholder={t("Password")}
                   type="password"
                   value={editingEmployee?.password}
@@ -1104,6 +1112,23 @@ export default function EmployeesPage() {
                       password: e.target.value,
                     })
                   }
+                /> */}
+                <Input
+                  placeholder={t("Password")}
+                  type="password"
+                  value={editingEmployee?.password}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  onChange={(e) => {
+                    const value = e.target.value;
+
+                    if (/^\d*$/.test(value)) {
+                      setEditingEmployee({
+                        ...editingEmployee,
+                        password: value,
+                      });
+                    }
+                  }}
                 />
 
                 <Button
@@ -1162,11 +1187,25 @@ export default function EmployeesPage() {
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Input
+            {/* <Input
               placeholder={t("Enter new password")}
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
+            /> */}
+            <Input
+              placeholder={t("Enter new password")}
+              type="password"
+              value={newPassword}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              onChange={(e) => {
+                const value = e.target.value;
+
+                if (/^\d*$/.test(value)) {
+                  setNewPassword(value);
+                }
+              }}
             />
           </ModalBody>
 
