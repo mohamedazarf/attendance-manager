@@ -16,15 +16,29 @@ class ZKService:
         conn.disconnect()
         return users
 
-    def create_user(self, uid, name, user_id=None, privilege=0, password=''):
+    def create_user(self, uid, name, user_id=None, privilege=0, password='', department='employee'):
         if user_id is None:
             user_id = str(uid)
 
         conn = self._connect()
-        conn.set_user(uid=uid, name=name, privilege=privilege,
-                      password=password, user_id=user_id)
-        conn.disconnect()
-        return {"message": "User created"}
+        try:
+            conn.set_user(uid=uid, name=name, privilege=privilege,
+                          password=password, user_id=user_id)
+            
+            employee = Employee(
+                employee_code=str(uid),
+                name=name,
+                privilege=privilege,
+                card=None,
+                is_active=True,
+                department=department
+            )
+            EmployeeRepository().insert_employee(employee)
+            
+            return {"status": "success", "message": f"User {name} created"}
+        finally:
+            conn.disconnect()
+
 
 
     
@@ -76,46 +90,7 @@ class ZKService:
         return attendances
 
 
-    def create_user(self, uid, name, privilege=0, password: str = "", user_id: str = None):
-        conn = self._connect()
 
-        if user_id is None:
-            user_id = str(uid)
-
-        try:
-            print("Creating user on device...")
-
-            conn.set_user(
-                uid=uid,
-                name=name,
-                privilege=privilege,
-                password=password or "",
-                user_id=user_id
-            )
-
-            print("User created successfully.")
-
-            employee = Employee(
-                employee_code=str(uid),
-                name=name,
-                privilege=privilege,
-                card=None,
-                is_active=True
-            )
-
-            EmployeeRepository().insert_employee(employee)
-
-            return {
-                "status": "success",
-                "message": f"User {name} created successfully."
-            }
-
-        except Exception as e:
-            print("ERROR creating user:", str(e))
-            raise e
-
-        finally:
-            conn.disconnect()
 
     def enroll_fingerprint(self, uid: int):
         conn = self._connect()
@@ -234,7 +209,7 @@ class ZKService:
         return mapping
 
     
-    def update_user(self, employee_code: str, name: str = None, privilege: int = None):
+    def update_user(self, employee_code: str, name: str = None, privilege: int = None, department: str = None):
         conn = None
         try:
             conn = self._connect()
@@ -253,6 +228,10 @@ class ZKService:
             updated_name = name if name is not None else user.name
             updated_privilege = privilege if privilege is not None else user.privilege
             
+            # Fetch existing employee from DB to get current department if not provided
+            existing_employees = EmployeeRepository().get_all_employees()
+            emp_in_db = next((e for e in existing_employees if e["employee_code"] == str(employee_code)), {})
+            updated_dept = department if department is not None else emp_in_db.get("department", "employee")
 
             # Update on device (overwrite)
             conn.set_user(
@@ -267,7 +246,8 @@ class ZKService:
                 name=updated_name,
                 privilege=updated_privilege,
                 card=user.card,
-                is_active=user.is_active
+                is_active=True,
+                department=updated_dept
             )
 
             # Update in DB
@@ -279,6 +259,7 @@ class ZKService:
                 "status": "success",
                 "message": f"Employee {employee_code} updated successfully"
             }
+
 
         except Exception as e:
             return {

@@ -66,6 +66,7 @@ interface Employee {
   card?: number;
   is_active?: boolean;
   fingerprint_count?: number;
+  department?: string;
 }
 
 type EmployeeHistoryItem = {
@@ -123,6 +124,7 @@ export default function EmployeesPage() {
     group_id: "",
     card: "",
     password: "",
+    department: "employee",
   });
 
   const [addLoading, setAddLoading] = useState(false);
@@ -316,6 +318,7 @@ export default function EmployeesPage() {
         name: newEmployee.name,
         privilege: newEmployee.privilege,
         password: newEmployee.password,
+        department: newEmployee.department,
       });
       await axios.post(`${BASE_URL}/device/sync/employees`);
 
@@ -348,6 +351,7 @@ export default function EmployeesPage() {
         group_id: "",
         card: "",
         password: "",
+        department: "employee",
       });
     } catch (err: any) {
       toast({
@@ -401,6 +405,7 @@ export default function EmployeesPage() {
           params: {
             name: editingEmployee.name,
             privilege: editingEmployee.privilege,
+            department: editingEmployee.department,
           },
         },
       );
@@ -641,6 +646,10 @@ export default function EmployeesPage() {
                   <Text fontSize="sm" mb={1}>
                     <strong>{t("Group")}:</strong> {emp.group_id || "-"}
                   </Text>
+                  <Text fontSize="sm" mb={1}>
+                    <strong>{t("Department")}:</strong>{" "}
+                    {t(emp.department || "employee")}
+                  </Text>
                   <Text fontSize="sm">
                     <strong>{t("Card")}:</strong> {emp.card || "-"}
                   </Text>
@@ -702,6 +711,7 @@ export default function EmployeesPage() {
                   <Th>{t("Name")}</Th>
                   <Th>{t("Code")}</Th>
                   <Th>{t("Privilege")}</Th>
+                  <Th>{t("Department")}</Th>
                   <Th>{t("Group")}</Th>
                   <Th>{t("Card")}</Th>
                   <Th>{t("Fingerprint")}</Th>
@@ -726,6 +736,7 @@ export default function EmployeesPage() {
                           {emp.privilege === 14 ? t("Admin") : t("User")}
                         </Badge>
                       </Td>
+                      <Td>{t(emp.department || "employee")}</Td>
                       <Td>{emp.group_id || "-"}</Td>
                       <Td>{emp.card || "-"}</Td>
                       <Td>
@@ -933,15 +944,27 @@ export default function EmployeesPage() {
 
                 <Select
                   value={newEmployee.privilege}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const selectedPrivilege = Number(e.target.value);
                     setNewEmployee({
                       ...newEmployee,
-                      privilege: Number(e.target.value),
-                    })
-                  }
+                      privilege: selectedPrivilege,
+                      department:
+                        selectedPrivilege === 14 ? "administration" : "employee",
+                    });
+                  }}
                 >
                   <option value={0}>{t("User")}</option>
-                  <option value={1}>{t("Admin")}</option>
+                  <option value={14}>{t("Admin")}</option>
+                </Select>
+
+                <Select value={newEmployee.department} isDisabled>
+                  <option value="employee">
+                    {t("Employee (7:30 - 16:30)")}
+                  </option>
+                  <option value="administration">
+                    {t("Administration (8:30 - 17:30)")}
+                  </option>
                 </Select>
 
                 <Input
@@ -1004,36 +1027,59 @@ export default function EmployeesPage() {
                 <Input
                   placeholder={t("Name")}
                   value={editingEmployee?.name}
-                  onChange={(e) =>
-                    setEditingEmployee({
-                      ...editingEmployee,
-                      name: e.target.value,
-                    })
-                  }
+                  onChange={(e) => {
+                    if (editingEmployee) {
+                      setEditingEmployee({
+                        ...editingEmployee,
+                        name: e.target.value,
+                      } as Employee);
+                    }
+                  }}
                 />
 
                 <Select
                   value={editingEmployee?.privilege}
-                  onChange={(e) =>
-                    setEditingEmployee({
-                      ...editingEmployee,
-                      privilege: Number(e.target.value),
-                    })
-                  }
+                  onChange={(e) => {
+                    if (editingEmployee) {
+                      const selectedPrivilege = Number(e.target.value);
+                      setEditingEmployee({
+                        ...editingEmployee,
+                        privilege: selectedPrivilege,
+                        department:
+                          selectedPrivilege === 14
+                            ? "administration"
+                            : "employee",
+                      } as Employee);
+                    }
+                  }}
                 >
                   <option value={0}>{t("User")}</option>
-                  <option value={1}>{t("Admin")}</option>
+                  <option value={14}>{t("Admin")}</option>
+                </Select>
+
+                <Select
+                  value={editingEmployee?.department || "employee"}
+                  isDisabled
+                >
+                  <option value="employee">
+                    {t("Employee (7:30 - 16:30)")}
+                  </option>
+                  <option value="administration">
+                    {t("Administration (8:30 - 17:30)")}
+                  </option>
                 </Select>
 
                 <Input
                   placeholder={t("Group")}
                   value={editingEmployee?.group_id}
-                  onChange={(e) =>
-                    setEditingEmployee({
-                      ...editingEmployee,
-                      group_id: e.target.value,
-                    })
-                  }
+                  onChange={(e) => {
+                    if (editingEmployee) {
+                      setEditingEmployee({
+                        ...editingEmployee,
+                        group_id: e.target.value,
+                      } as Employee);
+                    }
+                  }}
                 />
 
                 <Input

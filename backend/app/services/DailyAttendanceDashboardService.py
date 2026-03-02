@@ -24,8 +24,16 @@ class DailyAttendanceDashboardService:
 
         employees = list(self.employees_collection.find(
             {"is_active": True},
-            {"_id": 0, "employee_code": 1, "name": 1}
+            {"_id": 0, "employee_code": 1, "name": 1, "department": 1}
         ))
+        
+        # Build user_id -> department map
+        user_departments = {}
+        for emp in employees:
+            try:
+                user_departments[int(emp["employee_code"])] = emp.get("department", "employee")
+            except ValueError:
+                continue
 
         # Justifications
         justifications = {
@@ -51,14 +59,15 @@ class DailyAttendanceDashboardService:
             else:
                 log["timestamp"] = None
 
-        # Process logs une seule fois
-        processed_map = self.processor.process_logs(logs)
+        # Process logs with department info
+        processed_map = self.processor.process_logs(logs, user_departments=user_departments)
 
         present_today = 0
         employees_data = []
 
         for emp in employees:
             emp_id = int(emp["employee_code"])
+            dept = emp.get("department", "employee")
             key = (emp_id, target_date)
 
             processed = processed_map.get(key)
@@ -74,8 +83,9 @@ class DailyAttendanceDashboardService:
                 late_minutes = processed.late_minutes if is_late else 0
                 anomalies = processed.anomalies or []
 
-                expected_hours = AttendanceConfig.get_expected_working_hours()
+                expected_hours = processed.expected_hours
                 extra_hours = round(worked_hours - expected_hours, 2) if worked_hours > expected_hours else 0
+
 
             else:
                 status = "absent"

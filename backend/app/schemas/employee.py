@@ -9,3 +9,4 @@ class Employee(BaseModel):
     password: str | None = None
     fingerprint_count: int = 0
     is_active: bool = True
+    department: str | None = "employee"

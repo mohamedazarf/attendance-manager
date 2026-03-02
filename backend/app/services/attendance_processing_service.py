@@ -14,16 +14,19 @@ class AttendanceProcessingService:
     def __init__(self, config: AttendanceConfig = None):
         self.config = config or AttendanceConfig()
     
-    def process_logs(self, logs: List[dict]) -> Dict[Tuple[int, date], ProcessedAttendance]:
+    def process_logs(self, logs: List[dict], user_departments: Dict[int, str] = None) -> Dict[Tuple[int, date], ProcessedAttendance]:
         """
         Process raw attendance logs and group by user_id and date.
         
         Args:
             logs: List of raw attendance logs with user_id and timestamp
+            user_departments: Optional map of user_id to department name
             
         Returns:
             Dictionary with (user_id, date) as key and ProcessedAttendance as value
         """
+        user_departments = user_departments or {}
+        
         # Group logs by user_id and date
         grouped_logs: Dict[Tuple[int, date], List[dict]] = {}
         
@@ -46,11 +49,13 @@ class AttendanceProcessingService:
         # Process each group
         processed = {}
         for (user_id, log_date), date_logs in grouped_logs.items():
-            processed[(user_id, log_date)] = self._process_daily_logs(user_id, log_date, date_logs)
+            dept = user_departments.get(user_id, "employee")
+            processed[(user_id, log_date)] = self._process_daily_logs(user_id, log_date, date_logs, department=dept)
         
         return processed
+
     
-    def _process_daily_logs(self, user_id: int, log_date: date, logs: List[dict]) -> ProcessedAttendance:
+    def _process_daily_logs(self, user_id: int, log_date: date, logs: List[dict], department: str = "employee") -> ProcessedAttendance:
         """
         Process all logs for a specific user on a specific day.
         Determine in/out events and calculate hours.
@@ -78,10 +83,11 @@ class AttendanceProcessingService:
             else:
                 processed.check_out_time = None
         # Calculate hours and detect anomalies
-        self.calculate_hours(processed)
-        self._detect_anomalies(processed)
+        self.calculate_hours(processed, department=department)
+        self._detect_anomalies(processed, department=department)
         
         return processed
+
     
     def _deduplicate_logs(self, logs: List[dict]) -> List[dict]:
         """Remove duplicate logs (same user_id and timestamp within 5 seconds)"""
@@ -123,7 +129,7 @@ class AttendanceProcessingService:
         
         return events
     
-    def calculate_hours(self, processed: ProcessedAttendance):
+    def calculate_hours(self, processed: ProcessedAttendance, department: str = "employee"):
         """Calculate total working hours from in/out pairs"""
         if not processed.events:
             processed.total_hours_worked = 0.0
@@ -146,14 +152,31 @@ class AttendanceProcessingService:
         
         processed.total_hours_worked = max(0, total_hours - pause_hours)
         processed.pause_hours = pause_hours
-        processed.expected_hours = self.config.get_expected_working_hours()
+        
+        # Department-specific expected hours
+        dept_config = self.config.get_department_config(department)
+        start = dept_config["start_time"]
+        end = dept_config["end_time"]
+        
+        total_seconds_expected = (
+            end.hour * 3600 + end.minute * 60
+        ) - (
+            start.hour * 3600 + start.minute * 60
+        )
+        
+        expected_hours = (total_seconds_expected / 3600) - (self.config.PAUSE_DURATION / 60)
+        processed.expected_hours = expected_hours
     
-    def _detect_anomalies(self, processed: ProcessedAttendance):
+    def _detect_anomalies(self, processed: ProcessedAttendance, department: str = "employee"):
         """Detect various types of attendance anomalies"""
         from datetime import timezone as dt_timezone
         
         anomalies = []
         
+        dept_config = self.config.get_department_config(department)
+        dept_start_time = dept_config["start_time"]
+        dept_end_time = dept_config["end_time"]
+
         # Check for absence (no check-in)
         if not processed.events:
             anomalies.append(AnomalyType.ABSENCE)
@@ -165,7 +188,7 @@ class AttendanceProcessingService:
         # Check for late arrival
         if processed.check_in_time:
             # Create timezone-aware start time for comparison
-            start_time = datetime.combine(processed.date, self.config.START_TIME)
+            start_time = datetime.combine(processed.date, dept_start_time)
             start_time_utc = start_time.replace(tzinfo=None)
             start_with_tolerance = start_time_utc + timedelta(minutes=self.config.LATE_TOLERANCE)
             
@@ -188,7 +211,7 @@ class AttendanceProcessingService:
         
         # Check for early departure
         if processed.check_out_time:
-            end_time = datetime.combine(processed.date, self.config.END_TIME)
+            end_time = datetime.combine(processed.date, dept_end_time)
             end_time_utc = end_time.replace(tzinfo=None)
             
             if processed.check_out_time < end_time_utc:
@@ -214,6 +237,7 @@ class AttendanceProcessingService:
             processed.status = "anomaly"
         else:
             processed.status = "normal"
+
     
     def generate_summary(self, processed: ProcessedAttendance, employee_info: dict = None) -> DailyAttendanceSummary:
         """

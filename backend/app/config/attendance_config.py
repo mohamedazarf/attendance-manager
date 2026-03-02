@@ -18,11 +18,33 @@ class AttendanceConfig:
     START_TIME = time(8, 30)      # 8:30 AM
     END_TIME = time(17, 30)        # 5:30 PM
     
+    # Department-specific configurations
+    DEPARTMENT_CONFIG = {
+        "administration": {
+            "start_time": time(8, 30),
+            "end_time": time(17, 30)
+        },
+        "employee": {
+            "start_time": time(7, 30),
+            "end_time": time(16, 30)
+        }
+    }
+
+    @staticmethod
+    def get_department_config(department: str = None) -> dict:
+        """Get work hours for a specific department. Defaults to administration if unknown."""
+        department = (department or "administration").lower()
+        return AttendanceConfig.DEPARTMENT_CONFIG.get(
+            department, 
+            AttendanceConfig.DEPARTMENT_CONFIG["employee"]
+        )
+
     # Pause/Break duration (in minutes)
     PAUSE_DURATION = 75           # 1 hour and 15 minutes lunch break
     
     # Tolerance for late arrival (in minutes)
     LATE_TOLERANCE = 0           # Allow 0 min grace period
+
     
     # Thresholds for anomalies
     EARLY_DEPARTURE_THRESHOLD = 30  # Leave more than 30 min early = anomaly

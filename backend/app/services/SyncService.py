@@ -26,17 +26,32 @@ class SyncService:
             # Step 1: Fetch all employees from DB
             db_employees = self.employee_repo.get_all_employees()
             db_user_ids = [str(e["employee_code"]) for e in db_employees]
+            # Map for quick lookup (to preserve fields like department)
+            db_emp_map = {
+                str(e["employee_code"]): e
+                for e in db_employees
+            }
 
             # Step 2: Insert new employees or update existing ones
             for user in device_users:
+                user_id_str = str(user.user_id)
+                existing_emp = db_emp_map.get(user_id_str)
+
+                # Preserve existing department if present, otherwise default to "employee"
+                existing_department = None
+                if existing_emp is not None:
+                    existing_department = existing_emp.get("department")
+
                 employee_data = Employee(
-                    employee_code=str(user.user_id),
+                    employee_code=user_id_str,
                     name=user.name,
                     privilege=user.privilege,
                     card=getattr(user, "card", None),
-                    is_active=True  # mark as active since it's on device
+                    is_active=True,  # mark as active since it's on device
+                    department=existing_department or "employee",
                 )
-                if str(user.user_id) in db_user_ids:
+
+                if user_id_str in db_user_ids:
                     self.employee_repo.update_employee(employee_data)
                 else:
                     self.employee_repo.insert_employee(employee_data)
