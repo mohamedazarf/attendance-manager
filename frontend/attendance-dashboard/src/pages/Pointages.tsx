@@ -111,13 +111,9 @@ const StatCard = ({
 function DailyAlerts({
   employees,
   onManualPunch,
-  onMarkAbsent,
-  onConfirmLate,
 }: {
   employees: Employee[];
   onManualPunch: (emp: { id: number; name: string }) => void;
-  onMarkAbsent: (emp: { id: number; name: string }) => void;
-  onConfirmLate: (id: number) => void;
 }) {
   const { t } = useTranslation();
 
@@ -194,31 +190,6 @@ function DailyAlerts({
                   {t("Manual punch")}
                 </Button>
               )}
-              {!emp.check_in_time && (
-                <Button
-                  size="sm"
-                  colorScheme="red"
-                  variant="outline"
-                  onClick={() =>
-                    onMarkAbsent({
-                      id: emp.employee_id,
-                      name: emp.employee_name,
-                    })
-                  }
-                >
-                  {t("Mark absent")}
-                </Button>
-              )}
-              {emp.anomalies.includes("retard") && (
-                <Button
-                  size="sm"
-                  colorScheme="yellow"
-                  variant="outline"
-                  onClick={() => onConfirmLate(emp.employee_id)}
-                >
-                  {t("Confirm late")}
-                </Button>
-              )}
             </HStack>
           </HStack>
           {emp.justification?.notes && (
@@ -246,10 +217,11 @@ export default function Pointages() {
   const [selectedDate, setSelectedDate] = useState<string>(getCurrentDate());
   const [rules, setRules] = useState<DayRulesConfig | null>(null);
   const [rulesLoading, setRulesLoading] = useState(false);
-  const [newSpecialDate, setNewSpecialDate] = useState<string>(getCurrentDate());
-  const [newSpecialType, setNewSpecialType] = useState<"holiday" | "remote_day">(
-    "holiday",
-  );
+  const [newSpecialDate, setNewSpecialDate] =
+    useState<string>(getCurrentDate());
+  const [newSpecialType, setNewSpecialType] = useState<
+    "holiday" | "remote_day"
+  >("holiday");
   const [newSpecialLabel, setNewSpecialLabel] = useState<string>("");
 
   // Modals state
@@ -290,9 +262,9 @@ export default function Pointages() {
       if (!isAdmin) return;
       setRulesLoading(true);
       Promise.all([
-        fetch("http://127.0.0.1:8000/api/v1/attendance/dashboard/day-rules").then(
-          (res) => res.json(),
-        ),
+        fetch(
+          "http://127.0.0.1:8000/api/v1/attendance/dashboard/day-rules",
+        ).then((res) => res.json()),
         fetch(
           `http://127.0.0.1:8000/api/v1/attendance/dashboard/special-days?start_date=${year}-01-01&end_date=${year}-12-31`,
         ).then((res) => res.json()),
@@ -329,18 +301,16 @@ export default function Pointages() {
     onManualOpen();
   };
 
-  const handleMarkAbsent = (emp: { id: number; name: string }) => {
-    setSelectedEmp(emp);
-    onAbsentOpen();
-  };
-
   const updateIncludeSunday = async (value: boolean) => {
     try {
-      await fetch("http://127.0.0.1:8000/api/v1/attendance/dashboard/day-rules", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ include_sunday: value }),
-      });
+      await fetch(
+        "http://127.0.0.1:8000/api/v1/attendance/dashboard/day-rules",
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ include_sunday: value }),
+        },
+      );
       const year = Number(selectedDate.split("-")[0]);
       fetchRules(year);
       fetchDashboard(selectedDate);
@@ -461,8 +431,8 @@ export default function Pointages() {
               <AlertIcon />
               <Text fontSize="sm">
                 Cette date est un jour spécial:{" "}
-                <strong>{dashboard?.day_context?.label}</strong>. Les absences ne
-                sont pas comptabilisées.
+                <strong>{dashboard?.day_context?.label}</strong>. Les absences
+                ne sont pas comptabilisées.
               </Text>
             </Alert>
           )}
@@ -480,7 +450,9 @@ export default function Pointages() {
             />
             <StatCard
               label={t("Absent Today")}
-              value={suppressAbsence ? "-" : (dashboard?.global.absent_today ?? 0)}
+              value={
+                suppressAbsence ? "-" : (dashboard?.global.absent_today ?? 0)
+              }
               onClick={
                 suppressAbsence
                   ? undefined
@@ -504,7 +476,9 @@ export default function Pointages() {
               </Heading>
 
               <HStack justify="space-between" mb={4} wrap="wrap">
-                <Text>Inclure automatiquement le dimanche comme non ouvrable</Text>
+                <Text>
+                  Inclure automatiquement le dimanche comme non ouvrable
+                </Text>
                 <HStack>
                   {rulesLoading && <Spinner size="sm" />}
                   <Switch
@@ -536,7 +510,9 @@ export default function Pointages() {
                   <Select
                     value={newSpecialType}
                     onChange={(e) =>
-                      setNewSpecialType(e.target.value as "holiday" | "remote_day")
+                      setNewSpecialType(
+                        e.target.value as "holiday" | "remote_day",
+                      )
                     }
                     size="sm"
                     bg="white"
@@ -580,8 +556,12 @@ export default function Pointages() {
                       borderRadius="md"
                     >
                       <HStack>
-                        <Badge colorScheme={item.type === "holiday" ? "red" : "blue"}>
-                          {item.type === "holiday" ? "Jour férié" : "Jour à distance"}
+                        <Badge
+                          colorScheme={item.type === "holiday" ? "red" : "blue"}
+                        >
+                          {item.type === "holiday"
+                            ? "Jour férié"
+                            : "Jour à distance"}
                         </Badge>
                         <Text fontSize="sm">{item.date}</Text>
                         {item.label && (
@@ -617,8 +597,6 @@ export default function Pointages() {
                 <DailyAlerts
                   employees={negativeAlerts}
                   onManualPunch={handleManualPunch}
-                  onMarkAbsent={handleMarkAbsent}
-                  onConfirmLate={(id) => console.log("Confirm late", id)}
                 />
               </Box>
 
@@ -630,8 +608,6 @@ export default function Pointages() {
                   <DailyAlerts
                     employees={positiveAlerts}
                     onManualPunch={handleManualPunch}
-                    onMarkAbsent={handleMarkAbsent}
-                    onConfirmLate={(id) => console.log("Confirm late", id)}
                   />
                 ) : (
                   <Text color="gray.500">{t("No alerts 🎉")}</Text>
