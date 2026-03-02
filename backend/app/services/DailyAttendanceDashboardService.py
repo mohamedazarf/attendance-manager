@@ -4,6 +4,7 @@ from typing import Dict, Any, List
 from app.services.attendance_processing_service import AttendanceProcessingService
 from app.schemas.processed_attendance import ProcessedAttendance
 from app.config.attendance_config import AttendanceConfig
+from app.services.day_rules_service import DayRulesService
 
 
 class DailyAttendanceDashboardService:
@@ -14,10 +15,12 @@ class DailyAttendanceDashboardService:
         self.employees_collection = self.db["employees"]
         self.justifications_collection = self.db["attendance_justifications"]
         self.processor = AttendanceProcessingService()
+        self.day_rules_service = DayRulesService()
 
     def get_today_data(self, target_date: date = None):
         if not target_date:
             target_date = date.today()
+        day_context = self.day_rules_service.get_day_context(target_date)
 
         start_dt = datetime.combine(target_date, time.min)
         end_dt = datetime.combine(target_date, time.max)
@@ -112,18 +115,21 @@ class DailyAttendanceDashboardService:
             })
 
         total_employees = len(employees)
-        absent_today = total_employees - present_today
+        raw_absent_today = total_employees - present_today
+        absent_today = 0 if day_context.get("suppress_absence") else raw_absent_today
 
         attendance_rate = round(
             (present_today / total_employees) * 100, 2
-        ) if total_employees else 0
+        ) if total_employees and not day_context.get("suppress_absence") else 0
 
         return {
             "date": target_date.isoformat(),
+            "day_context": day_context,
             "global": {
                 "total_employees": total_employees,
                 "present_today": present_today,
                 "absent_today": absent_today,
+                "raw_absent_today": raw_absent_today,
                 "attendance_rate": attendance_rate
             },
             "employees": employees_data

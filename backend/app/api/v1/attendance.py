@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query, HTTPException
 from zk import ZK
 from zk.exception import ZKNetworkError
 from app.utils import get_db
@@ -7,9 +7,11 @@ from app.services.ingestion_service import IngestionService
 from app.services.attendance_processing_service import AttendanceProcessingService
 from app.services.attendance_metrics_service import AttendanceMetricsService
 from app.sdk.mock import ZKMock
-from typing import List
+from typing import List, Optional
 from datetime import datetime, date
 from app import utils
+from pydantic import BaseModel
+from app.services.day_rules_service import DayRulesService
 
 router = APIRouter()
 
@@ -509,8 +511,6 @@ def dashboard_today():
     service = DailyAttendanceDashboardService()
     return service.get_today_data()
 
-from datetime import date
-from fastapi import Query
 from app.services.DailyAttendanceDashboardService import DailyAttendanceDashboardService
 
 
@@ -520,6 +520,63 @@ def dashboard_day(
 ):
     service = DailyAttendanceDashboardService()
     return service.get_today_data(day)
+
+
+class IncludeSundayPayload(BaseModel):
+    include_sunday: bool
+
+
+class SpecialDayPayload(BaseModel):
+    date: date
+    type: str
+    label: Optional[str] = ""
+
+
+@router.get("/dashboard/day-rules")
+def get_day_rules():
+    service = DayRulesService()
+    return service.get_config()
+
+
+@router.put("/dashboard/day-rules")
+def update_day_rules(payload: IncludeSundayPayload):
+    service = DayRulesService()
+    return service.set_include_sunday(payload.include_sunday)
+
+
+@router.get("/dashboard/special-days")
+def get_special_days(
+    start_date: date = Query(None, description="YYYY-MM-DD"),
+    end_date: date = Query(None, description="YYYY-MM-DD"),
+):
+    service = DayRulesService()
+    return {
+        "special_days": service.list_special_days(start_date=start_date, end_date=end_date)
+    }
+
+
+@router.post("/dashboard/special-days")
+def upsert_special_day(payload: SpecialDayPayload):
+    if payload.type not in ["holiday", "remote_day"]:
+        raise HTTPException(
+            status_code=400,
+            detail="type must be 'holiday' or 'remote_day'",
+        )
+
+    service = DayRulesService()
+    day = service.upsert_special_day(
+        day=payload.date,
+        day_type=payload.type,
+        label=payload.label,
+    )
+    return {"status": "success", "special_day": day}
+
+
+@router.delete("/dashboard/special-days/{day}")
+def delete_special_day(day: date):
+    service = DayRulesService()
+    result = service.delete_special_day(day)
+    return {"status": "success", **result}
 
 
 
