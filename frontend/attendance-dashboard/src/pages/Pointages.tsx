@@ -192,6 +192,8 @@ export default function Pointages() {
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
 
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+  const [yesterdayDashboard, setYesterdayDashboard] =
+    useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string>(getCurrentDate());
 
@@ -222,9 +224,29 @@ export default function Pointages() {
       });
   }, []);
 
+  const getPreviousDate = (day: string) => {
+    const [year, month, date] = day.split("-").map(Number);
+    const utcDate = new Date(Date.UTC(year, month - 1, date));
+    utcDate.setUTCDate(utcDate.getUTCDate() - 1);
+    return utcDate.toISOString().split("T")[0];
+  };
+
   useEffect(() => {
     fetchDashboard(selectedDate);
   }, [fetchDashboard, selectedDate]);
+
+  useEffect(() => {
+    const yesterday = getPreviousDate(selectedDate);
+    fetch(
+      `http://127.0.0.1:8000/api/v1/attendance/dashboard/day?day=${yesterday}`,
+    )
+      .then((res) => res.json())
+      .then((data) => setYesterdayDashboard(data))
+      .catch((err) => {
+        console.error("Yesterday dashboard fetch error:", err);
+        setYesterdayDashboard(null);
+      });
+  }, [selectedDate]);
 
   const handleManualPunch = (emp: { id: number; name: string }) => {
     setSelectedEmp(emp);
@@ -249,8 +271,9 @@ export default function Pointages() {
         (suppressAbsence ? false : emp.status === "absent") ||
         emp.anomalies.length > 0,
     ) ?? [];
+  const previousDate = getPreviousDate(selectedDate);
   const positiveAlerts =
-    dashboard?.employees.filter(
+    yesterdayDashboard?.employees.filter(
       (emp) => emp.extra_hours && emp.extra_hours > 0,
     ) ?? [];
 
@@ -351,7 +374,7 @@ export default function Pointages() {
 
               <Box>
                 <Heading size="sm" mb={3} color="blue.500">
-                  ✅ {t("Extra hours")}
+                  ✅ {t("Extra hours")} ({t("Yesterday")}: {previousDate})
                 </Heading>
                 {positiveAlerts.length > 0 ? (
                   <DailyAlerts
@@ -359,7 +382,7 @@ export default function Pointages() {
                     onManualPunch={handleManualPunch}
                   />
                 ) : (
-                  <Text color="gray.500">{t("No alerts 🎉")}</Text>
+                  <Text color="gray.500">{t("No extra hours reported yesterday")}</Text>
                 )}
               </Box>
             </SimpleGrid>
@@ -376,3 +399,4 @@ export default function Pointages() {
     </Box>
   );
 }
+
