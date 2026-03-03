@@ -42,26 +42,17 @@ export default function Sidebar({
       <VStack align="start" spacing={3} w="full">
         <Text
           _hover={{ color: "#B98112", cursor: "pointer" }}
-          onClick={() => handleNavigate("/")}
-        >
-          {t("Dashboard")}
-        </Text>
-
-        <Text
-          _hover={{ color: "#B98112", cursor: "pointer" }}
           onClick={() => handleNavigate("/pointages")}
         >
           {t("Pointages")}
         </Text>
 
-        {isAdmin && (
-          <Text
-            _hover={{ color: "#B98112", cursor: "pointer" }}
-            onClick={() => handleNavigate("/employees")}
-          >
-            {t("Employees")}
-          </Text>
-        )}
+        <Text
+          _hover={{ color: "#B98112", cursor: "pointer" }}
+          onClick={() => handleNavigate("/employees")}
+        >
+          {t("Employees")}
+        </Text>
 
         {isAdmin && (
           <Text
@@ -69,6 +60,15 @@ export default function Sidebar({
             onClick={() => handleNavigate("/inactive-employees")}
           >
             {t("Inactive Employees")}
+          </Text>
+        )}
+
+        {isAdmin && (
+          <Text
+            _hover={{ color: "#B98112", cursor: "pointer" }}
+            onClick={() => handleNavigate("/parametrage")}
+          >
+            Parametrage
           </Text>
         )}
 

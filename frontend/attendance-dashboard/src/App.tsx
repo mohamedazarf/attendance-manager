@@ -22,11 +22,19 @@
 //           <Routes>
 //             <Route path="/login" element={<LoginPage />} />
 
-//             <Route
+//             {/* <Route
 //               path="/"
 //               element={
 //                 <ProtectedRoute>
 //                   <Dashboard />
+//                 </ProtectedRoute>
+//               }
+//             /> */}
+//             <Route
+//               path="/"
+//               element={
+//                 <ProtectedRoute>
+//                   <Pointages />
 //                 </ProtectedRoute>
 //               }
 //             />
@@ -43,8 +51,8 @@
 //             <Route
 //               path="/employees"
 //               element={
-//                 <ProtectedRoute allowedRoles={["admin"]}>
-//                   {/* <ProtectedRoute> */}
+//                 // <ProtectedRoute allowedRoles={["admin"]}>
+//                   <ProtectedRoute>
 //                   <EmployeesPage />
 //                 </ProtectedRoute>
 //               }
@@ -113,7 +121,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ChakraProvider } from "@chakra-ui/react";
 import { AuthProvider } from "./context/AuthContext";
-import Dashboard from "./components/Dashboard";
 import EmployeesPage from "./pages/EmployeesPage";
 import RapportPage from "./pages/RapportPage";
 import HoursByEmployeeChart from "./pages/charts/HoursByEmployeeChart";
@@ -122,6 +129,7 @@ import Pointages from "./pages/Pointages";
 import EmployeesToday from "./pages/EmployeesToday";
 import TestI18nPage from "./pages/TestI18nPage";
 import InactiveEmployeesPage from "./pages/InactiveEmployeesPage";
+import Parametrage from "./pages/Parametrage";
 import "./i18n";
 
 export default function App() {
@@ -132,13 +140,14 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             {/* Toutes les routes ici peuvent maintenant utiliser useAuth() sans crasher */}
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<Pointages />} />
             <Route path="/employees" element={<EmployeesPage />} />
             <Route path="/pointages" element={<Pointages />} />
             <Route path="/rapports" element={<RapportPage />} />
             <Route path="/rapports/charts" element={<RapportsChartsPage />} />
             <Route path="/employeesToday" element={<EmployeesToday />} />
             <Route path="/test-i18n" element={<TestI18nPage />} />
+            <Route path="/parametrage" element={<Parametrage />} />
             <Route
               path="/inactive-employees"
               element={<InactiveEmployeesPage />}

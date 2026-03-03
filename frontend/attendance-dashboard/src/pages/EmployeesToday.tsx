@@ -30,6 +30,7 @@ import Navbar from "../components/layout/Navbar";
 import Sidebar from "../components/layout/Sidebar";
 import { useEffect, useState } from "react";
 import { CloseIcon, HamburgerIcon } from "@chakra-ui/icons";
+import { useLocation } from "react-router-dom";
 
 // -------------------- Types --------------------
 type Employee = {
@@ -87,19 +88,23 @@ function getCurrentDate() {
 
 export default function EmployeesToday() {
   const { t } = useTranslation();
+  const { search } = useLocation();
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
 
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const params = new URLSearchParams(location.search);
+  const params = new URLSearchParams(search);
   const urlFilter = params.get("filter") as
     | "all"
     | "present"
     | "absent"
     | "late"
     | null;
+  const urlDate = params.get("date");
+  const isValidDate = !!urlDate && /^\d{4}-\d{2}-\d{2}$/.test(urlDate);
+  const targetDate = isValidDate ? urlDate : getCurrentDate();
 
   const [filterState, setFilterState] = useState<
     "all" | "present" | "absent" | "late"
@@ -138,8 +143,9 @@ export default function EmployeesToday() {
 
   // -------------------- Fetch dashboard --------------------
   useEffect(() => {
-    const today = getCurrentDate();
-    fetch(`http://127.0.0.1:8000/api/v1/attendance/dashboard/day?day=${today}`)
+    fetch(
+      `http://127.0.0.1:8000/api/v1/attendance/dashboard/day?day=${targetDate}`,
+    )
       .then((res) => res.json())
       .then((data) => {
         setDashboard(data);
@@ -149,7 +155,11 @@ export default function EmployeesToday() {
         console.error("Dashboard fetch error:", err);
         setLoading(false);
       });
-  }, []);
+  }, [targetDate]);
+
+  useEffect(() => {
+    setFilterState(urlFilter || "all");
+  }, [urlFilter]);
 
   // -------------------- Filtrer les employés --------------------
   const filteredEmployees = dashboard?.employees

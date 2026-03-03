@@ -47,6 +47,7 @@ import axios from "axios";
 import Sidebar from "../components/layout/Sidebar";
 import Navbar from "../components/layout/Navbar";
 import AddEmployeeModal from "../components/AddEmployeeModal";
+import { useAuth } from "../context/AuthContext";
 
 const BASE_URL = "http://localhost:8000/api/v1";
 
@@ -85,6 +86,7 @@ import { useTranslation } from "react-i18next";
 
 export default function EmployeesPage() {
   const { t } = useTranslation();
+  const { isAdmin } = useAuth();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -654,6 +656,11 @@ export default function EmployeesPage() {
                   <Text fontSize="sm">
                     <strong>{t("Card")}:</strong> {emp.card || "-"}
                   </Text>
+                  {isAdmin && (
+                    <Text fontSize="sm" mb={1}>
+                      <strong>{t("Password")}:</strong> {emp.password || "-"}
+                    </Text>
+                  )}
 
                   <Flex gap={2} mt={3} wrap="wrap">
                     <Button
@@ -715,6 +722,7 @@ export default function EmployeesPage() {
                   <Th>{t("Department")}</Th>
                   <Th>{t("Group")}</Th>
                   <Th>{t("Card")}</Th>
+
                   <Th>{t("Fingerprint")}</Th>
                   <Th>{t("Actions")}</Th>
                 </Tr>
@@ -745,8 +753,10 @@ export default function EmployeesPage() {
                           ? `${emp.fingerprint_count} ${t("enrolled")}`
                           : t("None")}
                       </Td>
+
                       <Td>
-                        <Flex gap={2}>
+                        <Flex gap={2} wrap="wrap">
+                          {/* Delete */}
                           <Button
                             size="xs"
                             colorScheme="red"
@@ -755,8 +765,37 @@ export default function EmployeesPage() {
                               setDeletingEmployee(emp);
                             }}
                           >
-                            Delete
+                            {t("Delete")}
                           </Button>
+
+                          {/* Password */}
+                          <Button
+                            size="xs"
+                            colorScheme="teal"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openPasswordModal(emp);
+                            }}
+                          >
+                            {t("Password")}
+                          </Button>
+
+                          {/* Enroll Fingerprint */}
+                          <Button
+                            size="xs"
+                            colorScheme="orange"
+                            isLoading={enrollLoading === emp.employee_code}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEnrollFingerprint(emp);
+                            }}
+                          >
+                            {emp.fingerprint_count > 0
+                              ? t("Add Another Fingerprint")
+                              : t("Enroll Fingerprint")}
+                          </Button>
+
+                          {/* Edit */}
                           <Button
                             size="xs"
                             colorScheme="blue"
@@ -766,7 +805,7 @@ export default function EmployeesPage() {
                               setIsEditOpen(true);
                             }}
                           >
-                            Edit
+                            {t("Edit")}
                           </Button>
                         </Flex>
                       </Td>
@@ -1102,17 +1141,6 @@ export default function EmployeesPage() {
                   }
                 />
 
-                {/* <Input
-                  placeholder={t("Password")}
-                  type="password"
-                  value={editingEmployee?.password}
-                  onChange={(e) =>
-                    setEditingEmployee({
-                      ...editingEmployee,
-                      password: e.target.value,
-                    })
-                  }
-                /> */}
                 <Input
                   placeholder={t("Password")}
                   type="password"
