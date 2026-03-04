@@ -23,7 +23,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { CloseIcon } from "@chakra-ui/icons/Close";
 import { HamburgerIcon } from "@chakra-ui/icons/Hamburger";
-import { ManualPunchModal } from "../components/AttendanceModals";
+import { ManualPunchModal, MarkAbsentModal } from "../components/AttendanceModals";
 import { getCurrentDate } from "../../utils";
 
 /* -------------------- Types -------------------- */
@@ -94,6 +94,7 @@ function DailyAlerts({
   defaultDate,
   allowManualCheckout = true,
   onManualPunch,
+  onMarkAbsent,
 }: {
   employees: Employee[];
   defaultDate: string;
@@ -104,6 +105,7 @@ function DailyAlerts({
     date: string;
     eventType: "check_in" | "check_out";
   }) => void;
+  onMarkAbsent?: (emp: { id: number; name: string; date: string }) => void;
 }) {
   const { t } = useTranslation();
 
@@ -182,6 +184,22 @@ function DailyAlerts({
                   {t("Manual punch")}
                 </Button>
               )}
+              {emp.status === "absent" && !emp.justification && onMarkAbsent && (
+                <Button
+                  size="sm"
+                  colorScheme="red"
+                  variant="outline"
+                  onClick={() =>
+                    onMarkAbsent({
+                      id: emp.employee_id,
+                      name: emp.employee_name,
+                      date: defaultDate,
+                    })
+                  }
+                >
+                  {t("Mark absent")}
+                </Button>
+              )}
               {allowManualCheckout &&
                 emp.anomalies.includes("entree_sans_sortie") && (
                   <Button
@@ -234,6 +252,11 @@ export default function Pointages() {
     isOpen: isManualOpen,
     onOpen: onManualOpen,
     onClose: onManualClose,
+  } = useDisclosure();
+  const {
+    isOpen: isAbsentOpen,
+    onOpen: onAbsentOpen,
+    onClose: onAbsentClose,
   } = useDisclosure();
 
   const [selectedEmp, setSelectedEmp] = useState<{
@@ -297,6 +320,12 @@ export default function Pointages() {
     onManualOpen();
   };
 
+  const handleMarkAbsent = (emp: { id: number; name: string; date: string }) => {
+    setSelectedEmp({ id: emp.id, name: emp.name });
+    setSelectedManualDate(emp.date);
+    onAbsentOpen();
+  };
+
   const goToEmployeesToday = (filter?: "present" | "absent") => {
     const params = new URLSearchParams();
     params.set("date", selectedDate);
@@ -312,7 +341,7 @@ export default function Pointages() {
   const negativeAlerts =
     dashboard?.employees.filter(
       (emp) =>
-        (suppressAbsence ? false : emp.status === "absent") ||
+        (suppressAbsence ? false : emp.status === "absent" && !emp.justification) ||
         emp.anomalies.length > 0,
     ) ?? [];
   const previousDate = getPreviousDate(selectedDate);
@@ -418,6 +447,7 @@ export default function Pointages() {
                   employees={negativeAlerts}
                   defaultDate={selectedDate}
                   allowManualCheckout={!isTodaySelected}
+                  onMarkAbsent={handleMarkAbsent}
                   onManualPunch={(emp) =>
                     handleManualPunch({
                       ...emp,
@@ -440,6 +470,7 @@ export default function Pointages() {
                     employees={yesterdayExtraHoursAlerts}
                     defaultDate={previousDate}
                     allowManualCheckout={false}
+                    onMarkAbsent={handleMarkAbsent}
                     onManualPunch={(emp) =>
                       handleManualPunch({
                         ...emp,
@@ -462,6 +493,7 @@ export default function Pointages() {
                     employees={yesterdayMissingCheckoutAlerts}
                     defaultDate={previousDate}
                     allowManualCheckout={true}
+                    onMarkAbsent={handleMarkAbsent}
                     onManualPunch={(emp) =>
                       handleManualPunch({
                         ...emp,
@@ -485,6 +517,16 @@ export default function Pointages() {
           employee={selectedEmp}
           date={selectedManualDate}
           initialEventType={selectedManualEventType}
+          onSuccess={() => {
+            fetchDashboard(selectedDate);
+            fetchYesterdayDashboard(selectedDate);
+          }}
+        />
+        <MarkAbsentModal
+          isOpen={isAbsentOpen}
+          onClose={onAbsentClose}
+          employee={selectedEmp}
+          date={selectedManualDate}
           onSuccess={() => {
             fetchDashboard(selectedDate);
             fetchYesterdayDashboard(selectedDate);

@@ -75,6 +75,8 @@ export default function RapportPage() {
   const now = new Date();
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1); // 1-12
+  const [employeeSearchTerm, setEmployeeSearchTerm] = useState("");
+  const [overtimeOnly, setOvertimeOnly] = useState(false);
 
   // Derive start/end dates from selected year+month
   const startDate = `${selectedYear}-${String(selectedMonth).padStart(2, "0")}-01`;
@@ -83,6 +85,23 @@ export default function RapportPage() {
 
   const [data, setData] = useState<AttendanceMetric[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const filteredData = data.filter((row) => {
+    const search = employeeSearchTerm.trim().toLowerCase();
+    const matchesSearch =
+      search.length === 0 ||
+      row.employee_name.toLowerCase().includes(search) ||
+      String(row.employee_id).toLowerCase().includes(search);
+
+    // Align filter behavior with displayed precision (2 decimals).
+    const overtimeValue = Number(row.overtime_hours ?? 0);
+    const overtimeDisplayed = Number(overtimeValue.toFixed(2));
+    const matchesOvertime = !overtimeOnly || overtimeDisplayed > 0;
+
+    return matchesSearch && matchesOvertime;
+  });
+
+
 
   // -------------------- Employee History Drawer --------------------
   const [selectedEmployee, setSelectedEmployee] =
@@ -192,7 +211,7 @@ export default function RapportPage() {
 
   // -------------------- Download CSV / Excel --------------------
   const downloadCSV = () => {
-    if (!data || data.length === 0) return;
+    if (!filteredData || filteredData.length === 0) return;
 
     const headers = [
       "ID",
@@ -209,7 +228,7 @@ export default function RapportPage() {
       "data:text/csv;charset=utf-8," +
       [
         headers.join(","),
-        ...data.map((row) =>
+        ...filteredData.map((row) =>
           [
             row.employee_id,
             `"${row.employee_name}"`,
@@ -236,8 +255,8 @@ export default function RapportPage() {
   };
 
   const downloadAllEmployeesExcel = () => {
-    if (!data || data.length === 0) return;
-    const sheetData = data.map((emp) => ({
+    if (!filteredData || filteredData.length === 0) return;
+    const sheetData = filteredData.map((emp) => ({
       ID: emp.employee_id,
       Name: emp.employee_name,
       Period: `${emp.start_date} → ${emp.end_date}`,
@@ -412,6 +431,27 @@ export default function RapportPage() {
                   </option>
                 ))}
               </select>
+              <Text fontWeight="medium">{t("Search")}:</Text>
+              <input
+                value={employeeSearchTerm}
+                onChange={(e) => setEmployeeSearchTerm(e.target.value)}
+                placeholder={t("Name or code (e.g. mohamed)")}
+                style={{
+                  padding: "6px 10px",
+                  borderRadius: "6px",
+                  border: "1px solid #CBD5E0",
+                  fontSize: "14px",
+                  maxWidth: "220px",
+                }}
+              />
+              <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <input
+                  type="checkbox"
+                  checked={overtimeOnly}
+                  onChange={(e) => setOvertimeOnly(e.target.checked)}
+                />
+                <span style={{ fontSize: "14px" }}>{t("Overtime only")}</span>
+              </label>
             </HStack>
             <HStack>
               <Button
@@ -450,7 +490,7 @@ export default function RapportPage() {
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {data.map((row) => (
+                  {filteredData.map((row) => (
                     <Tr
                       key={row.employee_id}
                       cursor="pointer"
