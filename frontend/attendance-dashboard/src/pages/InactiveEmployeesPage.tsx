@@ -114,8 +114,8 @@ export default function InactiveEmployeesPage() {
         setEmployees(inactive);
       } catch (err: any) {
         toast({
-          title: "Error fetching employees",
-          description: err.message,
+          title: t("Error fetching employees"),
+          description: t(err.message),
           status: "error",
           duration: 5000,
           isClosable: true,
@@ -141,8 +141,8 @@ export default function InactiveEmployeesPage() {
       setDrawerSelectedAnomalies([]);
     } catch (err: any) {
       toast({
-        title: "Error fetching history",
-        description: err.message,
+        title: t("Error fetching history"),
+        description: t(err.message),
         status: "error",
         duration: 4000,
         isClosable: true,
@@ -255,10 +255,10 @@ export default function InactiveEmployeesPage() {
                   <Flex justify="space-between" align="center" mb={3}>
                     <Heading size="md">{emp.name}</Heading>
                     <Badge
-                      colorScheme={emp.privilege === 1 ? "green" : "blue"}
+                      colorScheme={emp.privilege === 14 ? "red" : "blue"}
                       fontSize="0.8em"
                     >
-                      {emp.privilege === 1 ? "Admin" : "User"}
+                      {emp.privilege === 14 ? t("Admin") : t("User")}
                     </Badge>
                   </Flex>
 
@@ -299,9 +299,9 @@ export default function InactiveEmployeesPage() {
                       <Td>{emp.employee_code}</Td>
                       <Td>
                         <Badge
-                          colorScheme={emp.privilege === 1 ? "green" : "blue"}
+                          colorScheme={emp.privilege === 14 ? "red" : "blue"}
                         >
-                          {emp.privilege === 1 ? t("Admin") : t("User")}
+                          {emp.privilege === 14 ? t("Admin") : t("User")}
                         </Badge>
                       </Td>
                       <Td>{emp.group_id || "-"}</Td>
@@ -373,12 +373,14 @@ export default function InactiveEmployeesPage() {
                   onClick={() =>
                     setDrawerSelectedAnomalies((prev) =>
                       prev.includes(a)
-                        ? prev.filter((x) => x !== a)
+                        ? prev.filter((x) => {
+                            return x !== a;
+                          })
                         : [...prev, a],
                     )
                   }
                 >
-                  {a.replace("_", " ")}
+                  {t(a.replace("_", " "))}
                 </Button>
               ))}
             </Flex>
@@ -418,11 +420,13 @@ export default function InactiveEmployeesPage() {
                               colorScheme={anomalyColors[a] || "gray"}
                               mr={1}
                             >
-                              {a.replace("_", " ")}
+                              {t(a.replace("_", " "))}
                             </Badge>
                           ))}
                         </Td>
-                        <Td>{h.status}</Td>
+                        <Td>
+                          {t(h.status === "normal" ? "Present" : "Absent")}
+                        </Td>
                       </Tr>
                     ))}
                   </Tbody>

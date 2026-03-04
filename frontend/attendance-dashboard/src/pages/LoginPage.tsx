@@ -17,8 +17,10 @@ import {
   IconButton,
 } from "@chakra-ui/react";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
+import { useTranslation } from "react-i18next";
 
 const LoginPage: React.FC = () => {
+  const { t } = useTranslation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -63,8 +65,10 @@ const LoginPage: React.FC = () => {
 
       login(data.access_token, userData);
       toast({
-        title: "Welcome back!",
-        description: `Successfully signed in as ${userData.full_name || userData.username}`,
+        title: t("Welcome back!"),
+        description: t("Successfully signed in as", {
+          name: userData.full_name || userData.username,
+        }),
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -72,8 +76,8 @@ const LoginPage: React.FC = () => {
       navigate(from, { replace: true });
     } catch (err: any) {
       toast({
-        title: "Authentication Failed",
-        description: err.message || "Something went wrong",
+        title: t("Authentication Failed"),
+        description: t(err.message) || t("Something went wrong"),
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -105,15 +109,17 @@ const LoginPage: React.FC = () => {
           <VStack spacing={8} align="stretch">
             <VStack spacing={2} textAlign="center">
               <Heading color="white" size="xl" letterSpacing="tight">
-                Attendance
+                {t("Attendance")}
               </Heading>
-              <Text color="purple.200">Sign in to manage your workplace</Text>
+              <Text color="purple.200">
+                {t("Sign in to manage your workplace")}
+              </Text>
             </VStack>
 
             <form onSubmit={handleSubmit}>
               <VStack spacing={4}>
                 <FormControl isRequired>
-                  <FormLabel color="purple.100">Username</FormLabel>
+                  <FormLabel color="purple.100">{t("Username")}</FormLabel>
                   <Input
                     type="text"
                     bg="whiteAlpha.50"
@@ -127,12 +133,12 @@ const LoginPage: React.FC = () => {
                     }}
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Enter username"
+                    placeholder={t("Enter username")}
                   />
                 </FormControl>
 
                 <FormControl isRequired>
-                  <FormLabel color="purple.100">Password</FormLabel>
+                  <FormLabel color="purple.100">{t("Password")}</FormLabel>
                   <InputGroup>
                     <Input
                       type={showPassword ? "text" : "password"}
@@ -149,10 +155,10 @@ const LoginPage: React.FC = () => {
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
                     />
-                    <InputRightElement hover={{ cursor: "pointer" }}>
+                    <InputRightElement _hover={{ cursor: "pointer" }}>
                       <IconButton
                         aria-label={
-                          showPassword ? "Hide password" : "Show password"
+                          showPassword ? t("Hide password") : t("Show password")
                         }
                         icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
                         variant="ghost"
@@ -183,13 +189,14 @@ const LoginPage: React.FC = () => {
                   fontSize="lg"
                   fontWeight="bold"
                 >
-                  Sign In
+                  {t("Sign In")}
                 </Button>
               </VStack>
             </form>
 
             <Text textAlign="center" color="whiteAlpha.400" fontSize="xs">
-              © 2026 Attendance Management System. All rights reserved.
+              © 2026 {t("Attendance Management System")}.{" "}
+              {t("All rights reserved.")}
             </Text>
           </VStack>
         </Box>

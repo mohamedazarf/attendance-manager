@@ -217,6 +217,81 @@ const resources = {
       "Save Password": "Save Password",
       "Save Employee": "Save Employee",
       "Update Employee": "Update Employee",
+
+      /* ===== Login Page ===== */
+      "Sign in to manage your workplace": "Sign in to manage your workplace",
+      Username: "Username",
+      "Enter username": "Enter username",
+      "Sign In": "Sign In",
+      "Welcome back!": "Welcome back!",
+      "Successfully signed in as": "Successfully signed in as {{name}}",
+      "Authentication Failed": "Authentication Failed",
+      "Something went wrong": "Something went wrong",
+      "Invalid username or password": "Invalid username or password",
+
+      /* ===== Modals & Shared ===== */
+      Success: "Success",
+      Error: "Error",
+      "Manual punch recorded successfully":
+        "Manual punch recorded successfully",
+      "Failed to record manual punch": "Failed to record manual punch",
+      "Manual punch for": "Manual punch for",
+      "Event Type": "Event Type",
+      "Check-In": "Check-In",
+      "Check-Out": "Check-Out",
+      Time: "Time",
+      "Optional notes...": "Optional notes...",
+      Save: "Save",
+      "Confirm absence for": "Confirm absence for",
+      Reason: "Reason",
+      "Sick Leave": "Sick Leave",
+      Vacation: "Vacation",
+      "Unjustified Absence": "Unjustified Absence",
+      Other: "Other",
+      Confirm: "Confirm",
+      "Missing fields": "Missing fields",
+      "UID and Name are required": "UID and Name are required",
+      "User created successfully. Please scan fingerprint on the device.":
+        "User created successfully. Please scan fingerprint on the device.",
+      "Creation Failed": "Creation Failed",
+      "Add New Employee": "Add New Employee",
+      "UID (integer)": "UID (integer)",
+      "Employee (7:30 - 16:30)": "Employee (7:30 - 16:30)",
+      "Administration (8:30 - 17:30)": "Administration (8:30 - 17:30)",
+      "Create & Enroll": "Create & Enroll",
+      "Enrollment check timed out": "Enrollment check timed out",
+      "Could not verify fingerprint enrollment. Please check on the device.":
+        "Could not verify fingerprint enrollment. Please check on the device.",
+      "Fingerprint successfully enrolled on device.":
+        "Fingerprint successfully enrolled on device.",
+      "User created successfully. You can now enroll fingerprint.":
+        "User created successfully. You can now enroll fingerprint.",
+      Department: "Department",
+      "Error fetching employees": "Error fetching employees",
+      "Error fetching history": "Error fetching history",
+
+      /* ===== Parametrage (Settings) ===== */
+      Settings: "Settings",
+      "Special Days": "Special Days",
+      "Include Sunday automatically as non-working day":
+        "Include Sunday automatically as non-working day",
+      "Label (optional)": "Label (optional)",
+      "Ex: National holiday": "Ex: National holiday",
+      "Add / Update": "Add / Update",
+      "No special days configured": "No special days configured",
+      "Special day saved": "Special day saved",
+      "Save error": "Save error",
+      "This page is reserved for administrators":
+        "This page is reserved for administrators",
+      "Special date":
+        "This date is a special day: {{label}}. Absences are not counted.",
+      "National holiday": "National holiday",
+      "Remote day": "Remote day",
+      Sunday: "Sunday",
+      "Working day": "Working day",
+      "Total Weekend Hours": "Total Weekend Hours",
+      "No extra hours reported yesterday": "No extra hours reported yesterday",
+      Yesterday: "Yesterday",
     },
   },
 
@@ -358,6 +433,83 @@ const resources = {
       "Save Password": "Enregistrer le mot de passe",
       "Save Employee": "Enregistrer l'employé",
       "Update Employee": "Mettre à jour l'employé",
+
+      /* ===== Login Page ===== */
+      "Sign in to manage your workplace":
+        "Connectez-vous pour gérer votre espace de travail",
+      Username: "Nom d'utilisateur",
+      "Enter username": "Entrez le nom d'utilisateur",
+      "Sign In": "Se connecter",
+      "Welcome back!": "Bon retour !",
+      "Successfully signed in as": "Connecté avec succès en tant que {{name}}",
+      "Authentication Failed": "Échec de l'authentification",
+      "Something went wrong": "Une erreur est survenue",
+      "Invalid username or password":
+        "Nom d'utilisateur ou mot de passe invalide",
+
+      /* ===== Modals & Shared ===== */
+      Success: "Succès",
+      Error: "Erreur",
+      "Manual punch recorded successfully": "Pointage manuel enregistré",
+      "Failed to record manual punch": "Échec de l'enregistrement du pointage",
+      "Manual punch for": "Pointage manuel pour",
+      "Event Type": "Type d'événement",
+      "Check-In": "Entrée",
+      "Check-Out": "Sortie",
+      Time: "Heure",
+      "Optional notes...": "Notes optionnelles...",
+      Save: "Enregistrer",
+      "Confirm absence for": "Confirmer l'absence pour",
+      Reason: "Motif",
+      "Sick Leave": "Maladie",
+      Vacation: "Congé",
+      "Unjustified Absence": "Absence injustifiée",
+      Other: "Autre",
+      Confirm: "Confirmer",
+      "Missing fields": "Champs manquants",
+      "UID and Name are required": "L'UID et le Nom sont requis",
+      "User created successfully. Please scan fingerprint on the device.":
+        "Utilisateur créé. Veuillez scanner l'empreinte sur l'appareil.",
+      "Creation Failed": "Échec de la création",
+      "Add New Employee": "Ajouter un nouvel employé",
+      "UID (integer)": "UID (entier)",
+      "Employee (7:30 - 16:30)": "Employé (7:30 - 16:30)",
+      "Administration (8:30 - 17:30)": "Administration (8:30 - 17:30)",
+      "Create & Enroll": "Créer et enrôler",
+      "Enrollment check timed out": "Délai d'enrôlement expiré",
+      "Could not verify fingerprint enrollment. Please check on the device.":
+        "Impossible de vérifier l'enrôlement. Veuillez vérifier sur l'appareil.",
+      "Fingerprint successfully enrolled on device.":
+        "Empreinte enrôlée avec succès sur l'appareil.",
+      "User created successfully. You can now enroll fingerprint.":
+        "Utilisateur créé avec succès. Vous pouvez maintenant enrôler l'empreinte.",
+      Department: "Département",
+      "Error fetching employees": "Erreur lors de la récupération des employés",
+      "Error fetching history":
+        "Erreur lors de la récupération de l'historique",
+
+      /* ===== Parametrage (Settings) ===== */
+      Settings: "Paramétrage",
+      "Special Days": "Jours spéciaux",
+      "Include Sunday automatically as non-working day":
+        "Inclure automatiquement le dimanche comme non ouvrable",
+      "Label (optional)": "Libellé (optionnel)",
+      "Ex: National holiday": "Ex: Fête nationale",
+      "Add / Update": "Ajouter / Mettre à jour",
+      "No special days configured": "Aucun jour spécial configuré",
+      "Special day saved": "Jour spécial enregistré",
+      "Save error": "Erreur d'enregistrement",
+      "This page is reserved for administrators":
+        "Cette page est réservée aux administrateurs.",
+      "Special date":
+        "Cette date est un jour spécial: {{label}}. Les absences ne sont pas comptabilisées.",
+      "National holiday": "Jour férié",
+      "Remote day": "Jour à distance",
+      Sunday: "Dimanche",
+      "Working day": "Jour ouvrable",
+      "Total Weekend Hours": "Total des heures de week-end",
+      "No extra hours reported yesterday": "Aucune heure supplémentaire hier",
+      Yesterday: "Hier",
     },
   },
 };

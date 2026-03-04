@@ -68,7 +68,7 @@ export default function Sidebar({
             _hover={{ color: "#B98112", cursor: "pointer" }}
             onClick={() => handleNavigate("/parametrage")}
           >
-            Parametrage
+            {t("Settings")}
           </Text>
         )}
 

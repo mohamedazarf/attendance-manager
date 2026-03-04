@@ -14,6 +14,7 @@ import {
   ModalCloseButton,
 } from "@chakra-ui/react";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 
 export default function AddEmployeeModal({
   isOpen,
@@ -22,6 +23,7 @@ export default function AddEmployeeModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const [uid, setUid] = useState("");
   const [name, setName] = useState("");
   const [privilege, setPrivilege] = useState(0);
@@ -33,8 +35,8 @@ export default function AddEmployeeModal({
   const handleCreateUser = async () => {
     if (!uid || !name) {
       toast({
-        title: "Missing fields",
-        description: "UID and Name are required",
+        title: t("Missing fields"),
+        description: t("UID and Name are required"),
         status: "warning",
         duration: 3000,
         isClosable: true,
@@ -60,17 +62,18 @@ export default function AddEmployeeModal({
         res.data.status === "enroll_started"
       ) {
         toast({
-          title: "Employee Created",
-          description:
+          title: t("Employee Created"),
+          description: t(
             "User created successfully. Please scan fingerprint on the device.",
+          ),
           status: "success",
           duration: 5000,
           isClosable: true,
         });
       } else {
         toast({
-          title: "Creation Failed",
-          description: res.data.message || "Something went wrong",
+          title: t("Creation Failed"),
+          description: t(res.data.message) || t("Something went wrong"),
           status: "error",
           duration: 5000,
           isClosable: true,
@@ -87,8 +90,8 @@ export default function AddEmployeeModal({
       // onClose();
     } catch (err: any) {
       toast({
-        title: "Error",
-        description: err.response?.data?.message || err.message,
+        title: t("Error"),
+        description: t(err.response?.data?.message) || t(err.message),
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -102,17 +105,17 @@ export default function AddEmployeeModal({
     <Modal isOpen={isOpen} onClose={onClose} isCentered>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Add New Employee</ModalHeader>
+        <ModalHeader>{t("Add New Employee")}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={3}>
             <Input
-              placeholder="UID (integer)"
+              placeholder={t("UID (integer)")}
               value={uid}
               onChange={(e) => setUid(e.target.value)}
             />
             <Input
-              placeholder="Name"
+              placeholder={t("Name")}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -130,16 +133,16 @@ export default function AddEmployeeModal({
                 }
               }}
             >
-              <option value={0}>User</option>
-              <option value={14}>Admin</option>
+              <option value={0}>{t("User")}</option>
+              <option value={14}>{t("Admin")}</option>
             </Select>
             <Select
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
             >
-              <option value="employee">Employee (7:30 - 16:30)</option>
+              <option value="employee">{t("Employee (7:30 - 16:30)")}</option>
               <option value="administration">
-                Administration (8:30 - 17:30)
+                {t("Administration (8:30 - 17:30)")}
               </option>
             </Select>
           </VStack>
@@ -147,14 +150,14 @@ export default function AddEmployeeModal({
 
         <ModalFooter>
           <Button variant="ghost" mr={3} onClick={onClose}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button
             colorScheme="blue"
             onClick={handleCreateUser}
             isLoading={loading}
           >
-            Create & Enroll
+            {t("Create & Enroll")}
           </Button>
         </ModalFooter>
       </ModalContent>

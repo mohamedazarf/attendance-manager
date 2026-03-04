@@ -317,9 +317,7 @@ export default function Pointages() {
             <Alert status="info" borderRadius="md" mb={6}>
               <AlertIcon />
               <Text fontSize="sm">
-                Cette date est un jour special:{" "}
-                <strong>{dashboard?.day_context?.label}</strong>. Les absences
-                ne sont pas comptabilisees.
+                {t("Special date", { label: dashboard?.day_context?.label })}
               </Text>
             </Alert>
           )}
@@ -341,9 +339,7 @@ export default function Pointages() {
                 suppressAbsence ? "-" : (dashboard?.global.absent_today ?? 0)
               }
               onClick={
-                suppressAbsence
-                  ? undefined
-                  : () => goToEmployeesToday("absent")
+                suppressAbsence ? undefined : () => goToEmployeesToday("absent")
               }
             />
             <StatCard
@@ -382,7 +378,9 @@ export default function Pointages() {
                     onManualPunch={handleManualPunch}
                   />
                 ) : (
-                  <Text color="gray.500">{t("No extra hours reported yesterday")}</Text>
+                  <Text color="gray.500">
+                    {t("No extra hours reported yesterday")}
+                  </Text>
                 )}
               </Box>
             </SimpleGrid>
@@ -399,4 +397,3 @@ export default function Pointages() {
     </Box>
   );
 }
-
