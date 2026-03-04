@@ -1,7 +1,6 @@
 from datetime import datetime, time
 from app import utils
 from app.services.attendance_processing_service import AttendanceProcessingService
-from app.schemas.processed_attendance import ProcessedAttendance, AttendanceCheckPoint
 from fastapi import HTTPException
 
 class AttendanceHistoryService:
@@ -18,7 +17,7 @@ class AttendanceHistoryService:
 
         employee = self.employees_collection.find_one(
             {"employee_code": str(employee_id)},
-            {"_id": 0, "name": 1, "employee_code": 1}
+            {"_id": 0, "name": 1, "employee_code": 1, "department": 1}
         )
 
         if not employee:
@@ -31,38 +30,23 @@ class AttendanceHistoryService:
 
         # Normalisation timestamp
         for log in logs:
-            log["timestamp"] = log["timestamp"].replace(tzinfo=None)
+            ts = log.get("timestamp")
+            if isinstance(ts, str):
+                log["timestamp"] = datetime.fromisoformat(ts.replace("Z", "+00:00")).replace(tzinfo=None)
+            elif isinstance(ts, datetime):
+                log["timestamp"] = ts.replace(tzinfo=None)
+            else:
+                log["timestamp"] = None
 
-        # Grouper par jour
-        logs_by_date = {}
-        for log in logs:
-            d = log["timestamp"].date()
-            logs_by_date.setdefault(d, []).append(log)
+        logs = [log for log in logs if log.get("timestamp") is not None]
+
+        user_departments = {employee_id: employee.get("department", "employee")}
+        processed_map = self.processor.process_logs(logs, user_departments=user_departments)
 
         history = []
         total_period_hours = 0
         total_weekend_hours = 0
-        for day, day_logs in sorted(logs_by_date.items()):
-            day_logs.sort(key=lambda x: x["timestamp"])
-
-            check_in = day_logs[0]["timestamp"]
-            check_out = day_logs[-1]["timestamp"]
-
-            events = [
-                AttendanceCheckPoint(event_type="in", timestamp=check_in, event_order=1),
-                AttendanceCheckPoint(event_type="out", timestamp=check_out, event_order=2),
-            ]
-
-            processed = ProcessedAttendance(
-                user_id=employee_id,
-                date=day,
-                check_in_time=check_in,
-                check_out_time=check_out,
-                events=events
-            )
-
-            self.processor.calculate_hours(processed)
-            self.processor._detect_anomalies(processed)
+        for (_, day), processed in sorted(processed_map.items(), key=lambda item: item[0][1]):
             if processed.total_hours_worked:
                 total_period_hours += processed.total_hours_worked
                 # Weekday() returns 5 for Saturday and 6 for Sunday
@@ -71,8 +55,8 @@ class AttendanceHistoryService:
 
             history.append({
                 "date": day.isoformat(),
-                "check_in_time": check_in,
-                "check_out_time": check_out,
+                "check_in_time": processed.check_in_time,
+                "check_out_time": processed.check_out_time,
                 "worked_hours": processed.total_hours_worked,
                 "expected_hours": processed.expected_hours,
                 "is_late": processed.is_late,

@@ -31,6 +31,7 @@ import Sidebar from "../components/layout/Sidebar";
 import { useEffect, useState } from "react";
 import { CloseIcon, HamburgerIcon } from "@chakra-ui/icons";
 import { useLocation } from "react-router-dom";
+import { ManualPunchModal } from "../components/AttendanceModals";
 
 // -------------------- Types --------------------
 type Employee = {
@@ -47,8 +48,8 @@ type Employee = {
 
 type EmployeeHistory = {
   date: string;
-  check_in_time: string;
-  check_out_time: string;
+  check_in_time: string | null;
+  check_out_time: string | null;
   worked_hours: number;
   is_late: boolean;
   late_minutes: number;
@@ -128,6 +129,12 @@ export default function EmployeesToday() {
   const [totalPeriodHours, setTotalPeriodHours] = useState<number>(0);
   const [totalWeekendHours, setTotalWeekendHours] = useState<number>(0);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [isManualOpen, setIsManualOpen] = useState(false);
+  const [manualEmployee, setManualEmployee] = useState<{
+    id: number;
+    name: string;
+  } | null>(null);
+  const [manualDate, setManualDate] = useState<string>(targetDate);
 
   // Dates filtre pour l’historique
   const [dateFrom, setDateFrom] = useState<string>("2026-01-01");
@@ -206,6 +213,16 @@ export default function EmployeesToday() {
   };
 
   const closeDrawer = () => setSelectedEmployeeId(null);
+
+  const openManualCheckoutFromHistory = (historyDate: string) => {
+    if (!selectedEmployeeId) return;
+    setManualEmployee({
+      id: selectedEmployeeId,
+      name: employeeName || `#${selectedEmployeeId}`,
+    });
+    setManualDate(historyDate);
+    setIsManualOpen(true);
+  };
 
   return (
     <Box display="flex" minH="100vh" bg="gray.50">
@@ -426,6 +443,7 @@ export default function EmployeesToday() {
                           <Th>{t("Late Minutes")}</Th>
                           <Th>{t("Anomalies")}</Th>
                           <Th>{t("Status")}</Th>
+                          <Th>{t("Actions")}</Th>
                         </Tr>
                       </Thead>
                       <Tbody>
@@ -465,6 +483,20 @@ export default function EmployeesToday() {
                                 ))}
                               </Td>
                               <Td>{h.status}</Td>
+                              <Td>
+                                {(h.anomalies.includes("entree_sans_sortie") ||
+                                  (!!h.check_in_time && !h.check_out_time)) && (
+                                  <Button
+                                    size="xs"
+                                    colorScheme="orange"
+                                    onClick={() =>
+                                      openManualCheckoutFromHistory(h.date)
+                                    }
+                                  >
+                                    {t("Add manual check-out")}
+                                  </Button>
+                                )}
+                              </Td>
                             </Tr>
                           ))}
                       </Tbody>
@@ -495,6 +527,18 @@ export default function EmployeesToday() {
           </Drawer>
         </Container>
       </VStack>
+      <ManualPunchModal
+        isOpen={isManualOpen}
+        onClose={() => setIsManualOpen(false)}
+        employee={manualEmployee}
+        date={manualDate}
+        initialEventType="check_out"
+        onSuccess={() => {
+          if (selectedEmployeeId) {
+            openEmployeeHistory(selectedEmployeeId);
+          }
+        }}
+      />
     </Box>
   );
 }

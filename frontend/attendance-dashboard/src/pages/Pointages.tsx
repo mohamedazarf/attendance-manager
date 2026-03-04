@@ -91,10 +91,17 @@ const StatCard = ({
 /* -------------------- Daily Alerts -------------------- */
 function DailyAlerts({
   employees,
+  defaultDate,
   onManualPunch,
 }: {
   employees: Employee[];
-  onManualPunch: (emp: { id: number; name: string }) => void;
+  defaultDate: string;
+  onManualPunch: (emp: {
+    id: number;
+    name: string;
+    date: string;
+    eventType: "check_in" | "check_out";
+  }) => void;
 }) {
   const { t } = useTranslation();
 
@@ -165,10 +172,28 @@ function DailyAlerts({
                     onManualPunch({
                       id: emp.employee_id,
                       name: emp.employee_name,
+                      date: defaultDate,
+                      eventType: "check_in",
                     })
                   }
                 >
                   {t("Manual punch")}
+                </Button>
+              )}
+              {emp.anomalies.includes("entree_sans_sortie") && (
+                <Button
+                  size="sm"
+                  colorScheme="orange"
+                  onClick={() =>
+                    onManualPunch({
+                      id: emp.employee_id,
+                      name: emp.employee_name,
+                      date: defaultDate,
+                      eventType: "check_out",
+                    })
+                  }
+                >
+                  {t("Add manual check-out")}
                 </Button>
               )}
             </HStack>
@@ -196,6 +221,11 @@ export default function Pointages() {
     useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string>(getCurrentDate());
+  const [selectedManualDate, setSelectedManualDate] =
+    useState<string>(getCurrentDate());
+  const [selectedManualEventType, setSelectedManualEventType] = useState<
+    "check_in" | "check_out"
+  >("check_in");
 
   const {
     isOpen: isManualOpen,
@@ -235,8 +265,8 @@ export default function Pointages() {
     fetchDashboard(selectedDate);
   }, [fetchDashboard, selectedDate]);
 
-  useEffect(() => {
-    const yesterday = getPreviousDate(selectedDate);
+  const fetchYesterdayDashboard = useCallback((day: string) => {
+    const yesterday = getPreviousDate(day);
     fetch(
       `http://127.0.0.1:8000/api/v1/attendance/dashboard/day?day=${yesterday}`,
     )
@@ -246,10 +276,21 @@ export default function Pointages() {
         console.error("Yesterday dashboard fetch error:", err);
         setYesterdayDashboard(null);
       });
-  }, [selectedDate]);
+  }, []);
 
-  const handleManualPunch = (emp: { id: number; name: string }) => {
-    setSelectedEmp(emp);
+  useEffect(() => {
+    fetchYesterdayDashboard(selectedDate);
+  }, [fetchYesterdayDashboard, selectedDate]);
+
+  const handleManualPunch = (emp: {
+    id: number;
+    name: string;
+    date: string;
+    eventType: "check_in" | "check_out";
+  }) => {
+    setSelectedEmp({ id: emp.id, name: emp.name });
+    setSelectedManualDate(emp.date);
+    setSelectedManualEventType(emp.eventType);
     onManualOpen();
   };
 
@@ -272,6 +313,10 @@ export default function Pointages() {
         emp.anomalies.length > 0,
     ) ?? [];
   const previousDate = getPreviousDate(selectedDate);
+  const previousDateMissingCheckout =
+    yesterdayDashboard?.employees.filter((emp) =>
+      emp.anomalies.includes("entree_sans_sortie"),
+    ) ?? [];
   const positiveAlerts =
     yesterdayDashboard?.employees.filter(
       (emp) => emp.extra_hours && emp.extra_hours > 0,
@@ -364,7 +409,14 @@ export default function Pointages() {
                 </Heading>
                 <DailyAlerts
                   employees={negativeAlerts}
-                  onManualPunch={handleManualPunch}
+                  defaultDate={selectedDate}
+                  onManualPunch={(emp) =>
+                    handleManualPunch({
+                      ...emp,
+                      date: selectedDate,
+                      eventType: emp.eventType,
+                    })
+                  }
                 />
               </Box>
 
@@ -375,12 +427,56 @@ export default function Pointages() {
                 {positiveAlerts.length > 0 ? (
                   <DailyAlerts
                     employees={positiveAlerts}
-                    onManualPunch={handleManualPunch}
+                    defaultDate={previousDate}
+                    onManualPunch={(emp) =>
+                      handleManualPunch({
+                        ...emp,
+                        date: previousDate,
+                        eventType: emp.eventType,
+                      })
+                    }
                   />
                 ) : (
                   <Text color="gray.500">
                     {t("No extra hours reported yesterday")}
                   </Text>
+                )}
+
+                <Heading size="sm" mt={6} mb={3} color="orange.500">
+                  {t("Missing check-out")} ({t("Yesterday")}: {previousDate})
+                </Heading>
+                {previousDateMissingCheckout.length > 0 ? (
+                  <VStack spacing={2} align="stretch" mt={2}>
+                    {previousDateMissingCheckout.map((emp) => (
+                      <HStack
+                        key={`missing-${emp.employee_id}`}
+                        justify="space-between"
+                        bg="orange.50"
+                        border="1px solid"
+                        borderColor="orange.200"
+                        borderRadius="md"
+                        p={3}
+                      >
+                        <Text fontWeight="bold">{emp.employee_name}</Text>
+                        <Button
+                          size="sm"
+                          colorScheme="orange"
+                          onClick={() =>
+                            handleManualPunch({
+                              id: emp.employee_id,
+                              name: emp.employee_name,
+                              date: previousDate,
+                              eventType: "check_out",
+                            })
+                          }
+                        >
+                          {t("Add manual check-out")}
+                        </Button>
+                      </HStack>
+                    ))}
+                  </VStack>
+                ) : (
+                  <Text color="gray.500">{t("No missing check-out yesterday")}</Text>
                 )}
               </Box>
             </SimpleGrid>
@@ -390,8 +486,12 @@ export default function Pointages() {
           isOpen={isManualOpen}
           onClose={onManualClose}
           employee={selectedEmp}
-          date={selectedDate}
-          onSuccess={() => fetchDashboard(selectedDate)}
+          date={selectedManualDate}
+          initialEventType={selectedManualEventType}
+          onSuccess={() => {
+            fetchDashboard(selectedDate);
+            fetchYesterdayDashboard(selectedDate);
+          }}
         />
       </VStack>
     </Box>

@@ -52,7 +52,7 @@
 //               path="/employees"
 //               element={
 //                 // <ProtectedRoute allowedRoles={["admin"]}>
-//                   <ProtectedRoute>
+//                 <ProtectedRoute>
 //                   <EmployeesPage />
 //                 </ProtectedRoute>
 //               }

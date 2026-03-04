@@ -48,6 +48,7 @@ import Sidebar from "../components/layout/Sidebar";
 import Navbar from "../components/layout/Navbar";
 import AddEmployeeModal from "../components/AddEmployeeModal";
 import { useAuth } from "../context/AuthContext";
+import { ManualPunchModal } from "../components/AttendanceModals";
 
 const BASE_URL = "http://localhost:8000/api/v1";
 
@@ -108,6 +109,10 @@ export default function EmployeesPage() {
   const [totalPeriodHours, setTotalPeriodHours] = useState(0);
   const [totalWeekendHours, setTotalWeekendHours] = useState(0);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [isManualOpen, setIsManualOpen] = useState(false);
+  const [manualDate, setManualDate] = useState<string>(
+    new Date().toISOString().split("T")[0],
+  );
 
   const [dateFrom, setDateFrom] = useState("2026-01-01");
   const [dateTo, setDateTo] = useState("2026-01-31");
@@ -495,6 +500,12 @@ export default function EmployeesPage() {
   };
 
   const closeDrawer = () => setSelectedEmployeeCode(null);
+
+  const openManualCheckoutFromHistory = (historyDate: string) => {
+    if (!selectedEmployeeCode) return;
+    setManualDate(historyDate);
+    setIsManualOpen(true);
+  };
 
   // -------------------- Drawer Filtering --------------------
   const filteredHistory = history
@@ -901,6 +912,7 @@ export default function EmployeesPage() {
                         <Th>{t("Late Minutes")}</Th>
                         <Th>{t("Anomalies")}</Th>
                         <Th>{t("Status")}</Th>
+                        <Th>{t("Actions")}</Th>
                       </Tr>
                     </Thead>
                     <Tbody>
@@ -924,6 +936,20 @@ export default function EmployeesPage() {
                             ))}
                           </Td>
                           <Td>{h.status}</Td>
+                          <Td>
+                            {(h.anomalies.includes("entree_sans_sortie") ||
+                              (!!h.check_in_time && !h.check_out_time)) && (
+                              <Button
+                                size="xs"
+                                colorScheme="orange"
+                                onClick={() =>
+                                  openManualCheckoutFromHistory(h.date)
+                                }
+                              >
+                                {t("Add manual check-out")}
+                              </Button>
+                            )}
+                          </Td>
                         </Tr>
                       ))}
                     </Tbody>
@@ -954,6 +980,25 @@ export default function EmployeesPage() {
             </DrawerBody>
           </DrawerContent>
         </Drawer>
+        <ManualPunchModal
+          isOpen={isManualOpen}
+          onClose={() => setIsManualOpen(false)}
+          employee={
+            selectedEmployeeCode
+              ? { id: Number(selectedEmployeeCode), name: employeeName || "" }
+              : null
+          }
+          date={manualDate}
+          initialEventType="check_out"
+          onSuccess={() => {
+            const emp = employees.find(
+              (e) => e.employee_code === selectedEmployeeCode,
+            );
+            if (emp) {
+              openEmployeeHistory(emp);
+            }
+          }}
+        />
         {/* -------------------- Add Employee Drawer -------------------- */}
         <Drawer
           isOpen={isAddOpen}

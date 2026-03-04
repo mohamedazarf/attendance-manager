@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -22,6 +22,7 @@ interface ManualPunchModalProps {
   onClose: () => void;
   employee: { id: number; name: string } | null;
   date: string;
+  initialEventType?: "check_in" | "check_out";
   onSuccess: () => void;
 }
 
@@ -30,12 +31,15 @@ export const ManualPunchModal: React.FC<ManualPunchModalProps> = ({
   onClose,
   employee,
   date,
+  initialEventType = "check_in",
   onSuccess,
 }) => {
   const { t } = useTranslation();
   const toast = useToast();
   const [loading, setLoading] = useState(false);
-  const [eventType, setEventType] = useState("check_in");
+  const [eventType, setEventType] = useState<"check_in" | "check_out">(
+    initialEventType,
+  );
   const [time, setTime] = useState(() => {
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, "0");
@@ -43,6 +47,12 @@ export const ManualPunchModal: React.FC<ManualPunchModalProps> = ({
     return `${hours}:${minutes}`;
   });
   const [notes, setNotes] = useState("");
+
+  useEffect(() => {
+    if (isOpen) {
+      setEventType(initialEventType);
+    }
+  }, [initialEventType, isOpen]);
 
   const handleSubmit = async () => {
     if (!employee) return;
