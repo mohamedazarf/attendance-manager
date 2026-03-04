@@ -45,6 +45,8 @@ class AttendanceConfig:
     # Tolerance for late arrival (in minutes)
     LATE_TOLERANCE = 0           # Allow 0 min grace period
 
+    OVERTIME_THRESHOLD = 173.33  # Monthly overtime threshold (hours)
+
     
     # Thresholds for anomalies
     EARLY_DEPARTURE_THRESHOLD = 30  # Leave more than 30 min early = anomaly
@@ -55,7 +57,7 @@ class AttendanceConfig:
 
     @classmethod
     def get_overtime_threshold(cls) -> float:
-        return float(os.getenv("OVERTIME_THRESHOLD_HOURS", "160.0"))
+        return float(os.getenv("OVERTIME_THRESHOLD_HOURS", "173.33"))
 
     @classmethod
     def get_admin_email(cls) -> str:
@@ -126,6 +128,7 @@ class AttendanceConfig:
         
         expected_hours = (total_seconds / 3600) - (AttendanceConfig.PAUSE_DURATION / 60)
         return expected_hours
+    
 
 
 class AnomalyType:

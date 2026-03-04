@@ -141,7 +141,7 @@ class AttendanceMetricsService:
         monthly_hours = self.get_monthly_hours_worked(employee_id, year, month)
 
         overtime_hours = max(
-            0,
+            0.0,
             monthly_hours - self.config.OVERTIME_THRESHOLD_HOURS
         )
         return {
@@ -158,7 +158,7 @@ class AttendanceMetricsService:
             "weekend_days_worked": weekend_days,
             "weekend_hours_worked": weekend_hours,
             "monthly_hours_worked": monthly_hours,
-            "overtime_hours" : round(overtime_hours)
+            "overtime_hours": round(overtime_hours, 2)
         }
 
     def get_all_employees_metrics(
@@ -244,9 +244,6 @@ class AttendanceMetricsService:
             log_date = log["timestamp"].date()
             days_with_attendance.add(log_date)
 
-        # Calculate weekend metrics
-        weekend_days, weekend_hours = self._calculate_weekend_hours(logs)
-
         total_working_days = 0
         current_date = start_date
         while current_date <= end_date:
@@ -264,6 +261,20 @@ class AttendanceMetricsService:
             presence_rate = round((days_present / total_working_days) * 100, 2)
             absence_rate = round((days_absent / total_working_days) * 100, 2)
 
+        # Calculate total hours worked via processing service
+        if logs:
+            processing_service = AttendanceProcessingService()
+            processed = processing_service.process_logs(logs)
+            total_hours_worked = round(
+                sum(a.total_hours_worked for a in processed.values()), 2
+            )
+        else:
+            total_hours_worked = 0.0
+
+        overtime_hours = round(
+            max(0.0, total_hours_worked - self.config.OVERTIME_THRESHOLD_HOURS), 2
+        )
+
         return {
             "employee_id": employee_id,
             "start_date": start_date.isoformat(),
@@ -274,7 +285,7 @@ class AttendanceMetricsService:
             "presence_rate": presence_rate,
             "absence_rate": absence_rate,
             "attendance_count": len(logs),
-            "weekend_days_worked": weekend_days,
-            "weekend_hours_worked": weekend_hours
+            "total_hours_worked": total_hours_worked,
+            "overtime_hours": overtime_hours
         }
 

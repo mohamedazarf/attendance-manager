@@ -20,7 +20,6 @@ import {
   DrawerCloseButton,
   DrawerHeader,
   DrawerBody,
-  Input,
   IconButton,
   Flex,
   Container,
@@ -50,10 +49,9 @@ type AttendanceMetric = {
   total_working_days: number;
   days_present: number;
   days_absent: number;
-  presence_rate: number;
-  absence_rate: number;
-  weekend_days_worked: number;
-  weekend_hours_worked: number;
+
+  total_hours_worked: number;
+  overtime_hours: number;
 };
 
 type EmployeeHistoryItem = {
@@ -74,8 +72,14 @@ export default function RapportPage() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
 
-  const [startDate, setStartDate] = useState("2025-03-01");
-  const [endDate, setEndDate] = useState("2025-04-16");
+  const now = new Date();
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1); // 1-12
+
+  // Derive start/end dates from selected year+month
+  const startDate = `${selectedYear}-${String(selectedMonth).padStart(2, "0")}-01`;
+  const lastDay = new Date(selectedYear, selectedMonth, 0).getDate();
+  const endDate = `${selectedYear}-${String(selectedMonth).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
 
   const [data, setData] = useState<AttendanceMetric[]>([]);
   const [loading, setLoading] = useState(false);
@@ -87,7 +91,7 @@ export default function RapportPage() {
     [],
   );
   const [totalPeriodHours, setTotalPeriodHours] = useState(0);
-  const [totalWeekendHours, setTotalWeekendHours] = useState(0);
+  const [totalOvertimeHours, setTotalOvertimeHours] = useState(0);
   const [historyLoading, setHistoryLoading] = useState(false);
 
   const [drawerFilterState, setDrawerFilterState] = useState<
@@ -96,8 +100,9 @@ export default function RapportPage() {
   const [drawerSelectedAnomalies, setDrawerSelectedAnomalies] = useState<
     string[]
   >([]);
-  const [dateFrom, setDateFrom] = useState("2025-03-01");
-  const [dateTo, setDateTo] = useState("2025-04-16");
+  // Drawer date range mirrors the selected month
+  const dateFrom = startDate;
+  const dateTo = endDate;
 
   // -------------------- Fetch metrics --------------------
   useEffect(() => {
@@ -132,7 +137,7 @@ export default function RapportPage() {
     };
 
     fetchMetrics();
-  }, [startDate, endDate]);
+  }, [selectedYear, selectedMonth]);
 
   // -------------------- Fetch employee history --------------------
   const fetchEmployeeHistory = async (employee: AttendanceMetric) => {
@@ -160,7 +165,7 @@ export default function RapportPage() {
 
       setEmployeeHistory(history);
       setTotalPeriodHours(res.data.total_period_hours);
-      setTotalWeekendHours(res.data.total_weekend_hours);
+      setTotalOvertimeHours(res.data.total_overtime_hours ?? 0);
       setDrawerFilterState("all");
       setDrawerSelectedAnomalies([]);
     } catch (err) {
@@ -196,10 +201,8 @@ export default function RapportPage() {
       "Working Days",
       "Presences",
       "Absences",
-      "Presence %",
-      "Absence %",
-      "Weekend Days",
-      "Weekend Hours",
+      "Total Hours",
+      "Overtime Hours",
     ];
 
     const csvContent =
@@ -214,10 +217,8 @@ export default function RapportPage() {
             row.total_working_days,
             row.days_present,
             row.days_absent,
-            row.presence_rate.toFixed(1),
-            row.absence_rate.toFixed(1),
-            row.weekend_days_worked,
-            row.weekend_hours_worked,
+            row.total_hours_worked?.toFixed(2) ?? "0.00",
+            row.overtime_hours?.toFixed(2) ?? "0.00",
           ].join(","),
         ),
       ].join("\n");
@@ -227,7 +228,7 @@ export default function RapportPage() {
     link.setAttribute("href", encodedUri);
     link.setAttribute(
       "download",
-      `attendance_report_${startDate}_${endDate}.csv`,
+      `attendance_report_${selectedYear}_${String(selectedMonth).padStart(2, "0")}.csv`,
     );
     document.body.appendChild(link);
     link.click();
@@ -243,17 +244,16 @@ export default function RapportPage() {
       "Working Days": emp.total_working_days,
       Presences: emp.days_present,
       Absences: emp.days_absent,
-      "Presence %": emp.presence_rate.toFixed(1),
-      "Absence %": emp.absence_rate.toFixed(1),
-      "Weekend Days": emp.weekend_days_worked,
-      "Weekend Hours": emp.weekend_hours_worked,
+
+      "Total Hours": emp.total_hours_worked?.toFixed(2) ?? "0.00",
+      "Overtime Hours": emp.overtime_hours?.toFixed(2) ?? "0.00",
     }));
     const ws = XLSX.utils.json_to_sheet(sheetData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Attendance");
     XLSX.writeFile(
       wb,
-      `attendance_all_employees_${startDate}_to_${endDate}.xlsx`,
+      `attendance_${selectedYear}_${String(selectedMonth).padStart(2, "0")}.xlsx`,
     );
   };
 
@@ -359,21 +359,59 @@ export default function RapportPage() {
             {t("Attendance Report")}
           </Text>
 
-          {/* Date filters + export buttons */}
-          <HStack spacing={2} mb={4} justifyContent="space-between">
-            <HStack>
-              <Text>{t("Start Date")}:</Text>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-              <Text>{t("End Date")}:</Text>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
+          {/* Month/Year filter + export buttons */}
+          <HStack spacing={4} mb={4} justifyContent="space-between">
+            <HStack spacing={2}>
+              <Text fontWeight="medium">{t("Year")}:</Text>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                style={{
+                  padding: "6px 10px",
+                  borderRadius: "6px",
+                  border: "1px solid #CBD5E0",
+                  fontSize: "14px",
+                }}
+              >
+                {Array.from(
+                  { length: 5 },
+                  (_, i) => now.getFullYear() - 2 + i,
+                ).map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+              <Text fontWeight="medium">{t("Month")}:</Text>
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                style={{
+                  padding: "6px 10px",
+                  borderRadius: "6px",
+                  border: "1px solid #CBD5E0",
+                  fontSize: "14px",
+                }}
+              >
+                {[
+                  "Janvier",
+                  "Février",
+                  "Mars",
+                  "Avril",
+                  "Mai",
+                  "Juin",
+                  "Juillet",
+                  "Août",
+                  "Septembre",
+                  "Octobre",
+                  "Novembre",
+                  "Décembre",
+                ].map((name, i) => (
+                  <option key={i + 1} value={i + 1}>
+                    {name}
+                  </option>
+                ))}
+              </select>
             </HStack>
             <HStack>
               <Button
@@ -407,10 +445,8 @@ export default function RapportPage() {
                     <Th isNumeric>{t("Working Days")}</Th>
                     <Th isNumeric>{t("Presences")}</Th>
                     <Th isNumeric>{t("Absences")}</Th>
-                    <Th isNumeric>{t("Presence %")}</Th>
-                    <Th isNumeric>{t("Absence %")}</Th>
-                    <Th isNumeric>{t("Weekend Days")}</Th>
-                    <Th isNumeric>{t("Weekend Hours")}</Th>
+                    <Th isNumeric>{t("Total Hours")}</Th>
+                    <Th isNumeric>{t("Overtime Hours")}</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
@@ -427,10 +463,13 @@ export default function RapportPage() {
                       <Td isNumeric>{row.total_working_days}</Td>
                       <Td isNumeric>{row.days_present}</Td>
                       <Td isNumeric>{row.days_absent}</Td>
-                      <Td isNumeric>{row.presence_rate.toFixed(1)}%</Td>
-                      <Td isNumeric>{row.absence_rate.toFixed(1)}%</Td>
-                      <Td isNumeric>{row.weekend_days_worked}</Td>
-                      <Td isNumeric>{row.weekend_hours_worked}</Td>
+
+                      <Td isNumeric>
+                        {row.total_hours_worked?.toFixed(2) ?? "0.00"}
+                      </Td>
+                      <Td isNumeric>
+                        {row.overtime_hours?.toFixed(2) ?? "0.00"}
+                      </Td>
                     </Tr>
                   ))}
                 </Tbody>
@@ -472,26 +511,7 @@ export default function RapportPage() {
                     </Button>
                   </HStack>
                 </Flex>
-                <Flex gap={2} mt={2}>
-                  <Input
-                    type="date"
-                    value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
-                  />
-                  <Input
-                    type="date"
-                    value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() =>
-                      selectedEmployee && fetchEmployeeHistory(selectedEmployee)
-                    }
-                  >
-                    {t("Filter")}
-                  </Button>
-                </Flex>
+
                 <Flex gap={2} mt={2}>
                   <ButtonGroup size="sm">
                     {["all", "present", "absent", "late"].map((f) => (
@@ -582,10 +602,10 @@ export default function RapportPage() {
                       </Flex>
                       <Flex justify="space-between" align="center">
                         <Text fontWeight="bold">
-                          {t("Total weekend Worked Hours in That Period")}:
+                          {t("Overtime Hours (beyond 173.33 h/month)")}:
                         </Text>
-                        <Text fontWeight="bold" color="blue.600">
-                          {totalWeekendHours.toFixed(2)} h
+                        <Text fontWeight="bold" color="orange.500">
+                          {totalOvertimeHours.toFixed(2)} h
                         </Text>
                       </Flex>
                     </Box>

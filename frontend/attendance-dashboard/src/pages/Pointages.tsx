@@ -320,9 +320,7 @@ export default function Pointages() {
   const yesterdayExtraHoursAlerts =
     yesterdayDashboard?.employees.filter(
       (emp) =>
-        emp.status === "present" &&
-        !!emp.extra_hours &&
-        emp.extra_hours > 0,
+        emp.status === "present" && !!emp.extra_hours && emp.extra_hours > 0,
     ) ?? [];
   const yesterdayMissingCheckoutAlerts =
     yesterdayDashboard?.employees.filter(
@@ -419,7 +417,7 @@ export default function Pointages() {
                 <DailyAlerts
                   employees={negativeAlerts}
                   defaultDate={selectedDate}
-                  allowManualCheckout={isTodaySelected}
+                  allowManualCheckout={!isTodaySelected}
                   onManualPunch={(emp) =>
                     handleManualPunch({
                       ...emp,
@@ -463,7 +461,7 @@ export default function Pointages() {
                   <DailyAlerts
                     employees={yesterdayMissingCheckoutAlerts}
                     defaultDate={previousDate}
-                    allowManualCheckout={false}
+                    allowManualCheckout={true}
                     onManualPunch={(emp) =>
                       handleManualPunch({
                         ...emp,
@@ -473,7 +471,9 @@ export default function Pointages() {
                     }
                   />
                 ) : (
-                  <Text color="gray.500">{t("No missing check-out yesterday")}</Text>
+                  <Text color="gray.500">
+                    {t("No missing check-out yesterday")}
+                  </Text>
                 )}
               </Box>
             </SimpleGrid>

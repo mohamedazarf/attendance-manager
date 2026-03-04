@@ -184,11 +184,11 @@ const resources = {
       "Attendance Report": "Attendance Report",
       "Start Date": "Start Date",
       "End Date": "End Date",
-      "Weekend Days": "Weekend Days",
-      "Weekend Hours": "Weekend Hours",
+      "Total Hours": "Total Hours",
+      "Overtime Hours": "Overtime Hours",
+      "Overtime Hours (beyond 173.33 h/month)":
+        "Overtime Hours (beyond 173.33 h/month)",
       "Total Worked Hours in That Period": "Total Worked Hours in That Period",
-      "Total weekend Worked Hours in That Period":
-        "Total weekend Worked Hours in That Period",
       "Check-in": "Check-in",
       "Check-out": "Check-out",
       "Worked Hours": "Worked Hours",
@@ -405,12 +405,12 @@ const resources = {
       "Attendance Report": "Rapport de présence",
       "Start Date": "Date de début",
       "End Date": "Date de fin",
-      "Weekend Days": "Jours de week-end",
-      "Weekend Hours": "Heures de week-end",
+      "Total Hours": "Total heures travaillées",
+      "Overtime Hours": "Heures supplémentaires",
+      "Overtime Hours (beyond 173.33 h/month)":
+        "Heures supplémentaires (au-delà de 173,33 h/mois)",
       "Total Worked Hours in That Period":
         "Total des heures travaillées sur la période",
-      "Total weekend Worked Hours in That Period":
-        "Total des heures de week-end sur la période",
       "Check-in": "Entrée",
       "Check-out": "Sortie",
       "Worked Hours": "Heures travaillées",
