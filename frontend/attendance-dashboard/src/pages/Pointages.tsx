@@ -92,10 +92,12 @@ const StatCard = ({
 function DailyAlerts({
   employees,
   defaultDate,
+  allowManualCheckout = true,
   onManualPunch,
 }: {
   employees: Employee[];
   defaultDate: string;
+  allowManualCheckout?: boolean;
   onManualPunch: (emp: {
     id: number;
     name: string;
@@ -180,22 +182,23 @@ function DailyAlerts({
                   {t("Manual punch")}
                 </Button>
               )}
-              {emp.anomalies.includes("entree_sans_sortie") && (
-                <Button
-                  size="sm"
-                  colorScheme="orange"
-                  onClick={() =>
-                    onManualPunch({
-                      id: emp.employee_id,
-                      name: emp.employee_name,
-                      date: defaultDate,
-                      eventType: "check_out",
-                    })
-                  }
-                >
-                  {t("Add manual check-out")}
-                </Button>
-              )}
+              {allowManualCheckout &&
+                emp.anomalies.includes("entree_sans_sortie") && (
+                  <Button
+                    size="sm"
+                    colorScheme="orange"
+                    onClick={() =>
+                      onManualPunch({
+                        id: emp.employee_id,
+                        name: emp.employee_name,
+                        date: defaultDate,
+                        eventType: "check_out",
+                      })
+                    }
+                  >
+                    {t("Add manual check-out")}
+                  </Button>
+                )}
             </HStack>
           </HStack>
           {emp.justification?.notes && (
@@ -313,13 +316,19 @@ export default function Pointages() {
         emp.anomalies.length > 0,
     ) ?? [];
   const previousDate = getPreviousDate(selectedDate);
-  const previousDateMissingCheckout =
-    yesterdayDashboard?.employees.filter((emp) =>
-      emp.anomalies.includes("entree_sans_sortie"),
-    ) ?? [];
-  const positiveAlerts =
+  const isTodaySelected = selectedDate === getCurrentDate();
+  const yesterdayExtraHoursAlerts =
     yesterdayDashboard?.employees.filter(
-      (emp) => emp.extra_hours && emp.extra_hours > 0,
+      (emp) =>
+        emp.status === "present" &&
+        !!emp.extra_hours &&
+        emp.extra_hours > 0,
+    ) ?? [];
+  const yesterdayMissingCheckoutAlerts =
+    yesterdayDashboard?.employees.filter(
+      (emp) =>
+        emp.status === "present" &&
+        emp.anomalies.includes("entree_sans_sortie"),
     ) ?? [];
 
   return (
@@ -405,11 +414,12 @@ export default function Pointages() {
             <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
               <Box>
                 <Heading size="sm" mb={3} color="red.500">
-                  🚨 {t("Attendance Alerts")}
+                  🚨 {t("today")}: {selectedDate}
                 </Heading>
                 <DailyAlerts
                   employees={negativeAlerts}
                   defaultDate={selectedDate}
+                  allowManualCheckout={isTodaySelected}
                   onManualPunch={(emp) =>
                     handleManualPunch({
                       ...emp,
@@ -422,12 +432,16 @@ export default function Pointages() {
 
               <Box>
                 <Heading size="sm" mb={3} color="blue.500">
-                  ✅ {t("Extra hours")} ({t("Yesterday")}: {previousDate})
+                  ✅ {t("Yesterday")}: {previousDate}
                 </Heading>
-                {positiveAlerts.length > 0 ? (
+                <Heading size="xs" mb={2} color="blue.600">
+                  {t("Extra hours")}
+                </Heading>
+                {yesterdayExtraHoursAlerts.length > 0 ? (
                   <DailyAlerts
-                    employees={positiveAlerts}
+                    employees={yesterdayExtraHoursAlerts}
                     defaultDate={previousDate}
+                    allowManualCheckout={false}
                     onManualPunch={(emp) =>
                       handleManualPunch({
                         ...emp,
@@ -437,44 +451,27 @@ export default function Pointages() {
                     }
                   />
                 ) : (
-                  <Text color="gray.500">
+                  <Text color="gray.500" mb={4}>
                     {t("No extra hours reported yesterday")}
                   </Text>
                 )}
 
-                <Heading size="sm" mt={6} mb={3} color="orange.500">
-                  {t("Missing check-out")} ({t("Yesterday")}: {previousDate})
+                <Heading size="xs" mt={4} mb={2} color="orange.600">
+                  {t("Missing check-out")}
                 </Heading>
-                {previousDateMissingCheckout.length > 0 ? (
-                  <VStack spacing={2} align="stretch" mt={2}>
-                    {previousDateMissingCheckout.map((emp) => (
-                      <HStack
-                        key={`missing-${emp.employee_id}`}
-                        justify="space-between"
-                        bg="orange.50"
-                        border="1px solid"
-                        borderColor="orange.200"
-                        borderRadius="md"
-                        p={3}
-                      >
-                        <Text fontWeight="bold">{emp.employee_name}</Text>
-                        <Button
-                          size="sm"
-                          colorScheme="orange"
-                          onClick={() =>
-                            handleManualPunch({
-                              id: emp.employee_id,
-                              name: emp.employee_name,
-                              date: previousDate,
-                              eventType: "check_out",
-                            })
-                          }
-                        >
-                          {t("Add manual check-out")}
-                        </Button>
-                      </HStack>
-                    ))}
-                  </VStack>
+                {yesterdayMissingCheckoutAlerts.length > 0 ? (
+                  <DailyAlerts
+                    employees={yesterdayMissingCheckoutAlerts}
+                    defaultDate={previousDate}
+                    allowManualCheckout={false}
+                    onManualPunch={(emp) =>
+                      handleManualPunch({
+                        ...emp,
+                        date: previousDate,
+                        eventType: emp.eventType,
+                      })
+                    }
+                  />
                 ) : (
                   <Text color="gray.500">{t("No missing check-out yesterday")}</Text>
                 )}
