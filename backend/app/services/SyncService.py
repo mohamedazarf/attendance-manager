@@ -23,6 +23,10 @@ class SyncService:
             device_users = self.zk_service.list_users()
             device_user_ids = [str(u.user_id) for u in device_users]
 
+            # Map device user_id (employee_code) -> uid to attach fingerprint/template count
+            id_to_uid_map = {str(u.user_id): u.uid for u in device_users}
+            fingerprint_counts = self.zk_service.get_all_fingerprint_counts()
+
             # Step 1: Fetch all employees from DB
             db_employees = self.employee_repo.get_all_employees()
             db_user_ids = [str(e["employee_code"]) for e in db_employees]
@@ -37,10 +41,18 @@ class SyncService:
                 user_id_str = str(user.user_id)
                 existing_emp = db_emp_map.get(user_id_str)
 
-                # Preserve existing department if present, otherwise default to "employee"
                 existing_department = None
                 if existing_emp is not None:
                     existing_department = existing_emp.get("department")
+
+                # Auto fix based on privilege
+                if user.privilege == 14:
+                    department = "administration"
+                else:
+                    department = existing_department or "employee"
+
+                uid = id_to_uid_map.get(user_id_str)
+                fingerprint_count = fingerprint_counts.get(uid, 0) if uid is not None else 0
 
                 employee_data = Employee(
                     employee_code=user_id_str,
@@ -48,7 +60,8 @@ class SyncService:
                     privilege=user.privilege,
                     card=getattr(user, "card", None),
                     is_active=True,  # mark as active since it's on device
-                    department=existing_department or "employee",
+                    department=department,
+                    fingerprint_count=fingerprint_count,
                 )
 
                 if user_id_str in db_user_ids:

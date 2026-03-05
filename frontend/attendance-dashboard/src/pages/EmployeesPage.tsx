@@ -72,6 +72,14 @@ interface Employee {
   password?: string;
 }
 
+interface DeviceUser {
+  uid: number;
+  user_id: string;
+  name: string;
+  privilege: number;
+  card?: number;
+}
+
 type EmployeeHistoryItem = {
   date: string;
   check_in_time: string | null;
@@ -158,71 +166,33 @@ export default function EmployeesPage() {
 
   const toast = useToast();
 
+  const resolveDeviceUid = async (employeeCode: string): Promise<number> => {
+    const res = await axios.get<DeviceUser[]>(`${BASE_URL}/device/users`);
+    const deviceUser = res.data.find(
+      (u) => String(u.user_id) === String(employeeCode),
+    );
+    if (!deviceUser) {
+      throw new Error(`User ${employeeCode} not found on device`);
+    }
+    return deviceUser.uid;
+  };
+
   const handleEnrollFingerprint = async (emp: Employee) => {
     setEnrollLoading(emp.employee_code);
     try {
-      const res = await axios.post(
-        `${BASE_URL}/device/users/${emp.employee_code}/enroll`,
-      );
+      const deviceUid = await resolveDeviceUid(emp.employee_code);
+      await axios.post(`${BASE_URL}/device/users/${deviceUid}/enroll`);
+      const pendingToastId = `pending-enroll-${emp.employee_code}`;
       toast({
-        title: t("Enrollment Started"),
-        description: res.data.message,
-        status: "success",
-        duration: 5000,
+        id: pendingToastId,
+        title: t("Enrollment Mode Triggered"),
+        description:
+          "L'employe doit mettre son doigt pour enregistrer son empreinte.",
+        status: "warning",
+        duration: null,
         isClosable: true,
       });
-
-      // 🔹 Polling avec timeout
-      const timeout = 10000; // 30 secondes max pour déposer le doigt
-      const interval = 2000; // vérification toutes les 2 secondes
-      const startTime = Date.now();
-
-      const checkFingerprint = async () => {
-        if (Date.now() - startTime > timeout) {
-          toast({
-            title: t("Enrollment Timed Out"),
-            description: "You did not place your finger on the device in time.",
-            status: "warning",
-            duration: 5000,
-            isClosable: true,
-          });
-          setEnrollLoading(null);
-          return;
-        }
-
-        try {
-          const res = await axios.get(
-            `${BASE_URL}/device/users/${emp.employee_code}/fingerprint-status`,
-          );
-          if (
-            res.data.status === "enrolled" ||
-            res.data.fingerprint_count > 0
-          ) {
-            toast({
-              title: t("Fingerprint Enrolled"),
-              description: `Fingerprint successfully enrolled on device. Total: ${res.data.fingerprint_count}`,
-              status: "success",
-              duration: 5000,
-              isClosable: true,
-            });
-            setEmployees((prev) =>
-              prev.map((e) =>
-                e.employee_code === emp.employee_code
-                  ? { ...e, fingerprint_count: res.data.fingerprint_count }
-                  : e,
-              ),
-            );
-            setEnrollLoading(null);
-            return;
-          }
-        } catch (err) {
-          console.error("Polling error:", err);
-        }
-
-        setTimeout(checkFingerprint, interval);
-      };
-
-      setTimeout(checkFingerprint, interval);
+      pollFingerprintStatus(deviceUid, emp.employee_code, pendingToastId);
     } catch (err: any) {
       toast({
         title: t("Enrollment Failed"),
@@ -275,13 +245,20 @@ export default function EmployeesPage() {
     }
   };
 
-  const pollFingerprintStatus = async (uid: number) => {
+  const pollFingerprintStatus = async (
+    uid: number,
+    employeeCode: string,
+    pendingToastId?: string,
+  ) => {
     const startTime = Date.now();
     const timeout = 60000; // 60 seconds
     const interval = 2000; // 2 seconds
 
     const check = async () => {
       if (Date.now() - startTime > timeout) {
+        if (pendingToastId) {
+          toast.close(pendingToastId);
+        }
         toast({
           title: "Enrollment check timed out",
           description:
@@ -298,6 +275,16 @@ export default function EmployeesPage() {
           `${BASE_URL}/device/users/${uid}/fingerprint-status`,
         );
         if (res.data.status === "enrolled" || res.data.fingerprint_count > 0) {
+          setEmployees((prev) =>
+            prev.map((e) =>
+              e.employee_code === String(employeeCode)
+                ? { ...e, fingerprint_count: res.data.fingerprint_count }
+                : e,
+            ),
+          );
+          if (pendingToastId) {
+            toast.close(pendingToastId);
+          }
           toast({
             title: "Fingerprint Enrolled",
             description: "Fingerprint successfully enrolled on device.",
@@ -311,17 +298,17 @@ export default function EmployeesPage() {
         console.error("Polling error", err);
       }
 
+        setTimeout(check, interval);
+      };
+
       setTimeout(check, interval);
     };
-
-    setTimeout(check, interval);
-  };
 
   const handleAddEmployee = async () => {
     setAddLoading(true);
 
     try {
-      const res = await axios.post(`${BASE_URL}/device/users/create`, {
+      await axios.post(`${BASE_URL}/device/users/create`, {
         uid: Number(newEmployee.employee_code),
         name: newEmployee.name,
         privilege: newEmployee.privilege,
@@ -329,6 +316,8 @@ export default function EmployeesPage() {
         department: newEmployee.department,
       });
       await axios.post(`${BASE_URL}/device/sync/employees`);
+
+      const createdUid = Number(newEmployee.employee_code);
 
       toast({
         title: t("User Created"),
@@ -338,6 +327,18 @@ export default function EmployeesPage() {
         duration: 5000,
         isClosable: true,
       });
+
+      const pendingToastId = `pending-enroll-${createdUid}`;
+      toast({
+        id: pendingToastId,
+        title: t("Enrollment Mode Triggered"),
+        description:
+          "L'employe doit mettre son doigt pour enregistrer son empreinte.",
+        status: "warning",
+        duration: null,
+        isClosable: true,
+      });
+      pollFingerprintStatus(createdUid, String(createdUid), pendingToastId);
 
       setIsAddOpen(false);
 

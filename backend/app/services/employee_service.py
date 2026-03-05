@@ -33,8 +33,16 @@ class EmployeeService:
         """
         employees = self.fetch_from_zk()
         db_codes = self.repo.get_existing_codes()
+        device_users = self.zk.list_users()
+        fingerprint_counts = self.zk.get_all_fingerprint_counts()
+
+        # Map device user_id (employee_code) -> uid to attach template count
+        id_to_uid_map = {str(u.user_id): u.uid for u in device_users}
         
         for emp in employees:
+            uid = id_to_uid_map.get(emp.employee_code)
+            emp.fingerprint_count = fingerprint_counts.get(uid, 0) if uid is not None else 0
+
             if emp.employee_code in db_codes:
                 self.repo.update_employee(emp)
             else:
