@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, time as dtime
 from typing import Any, Dict, List, Optional
 
 from app import utils
@@ -17,6 +17,11 @@ class DayRulesService:
             "key": self.config_key,
             "include_sunday": True,
             "special_days": [],
+            "ramadan_config": {
+                "start_date": None,
+                "end_date": None,
+                "departments": {},
+            },
         }
 
     def get_config(self) -> Dict[str, Any]:
@@ -140,3 +145,90 @@ class DayRulesService:
             "label": "",
             "suppress_absence": False,
         }
+
+    # ── Ramadan configuration helpers ──────────────────────────────────────────
+
+    def get_ramadan_config(self) -> Dict[str, Any]:
+        """
+        Return raw ramadan configuration as stored in DB.
+        Dates are ISO strings, times are HH:MM strings.
+        """
+        config = self.get_config()
+        ramadan = config.get("ramadan_config") or {}
+        # Ensure default structure
+        return {
+            "start_date": ramadan.get("start_date"),
+            "end_date": ramadan.get("end_date"),
+            "departments": ramadan.get("departments", {}),
+        }
+
+    def update_ramadan_config(
+        self,
+        start_date: Optional[date],
+        end_date: Optional[date],
+        departments: Dict[str, Dict[str, str]],
+    ) -> Dict[str, Any]:
+        """
+        Persist ramadan configuration.
+        - start_date / end_date: python date objects (or None)
+        - departments: {"administration": {"start_time": "HH:MM", "end_time": "HH:MM"}, ...}
+        """
+        payload = {
+            "start_date": start_date.isoformat() if start_date else None,
+            "end_date": end_date.isoformat() if end_date else None,
+            "departments": departments or {},
+        }
+
+        self.collection.update_one(
+            {"key": self.config_key},
+            {"$set": {"ramadan_config": payload}},
+            upsert=True,
+        )
+        return self.get_ramadan_config()
+
+    def get_department_hours_for_date(
+        self,
+        target_date: date,
+        department: str,
+    ) -> Optional[Dict[str, dtime]]:
+        """
+        If target_date is within the configured ramadan period and the given
+        department has overrides, return concrete time objects for start/end.
+        Otherwise return None.
+        """
+        config = self.get_config()
+        ramadan = config.get("ramadan_config") or {}
+        start_date_iso = ramadan.get("start_date")
+        end_date_iso = ramadan.get("end_date")
+        if not start_date_iso or not end_date_iso:
+            return None
+
+        try:
+            start_date_cfg = date.fromisoformat(start_date_iso)
+            end_date_cfg = date.fromisoformat(end_date_iso)
+        except ValueError:
+            return None
+
+        if not (start_date_cfg <= target_date <= end_date_cfg):
+            return None
+
+        departments = ramadan.get("departments", {}) or {}
+        dept_key = (department or "").lower()
+        dept_cfg = departments.get(dept_key)
+        if not dept_cfg:
+            return None
+
+        start_str = dept_cfg.get("start_time")
+        end_str = dept_cfg.get("end_time")
+        if not start_str or not end_str:
+            return None
+
+        try:
+            start_h, start_m = [int(x) for x in start_str.split(":")]
+            end_h, end_m = [int(x) for x in end_str.split(":")]
+            start_t = dtime(start_h, start_m)
+            end_t = dtime(end_h, end_m)
+        except Exception:
+            return None
+
+        return {"start_time": start_t, "end_time": end_t}

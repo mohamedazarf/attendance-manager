@@ -50,6 +50,15 @@ type DashboardData = {
     label: string;
     suppress_absence: boolean;
   };
+  ramadan?: {
+    is_ramadan: boolean;
+    departments: {
+      [key: string]: {
+        start_time: string;
+        end_time: string;
+      };
+    };
+  };
   global: {
     total_employees: number;
     present_today: number;
@@ -337,6 +346,7 @@ export default function Pointages() {
 
   const isSpecialDay = dashboard?.day_context?.is_special_day;
   const suppressAbsence = dashboard?.day_context?.suppress_absence;
+  const isRamadanDay = dashboard?.ramadan?.is_ramadan;
 
   const negativeAlerts =
     dashboard?.employees.filter(
@@ -400,6 +410,25 @@ export default function Pointages() {
               <Text fontSize="sm">
                 {t("Special date", { label: dashboard?.day_context?.label })}
               </Text>
+            </Alert>
+          )}
+
+          {isRamadanDay && (
+            <Alert status="info" borderRadius="md" mb={6}>
+              <AlertIcon />
+              <VStack align="start" spacing={1}>
+                <Text fontSize="sm" fontWeight="bold">
+                  Jour de ramadhan (paramétré)
+                </Text>
+                {Object.entries(dashboard?.ramadan?.departments ?? {}).map(
+                  ([dept, cfg]) => (
+                    <Text key={dept} fontSize="sm">
+                      {dept === "administration" ? "Administration" : "Employés"} :{" "}
+                      entrée {cfg.start_time} - sortie {cfg.end_time}
+                    </Text>
+                  ),
+                )}
+              </VStack>
             </Alert>
           )}
 

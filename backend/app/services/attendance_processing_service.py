@@ -1,8 +1,13 @@
 from datetime import datetime, timedelta, date, time as dtime
 from typing import List, Dict, Tuple
 from app.schemas.attendanceLog import AttendanceLog
-from app.schemas.processed_attendance import ProcessedAttendance, DailyAttendanceSummary, AttendanceCheckPoint
+from app.schemas.processed_attendance import (
+    ProcessedAttendance,
+    DailyAttendanceSummary,
+    AttendanceCheckPoint,
+)
 from app.config.attendance_config import AttendanceConfig, AnomalyType
+from app.services.day_rules_service import DayRulesService
 from app.utils import to_datetime
 
 class AttendanceProcessingService:
@@ -13,6 +18,7 @@ class AttendanceProcessingService:
     
     def __init__(self, config: AttendanceConfig = None):
         self.config = config or AttendanceConfig()
+        self.day_rules_service = DayRulesService()
     
     def process_logs(self, logs: List[dict], user_departments: Dict[int, str] = None) -> Dict[Tuple[int, date], ProcessedAttendance]:
         """
@@ -129,6 +135,32 @@ class AttendanceProcessingService:
         
         return events
     
+    def _get_effective_department_times(
+        self, processed: ProcessedAttendance, department: str = "employee"
+    ) -> Dict[str, dtime]:
+        """
+        Resolve department working hours for a specific date, taking into
+        account potential ramadan overrides.
+        """
+        dept_cfg = self.config.get_department_config(department)
+        base_start = dept_cfg["start_time"]
+        base_end = dept_cfg["end_time"]
+
+        try:
+            override = self.day_rules_service.get_department_hours_for_date(
+                processed.date, department
+            )
+        except Exception:
+            override = None
+
+        if override:
+            return {
+                "start_time": override["start_time"],
+                "end_time": override["end_time"],
+            }
+
+        return {"start_time": base_start, "end_time": base_end}
+
     def calculate_hours(self, processed: ProcessedAttendance, department: str = "employee"):
         """Calculate total working hours from in/out pairs"""
         if not processed.events:
@@ -148,15 +180,27 @@ class AttendanceProcessingService:
         
         # Convert to hours and subtract pause
         total_hours = total_seconds / 3600
-        pause_hours = self.config.PAUSE_DURATION / 60
+
+        # Pas de pause pendant ramadhan (si horaires overrides définis)
+        try:
+            ramadan_override = self.day_rules_service.get_department_hours_for_date(
+                processed.date, department
+            )
+        except Exception:
+            ramadan_override = None
+
+        if ramadan_override:
+            pause_hours = 0
+        else:
+            pause_hours = self.config.PAUSE_DURATION / 60
         
         processed.total_hours_worked = max(0, total_hours - pause_hours)
         processed.pause_hours = pause_hours
         
-        # Department-specific expected hours
-        dept_config = self.config.get_department_config(department)
-        start = dept_config["start_time"]
-        end = dept_config["end_time"]
+        # Department-specific expected hours (with possible ramadan override)
+        dept_times = self._get_effective_department_times(processed, department)
+        start = dept_times["start_time"]
+        end = dept_times["end_time"]
         
         total_seconds_expected = (
             end.hour * 3600 + end.minute * 60
@@ -164,7 +208,7 @@ class AttendanceProcessingService:
             start.hour * 3600 + start.minute * 60
         )
         
-        expected_hours = (total_seconds_expected / 3600) - (self.config.PAUSE_DURATION / 60)
+        expected_hours = (total_seconds_expected / 3600) - pause_hours
         processed.expected_hours = expected_hours
     
     def _detect_anomalies(self, processed: ProcessedAttendance, department: str = "employee"):
@@ -173,9 +217,9 @@ class AttendanceProcessingService:
         
         anomalies = []
         
-        dept_config = self.config.get_department_config(department)
-        dept_start_time = dept_config["start_time"]
-        dept_end_time = dept_config["end_time"]
+        dept_times = self._get_effective_department_times(processed, department)
+        dept_start_time = dept_times["start_time"]
+        dept_end_time = dept_times["end_time"]
 
         # Check for absence (no check-in)
         if not processed.events:

@@ -7,8 +7,8 @@ from app.services.ingestion_service import IngestionService
 from app.services.attendance_processing_service import AttendanceProcessingService
 from app.services.attendance_metrics_service import AttendanceMetricsService
 from app.sdk.mock import ZKMock
-from typing import List, Optional
-from datetime import datetime, date
+from typing import List, Optional, Dict
+from datetime import datetime, date, time
 from app import utils
 from pydantic import BaseModel
 from app.services.day_rules_service import DayRulesService
@@ -532,6 +532,17 @@ class SpecialDayPayload(BaseModel):
     label: Optional[str] = ""
 
 
+class RamadanDepartmentHours(BaseModel):
+    start_time: time
+    end_time: time
+
+
+class RamadanConfigPayload(BaseModel):
+    start_date: Optional[date]
+    end_date: Optional[date]
+    departments: Dict[str, RamadanDepartmentHours]
+
+
 @router.get("/dashboard/day-rules")
 def get_day_rules():
     service = DayRulesService()
@@ -577,6 +588,32 @@ def delete_special_day(day: date):
     service = DayRulesService()
     result = service.delete_special_day(day)
     return {"status": "success", **result}
+
+
+@router.get("/dashboard/ramadan-config")
+def get_ramadan_config():
+    service = DayRulesService()
+    return service.get_ramadan_config()
+
+
+@router.put("/dashboard/ramadan-config")
+def update_ramadan_config(payload: RamadanConfigPayload):
+    service = DayRulesService()
+
+    # Normalize department keys to lowercase for consistency
+    departments_payload = {}
+    for key, value in (payload.departments or {}).items():
+        departments_payload[key.lower()] = {
+            "start_time": value.start_time.strftime("%H:%M"),
+            "end_time": value.end_time.strftime("%H:%M"),
+        }
+
+    config = service.update_ramadan_config(
+        start_date=payload.start_date,
+        end_date=payload.end_date,
+        departments=departments_payload,
+    )
+    return config
 
 
 
