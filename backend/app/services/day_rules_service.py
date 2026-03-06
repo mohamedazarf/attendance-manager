@@ -24,6 +24,52 @@ class DayRulesService:
             },
         }
 
+    @staticmethod
+    def normalize_department_name(name: str) -> str:
+        return (name or "").strip().lower()
+
+    def list_departments(self) -> List[str]:
+        config = self.get_config()
+        ramadan = config.get("ramadan_config") or {}
+        departments = ramadan.get("departments", {}) or {}
+        names = set(["employee", "administration"])
+        for key in departments.keys():
+            normalized = self.normalize_department_name(key)
+            if normalized:
+                names.add(normalized)
+        return sorted(names)
+
+    def upsert_department_hours(
+        self,
+        department: str,
+        start_time: str,
+        end_time: str,
+    ) -> Dict[str, Any]:
+        dept_key = self.normalize_department_name(department)
+        if not dept_key:
+            raise ValueError("department name is required")
+
+        config = self.get_config()
+        ramadan = config.get("ramadan_config") or {}
+        departments = ramadan.get("departments", {}) or {}
+        departments[dept_key] = {
+            "start_time": start_time,
+            "end_time": end_time,
+        }
+
+        payload = {
+            "start_date": ramadan.get("start_date"),
+            "end_date": ramadan.get("end_date"),
+            "departments": departments,
+        }
+        self.collection.update_one(
+            {"key": self.config_key},
+            {"$set": {"ramadan_config": payload}},
+            upsert=True,
+        )
+
+        return {"name": dept_key, **departments[dept_key]}
+
     def get_config(self) -> Dict[str, Any]:
         config = self.collection.find_one({"key": self.config_key}, {"_id": 0})
         if config:

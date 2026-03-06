@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, Body
 from zk import ZK
 from zk.exception import ZKNetworkError
 from app.utils import get_db
@@ -594,6 +594,44 @@ def delete_special_day(day: date):
 def get_ramadan_config():
     service = DayRulesService()
     return service.get_ramadan_config()
+
+
+@router.get("/dashboard/departments")
+def get_departments():
+    service = DayRulesService()
+    return {"departments": service.list_departments()}
+
+
+@router.post("/dashboard/departments")
+def upsert_department(payload: dict = Body(default={})):
+    service = DayRulesService()
+    name = str(payload.get("name", "")).strip().lower()
+    start_raw = str(payload.get("start_time", "")).strip()
+    end_raw = str(payload.get("end_time", "")).strip()
+
+    if not name or not start_raw or not end_raw:
+        raise HTTPException(
+            status_code=400,
+            detail="name, start_time et end_time sont obligatoires",
+        )
+
+    try:
+        start_time = datetime.strptime(start_raw, "%H:%M").strftime("%H:%M")
+        end_time = datetime.strptime(end_raw, "%H:%M").strftime("%H:%M")
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="start_time et end_time doivent etre au format HH:MM",
+        )
+
+    try:
+        return service.upsert_department_hours(
+            department=name,
+            start_time=start_time,
+            end_time=end_time,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
 
 @router.put("/dashboard/ramadan-config")

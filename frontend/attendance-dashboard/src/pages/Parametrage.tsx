@@ -44,14 +44,11 @@ type RamadanDepartmentConfig = {
 type RamadanConfig = {
   start_date: string | null;
   end_date: string | null;
-  departments: {
-    administration?: RamadanDepartmentConfig;
-    employee?: RamadanDepartmentConfig;
-  };
+  departments: Record<string, RamadanDepartmentConfig>;
 };
 
 export default function Parametrage() {
-  const { isAdmin } = useAuth();
+  // const { isAdmin, token } = useAuth();
   const toast = useToast();
 
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -61,24 +58,41 @@ export default function Parametrage() {
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [rules, setRules] = useState<DayRulesConfig | null>(null);
   const [rulesLoading, setRulesLoading] = useState(false);
-  const [newSpecialDate, setNewSpecialDate] = useState<string>(getCurrentDate());
-  const [newSpecialType, setNewSpecialType] = useState<"holiday" | "remote_day">("holiday");
+  const [newSpecialDate, setNewSpecialDate] =
+    useState<string>(getCurrentDate());
+  const [newSpecialType, setNewSpecialType] = useState<
+    "holiday" | "remote_day"
+  >("holiday");
   const [newSpecialLabel, setNewSpecialLabel] = useState<string>("");
 
-  const [ramadanConfig, setRamadanConfig] = useState<RamadanConfig | null>(null);
+  const [ramadanConfig, setRamadanConfig] = useState<RamadanConfig | null>(
+    null,
+  );
   const [ramadanLoading, setRamadanLoading] = useState(false);
+  const [newDepartmentName, setNewDepartmentName] = useState("");
+  const [newDepartmentStartTime, setNewDepartmentStartTime] = useState("");
+  const [newDepartmentEndTime, setNewDepartmentEndTime] = useState("");
 
   const fetchRules = useCallback((year: number) => {
     setRulesLoading(true);
     setRamadanLoading(true);
     Promise.all([
-      fetch("http://127.0.0.1:8000/api/v1/attendance/dashboard/day-rules").then((res) => res.json()),
+      fetch("http://127.0.0.1:8000/api/v1/attendance/dashboard/day-rules").then(
+        (res) => res.json(),
+      ),
       fetch(
         `http://127.0.0.1:8000/api/v1/attendance/dashboard/special-days?start_date=${year}-01-01&end_date=${year}-12-31`,
       ).then((res) => res.json()),
-      fetch("http://127.0.0.1:8000/api/v1/attendance/dashboard/ramadan-config").then((res) => res.json()),
+      fetch(
+        "http://127.0.0.1:8000/api/v1/attendance/dashboard/ramadan-config",
+      ).then((res) => res.json()),
     ])
       .then(([config, specialDays, ramadan]) => {
+        const departments = {
+          administration: { start_time: "08:30", end_time: "17:30" },
+          employee: { start_time: "07:30", end_time: "16:30" },
+          ...(ramadan.departments ?? {}),
+        };
         setRules({
           include_sunday: config.include_sunday ?? true,
           special_days: specialDays.special_days ?? [],
@@ -86,7 +100,7 @@ export default function Parametrage() {
         setRamadanConfig({
           start_date: ramadan.start_date ?? null,
           end_date: ramadan.end_date ?? null,
-          departments: ramadan.departments ?? {},
+          departments,
         });
       })
       .catch((err) => {
@@ -99,17 +113,20 @@ export default function Parametrage() {
   }, []);
 
   useEffect(() => {
-    if (!isAdmin) return;
+    // if (!isAdmin) return;
     fetchRules(selectedYear);
-  }, [isAdmin, selectedYear, fetchRules]);
+  }, [selectedYear, fetchRules]);
 
   const updateIncludeSunday = async (value: boolean) => {
     try {
-      await fetch("http://127.0.0.1:8000/api/v1/attendance/dashboard/day-rules", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ include_sunday: value }),
-      });
+      await fetch(
+        "http://127.0.0.1:8000/api/v1/attendance/dashboard/day-rules",
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ include_sunday: value }),
+        },
+      );
       fetchRules(selectedYear);
     } catch (err) {
       console.error("Failed to update include_sunday", err);
@@ -119,15 +136,18 @@ export default function Parametrage() {
   const addSpecialDay = async () => {
     if (!newSpecialDate) return;
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/v1/attendance/dashboard/special-days", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          date: newSpecialDate,
-          type: newSpecialType,
-          label: newSpecialLabel,
-        }),
-      });
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/v1/attendance/dashboard/special-days",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            date: newSpecialDate,
+            type: newSpecialType,
+            label: newSpecialLabel,
+          }),
+        },
+      );
       if (!response.ok) {
         throw new Error("Invalid payload");
       }
@@ -152,16 +172,22 @@ export default function Parametrage() {
 
   const deleteSpecialDay = async (day: string) => {
     try {
-      await fetch(`http://127.0.0.1:8000/api/v1/attendance/dashboard/special-days/${day}`, {
-        method: "DELETE",
-      });
+      await fetch(
+        `http://127.0.0.1:8000/api/v1/attendance/dashboard/special-days/${day}`,
+        {
+          method: "DELETE",
+        },
+      );
       fetchRules(selectedYear);
     } catch (err) {
       console.error("Failed to delete special day", err);
     }
   };
 
-  const handleRamadanFieldChange = (field: "start_date" | "end_date", value: string) => {
+  const handleRamadanFieldChange = (
+    field: "start_date" | "end_date",
+    value: string,
+  ) => {
     setRamadanConfig((prev) => ({
       ...(prev || { start_date: null, end_date: null, departments: {} }),
       [field]: value || null,
@@ -169,7 +195,7 @@ export default function Parametrage() {
   };
 
   const handleRamadanDeptChange = (
-    dept: "administration" | "employee",
+    dept: string,
     subField: "start_time" | "end_time",
     value: string,
   ) => {
@@ -179,7 +205,10 @@ export default function Parametrage() {
         end_date: null,
         departments: {},
       };
-      const currentDept = base.departments[dept] || { start_time: "", end_time: "" };
+      const currentDept = base.departments[dept] || {
+        start_time: "",
+        end_time: "",
+      };
       return {
         ...base,
         departments: {
@@ -196,15 +225,18 @@ export default function Parametrage() {
   const saveRamadanConfig = async () => {
     if (!ramadanConfig) return;
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/v1/attendance/dashboard/ramadan-config", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          start_date: ramadanConfig.start_date,
-          end_date: ramadanConfig.end_date,
-          departments: ramadanConfig.departments,
-        }),
-      });
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/v1/attendance/dashboard/ramadan-config",
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            start_date: ramadanConfig.start_date,
+            end_date: ramadanConfig.end_date,
+            departments: ramadanConfig.departments,
+          }),
+        },
+      );
       if (!response.ok) {
         throw new Error("Invalid payload");
       }
@@ -231,6 +263,78 @@ export default function Parametrage() {
     }
   };
 
+  const addDepartment = async () => {
+    const name = newDepartmentName.trim().toLowerCase();
+    if (!name || !newDepartmentStartTime || !newDepartmentEndTime) {
+      toast({
+        title: "Veuillez remplir le nom et les horaires",
+        status: "warning",
+        duration: 2000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/v1/attendance/dashboard/departments",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            start_time: newDepartmentStartTime,
+            end_time: newDepartmentEndTime,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Echec creation departement");
+      }
+
+      toast({
+        title: "Departement enregistre",
+        status: "success",
+        duration: 1800,
+        isClosable: true,
+      });
+
+      setRamadanConfig((prev) => {
+        const base: RamadanConfig = prev || {
+          start_date: null,
+          end_date: null,
+          departments: {},
+        };
+        return {
+          ...base,
+          departments: {
+            ...base.departments,
+            [name]: {
+              start_time: newDepartmentStartTime,
+              end_time: newDepartmentEndTime,
+            },
+          },
+        };
+      });
+
+      setNewDepartmentName("");
+      setNewDepartmentStartTime("");
+      setNewDepartmentEndTime("");
+      fetchRules(selectedYear);
+    } catch (err) {
+      toast({
+        title: "Erreur lors de la creation du departement",
+        status: "error",
+        duration: 2000,
+        isClosable: true,
+      });
+      console.error("Failed to add department", err);
+    }
+  };
+
   return (
     <Box display="flex" minH="100vh" bg="gray.50">
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
@@ -251,238 +355,289 @@ export default function Parametrage() {
         <Container maxW="100%" flex={1} p={6}>
           <Heading mb={2}>Parametrage</Heading>
 
-          {!isAdmin ? (
+          {/* {!isAdmin ? (
             <Alert status="warning" borderRadius="md">
               <AlertIcon />
               <Text>Cette page est reservee aux administrateurs.</Text>
             </Alert>
-          ) : (
-            <>
-              <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" mb={8}>
-                <HStack justify="space-between" mb={4} wrap="wrap">
-                  <Heading size="md">Jours speciaux</Heading>
-                  <HStack>
-                    <Text fontSize="sm">Annee</Text>
-                    <Input
-                      type="number"
-                      value={selectedYear}
-                      onChange={(e) => setSelectedYear(Number(e.target.value || currentYear))}
-                      min={2000}
-                      max={2100}
-                      size="sm"
-                      w="120px"
-                      bg="white"
-                    />
-                    {rulesLoading && <Spinner size="sm" />}
-                  </HStack>
-                </HStack>
-
-                <HStack justify="space-between" mb={4} wrap="wrap">
-                  <Text>Inclure automatiquement le dimanche comme non ouvrable</Text>
-                  <Switch
-                    isChecked={rules?.include_sunday ?? true}
-                    onChange={(e) => updateIncludeSunday(e.target.checked)}
+          ) : ( */}
+          <>
+            <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" mb={8}>
+              <HStack justify="space-between" mb={4} wrap="wrap">
+                <Heading size="md">Jours speciaux</Heading>
+                <HStack>
+                  <Text fontSize="sm">Annee</Text>
+                  <Input
+                    type="number"
+                    value={selectedYear}
+                    onChange={(e) =>
+                      setSelectedYear(Number(e.target.value || currentYear))
+                    }
+                    min={2000}
+                    max={2100}
+                    size="sm"
+                    w="120px"
+                    bg="white"
                   />
+                  {rulesLoading && <Spinner size="sm" />}
                 </HStack>
+              </HStack>
 
-                <Divider mb={4} />
+              <HStack justify="space-between" mb={4} wrap="wrap">
+                <Text>
+                  Inclure automatiquement le dimanche comme non ouvrable
+                </Text>
+                <Switch
+                  isChecked={rules?.include_sunday ?? true}
+                  onChange={(e) => updateIncludeSunday(e.target.checked)}
+                />
+              </HStack>
 
-                <HStack mb={4} spacing={3} wrap="wrap" align="end">
-                  <Box>
-                    <Text fontSize="sm" mb={1}>
-                      Date
-                    </Text>
-                    <Input
-                      type="date"
-                      value={newSpecialDate}
-                      onChange={(e) => setNewSpecialDate(e.target.value)}
-                      bg="white"
-                      size="sm"
-                    />
-                  </Box>
-                  <Box>
-                    <Text fontSize="sm" mb={1}>
-                      Type
-                    </Text>
-                    <Select
-                      value={newSpecialType}
-                      onChange={(e) => setNewSpecialType(e.target.value as "holiday" | "remote_day")}
-                      size="sm"
-                      bg="white"
+              <Divider mb={4} />
+
+              <HStack mb={4} spacing={3} wrap="wrap" align="end">
+                <Box>
+                  <Text fontSize="sm" mb={1}>
+                    Date
+                  </Text>
+                  <Input
+                    type="date"
+                    value={newSpecialDate}
+                    onChange={(e) => setNewSpecialDate(e.target.value)}
+                    bg="white"
+                    size="sm"
+                  />
+                </Box>
+                <Box>
+                  <Text fontSize="sm" mb={1}>
+                    Type
+                  </Text>
+                  <Select
+                    value={newSpecialType}
+                    onChange={(e) =>
+                      setNewSpecialType(
+                        e.target.value as "holiday" | "remote_day",
+                      )
+                    }
+                    size="sm"
+                    bg="white"
+                  >
+                    <option value="holiday">Jour ferie</option>
+                    <option value="remote_day">Jour a distance</option>
+                  </Select>
+                </Box>
+                <Box flex={1} minW="220px">
+                  <Text fontSize="sm" mb={1}>
+                    Libelle (optionnel)
+                  </Text>
+                  <Input
+                    value={newSpecialLabel}
+                    onChange={(e) => setNewSpecialLabel(e.target.value)}
+                    placeholder="Ex: Fete nationale"
+                    size="sm"
+                    bg="white"
+                  />
+                </Box>
+                <Button colorScheme="blue" size="sm" onClick={addSpecialDay}>
+                  Ajouter / Mettre a jour
+                </Button>
+              </HStack>
+
+              <VStack align="stretch" spacing={2}>
+                {(rules?.special_days ?? []).length === 0 && (
+                  <Text color="gray.500" fontSize="sm">
+                    Aucun jour special configure.
+                  </Text>
+                )}
+                {(rules?.special_days ?? [])
+                  .sort((a, b) => a.date.localeCompare(b.date))
+                  .map((item) => (
+                    <HStack
+                      key={item.date}
+                      justify="space-between"
+                      p={3}
+                      border="1px solid"
+                      borderColor="gray.100"
+                      borderRadius="md"
                     >
-                      <option value="holiday">Jour ferie</option>
-                      <option value="remote_day">Jour a distance</option>
-                    </Select>
-                  </Box>
-                  <Box flex={1} minW="220px">
+                      <HStack>
+                        <Badge
+                          colorScheme={item.type === "holiday" ? "red" : "blue"}
+                        >
+                          {item.type === "holiday"
+                            ? "Jour ferie"
+                            : "Jour a distance"}
+                        </Badge>
+                        <Text fontSize="sm">{item.date}</Text>
+                        {item.label && (
+                          <Text fontSize="sm" color="gray.600">
+                            - {item.label}
+                          </Text>
+                        )}
+                      </HStack>
+                      <Button
+                        size="xs"
+                        colorScheme="red"
+                        variant="outline"
+                        onClick={() => deleteSpecialDay(item.date)}
+                      >
+                        Supprimer
+                      </Button>
+                    </HStack>
+                  ))}
+              </VStack>
+            </Box>
+
+            <Box bg="white" p={6} borderRadius="lg" boxShadow="sm">
+              <HStack justify="space-between" mb={4} wrap="wrap">
+                <Heading size="md">Horaire de ramadhan</Heading>
+                {ramadanLoading && <Spinner size="sm" />}
+              </HStack>
+
+              <HStack mb={4} spacing={3} wrap="wrap">
+                <Box>
+                  <Text fontSize="sm" mb={1}>
+                    Date de debut
+                  </Text>
+                  <Input
+                    type="date"
+                    value={ramadanConfig?.start_date ?? ""}
+                    onChange={(e) =>
+                      handleRamadanFieldChange("start_date", e.target.value)
+                    }
+                    bg="white"
+                    size="sm"
+                  />
+                </Box>
+                <Box>
+                  <Text fontSize="sm" mb={1}>
+                    Date de fin
+                  </Text>
+                  <Input
+                    type="date"
+                    value={ramadanConfig?.end_date ?? ""}
+                    onChange={(e) =>
+                      handleRamadanFieldChange("end_date", e.target.value)
+                    }
+                    bg="white"
+                    size="sm"
+                  />
+                </Box>
+              </HStack>
+
+              <Divider my={4} />
+
+              <Box mb={5}>
+                <Heading size="sm" mb={2}>
+                  Ajouter un departement
+                </Heading>
+                <HStack spacing={3} wrap="wrap" align="end">
+                  <Box minW="220px">
                     <Text fontSize="sm" mb={1}>
-                      Libelle (optionnel)
+                      Nom du departement
                     </Text>
                     <Input
-                      value={newSpecialLabel}
-                      onChange={(e) => setNewSpecialLabel(e.target.value)}
-                      placeholder="Ex: Fete nationale"
+                      value={newDepartmentName}
+                      onChange={(e) => setNewDepartmentName(e.target.value)}
+                      placeholder="Ex: logistique"
                       size="sm"
                       bg="white"
                     />
                   </Box>
-                  <Button colorScheme="blue" size="sm" onClick={addSpecialDay}>
-                    Ajouter / Mettre a jour
+                  <Box>
+                    <Text fontSize="sm" mb={1}>
+                      Heure d'entree
+                    </Text>
+                    <Input
+                      type="time"
+                      value={newDepartmentStartTime}
+                      onChange={(e) =>
+                        setNewDepartmentStartTime(e.target.value)
+                      }
+                      size="sm"
+                      bg="white"
+                    />
+                  </Box>
+                  <Box>
+                    <Text fontSize="sm" mb={1}>
+                      Heure de sortie
+                    </Text>
+                    <Input
+                      type="time"
+                      value={newDepartmentEndTime}
+                      onChange={(e) => setNewDepartmentEndTime(e.target.value)}
+                      size="sm"
+                      bg="white"
+                    />
+                  </Box>
+                  <Button colorScheme="blue" size="sm" onClick={addDepartment}>
+                    Ajouter departement
                   </Button>
                 </HStack>
+              </Box>
 
-                <VStack align="stretch" spacing={2}>
-                  {(rules?.special_days ?? []).length === 0 && (
-                    <Text color="gray.500" fontSize="sm">
-                      Aucun jour special configure.
-                    </Text>
-                  )}
-                  {(rules?.special_days ?? [])
-                    .sort((a, b) => a.date.localeCompare(b.date))
-                    .map((item) => (
-                      <HStack
-                        key={item.date}
-                        justify="space-between"
-                        p={3}
-                        border="1px solid"
-                        borderColor="gray.100"
-                        borderRadius="md"
-                      >
-                        <HStack>
-                          <Badge colorScheme={item.type === "holiday" ? "red" : "blue"}>
-                            {item.type === "holiday" ? "Jour ferie" : "Jour a distance"}
-                          </Badge>
-                          <Text fontSize="sm">{item.date}</Text>
-                          {item.label && (
-                            <Text fontSize="sm" color="gray.600">
-                              - {item.label}
-                            </Text>
-                          )}
-                        </HStack>
-                        <Button
-                          size="xs"
-                          colorScheme="red"
-                          variant="outline"
-                          onClick={() => deleteSpecialDay(item.date)}
-                        >
-                          Supprimer
-                        </Button>
+              <VStack align="stretch" spacing={4}>
+                {Object.entries(ramadanConfig?.departments ?? {}).map(
+                  ([deptName, deptCfg]) => (
+                    <Box key={deptName}>
+                      <Heading size="sm" mb={2}>
+                        {deptName}
+                      </Heading>
+                      <HStack spacing={3} wrap="wrap">
+                        <Box>
+                          <Text fontSize="sm" mb={1}>
+                            Heure d'entree
+                          </Text>
+                          <Input
+                            type="time"
+                            value={deptCfg?.start_time ?? ""}
+                            onChange={(e) =>
+                              handleRamadanDeptChange(
+                                deptName,
+                                "start_time",
+                                e.target.value,
+                              )
+                            }
+                            size="sm"
+                            bg="white"
+                          />
+                        </Box>
+                        <Box>
+                          <Text fontSize="sm" mb={1}>
+                            Heure de sortie
+                          </Text>
+                          <Input
+                            type="time"
+                            value={deptCfg?.end_time ?? ""}
+                            onChange={(e) =>
+                              handleRamadanDeptChange(
+                                deptName,
+                                "end_time",
+                                e.target.value,
+                              )
+                            }
+                            size="sm"
+                            bg="white"
+                          />
+                        </Box>
                       </HStack>
-                    ))}
-                </VStack>
-              </Box>
+                    </Box>
+                  ),
+                )}
+              </VStack>
 
-              <Box bg="white" p={6} borderRadius="lg" boxShadow="sm">
-                <HStack justify="space-between" mb={4} wrap="wrap">
-                  <Heading size="md">Horaire de ramadhan</Heading>
-                  {ramadanLoading && <Spinner size="sm" />}
-                </HStack>
-
-                <HStack mb={4} spacing={3} wrap="wrap">
-                  <Box>
-                    <Text fontSize="sm" mb={1}>
-                      Date de debut
-                    </Text>
-                    <Input
-                      type="date"
-                      value={ramadanConfig?.start_date ?? ""}
-                      onChange={(e) => handleRamadanFieldChange("start_date", e.target.value)}
-                      bg="white"
-                      size="sm"
-                    />
-                  </Box>
-                  <Box>
-                    <Text fontSize="sm" mb={1}>
-                      Date de fin
-                    </Text>
-                    <Input
-                      type="date"
-                      value={ramadanConfig?.end_date ?? ""}
-                      onChange={(e) => handleRamadanFieldChange("end_date", e.target.value)}
-                      bg="white"
-                      size="sm"
-                    />
-                  </Box>
-                </HStack>
-
-                <Divider my={4} />
-
-                <VStack align="stretch" spacing={4}>
-                  <Box>
-                    <Heading size="sm" mb={2}>
-                      Administration
-                    </Heading>
-                    <HStack spacing={3} wrap="wrap">
-                      <Box>
-                        <Text fontSize="sm" mb={1}>
-                          Heure d'entree
-                        </Text>
-                        <Input
-                          type="time"
-                          value={ramadanConfig?.departments?.administration?.start_time ?? ""}
-                          onChange={(e) =>
-                            handleRamadanDeptChange("administration", "start_time", e.target.value)
-                          }
-                          size="sm"
-                          bg="white"
-                        />
-                      </Box>
-                      <Box>
-                        <Text fontSize="sm" mb={1}>
-                          Heure de sortie
-                        </Text>
-                        <Input
-                          type="time"
-                          value={ramadanConfig?.departments?.administration?.end_time ?? ""}
-                          onChange={(e) =>
-                            handleRamadanDeptChange("administration", "end_time", e.target.value)
-                          }
-                          size="sm"
-                          bg="white"
-                        />
-                      </Box>
-                    </HStack>
-                  </Box>
-
-                  <Box>
-                    <Heading size="sm" mb={2}>
-                      Employes
-                    </Heading>
-                    <HStack spacing={3} wrap="wrap">
-                      <Box>
-                        <Text fontSize="sm" mb={1}>
-                          Heure d'entree
-                        </Text>
-                        <Input
-                          type="time"
-                          value={ramadanConfig?.departments?.employee?.start_time ?? ""}
-                          onChange={(e) => handleRamadanDeptChange("employee", "start_time", e.target.value)}
-                          size="sm"
-                          bg="white"
-                        />
-                      </Box>
-                      <Box>
-                        <Text fontSize="sm" mb={1}>
-                          Heure de sortie
-                        </Text>
-                        <Input
-                          type="time"
-                          value={ramadanConfig?.departments?.employee?.end_time ?? ""}
-                          onChange={(e) => handleRamadanDeptChange("employee", "end_time", e.target.value)}
-                          size="sm"
-                          bg="white"
-                        />
-                      </Box>
-                    </HStack>
-                  </Box>
-                </VStack>
-
-                <Button mt={6} colorScheme="blue" size="sm" onClick={saveRamadanConfig}>
-                  Enregistrer l'horaire de ramadhan
-                </Button>
-              </Box>
-            </>
-          )}
+              <Button
+                mt={6}
+                colorScheme="blue"
+                size="sm"
+                onClick={saveRamadanConfig}
+              >
+                Enregistrer l'horaire de ramadhan
+              </Button>
+            </Box>
+          </>
+          {/* ) */}
+          {/* } */}
         </Container>
       </VStack>
     </Box>

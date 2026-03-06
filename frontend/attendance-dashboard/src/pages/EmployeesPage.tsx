@@ -100,6 +100,10 @@ export default function EmployeesPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [privilege, setPrivilege] = useState("all");
+  const [departments, setDepartments] = useState<string[]>([
+    "employee",
+    "administration",
+  ]);
 
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
@@ -165,6 +169,16 @@ export default function EmployeesPage() {
   const [editLoading, setEditLoading] = useState(false);
 
   const toast = useToast();
+
+  const getDefaultDepartment = (selectedPrivilege: number) => {
+    if (selectedPrivilege === 14 && departments.includes("administration")) {
+      return "administration";
+    }
+    if (departments.includes("employee")) {
+      return "employee";
+    }
+    return departments[0] || "employee";
+  };
 
   const resolveDeviceUid = async (employeeCode: string): Promise<number> => {
     const res = await axios.get<DeviceUser[]>(`${BASE_URL}/device/users`);
@@ -360,7 +374,7 @@ export default function EmployeesPage() {
         group_id: "",
         card: "",
         password: "",
-        department: "employee",
+        department: getDefaultDepartment(0),
       });
     } catch (err: any) {
       toast({
@@ -455,10 +469,19 @@ export default function EmployeesPage() {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/employee/`);
-        setEmployees(res.data);
+        const [employeesRes, departmentsRes] = await Promise.all([
+          axios.get(`${BASE_URL}/employee/`),
+          axios.get(`${BASE_URL}/attendance/dashboard/departments`),
+        ]);
+        setEmployees(employeesRes.data);
+        const fetchedDepartments = Array.isArray(departmentsRes.data?.departments)
+          ? departmentsRes.data.departments
+          : [];
+        if (fetchedDepartments.length > 0) {
+          setDepartments(fetchedDepartments);
+        }
         console.log("=== USERS FROM DATABASE ===");
-        console.log(res.data);
+        console.log(employeesRes.data);
       } catch (err) {
         console.error("Error fetching employees:", err);
       } finally {
@@ -565,6 +588,7 @@ export default function EmployeesPage() {
                 setNewEmployee((prev) => ({
                   ...prev,
                   employee_code: res.data.next_code,
+                  department: getDefaultDepartment(prev.privilege),
                 }));
                 setIsAddOpen(true);
               } catch (err) {
@@ -1035,10 +1059,7 @@ export default function EmployeesPage() {
                     setNewEmployee({
                       ...newEmployee,
                       privilege: selectedPrivilege,
-                      department:
-                        selectedPrivilege === 14
-                          ? "administration"
-                          : "employee",
+                      department: getDefaultDepartment(selectedPrivilege),
                     });
                   }}
                 >
@@ -1046,13 +1067,17 @@ export default function EmployeesPage() {
                   <option value={14}>{t("Admin")}</option>
                 </Select>
 
-                <Select value={newEmployee.department} isDisabled>
-                  <option value="employee">
-                    {t("Employee (7:30 - 16:30)")}
-                  </option>
-                  <option value="administration">
-                    {t("Administration (8:30 - 17:30)")}
-                  </option>
+                <Select
+                  value={newEmployee.department}
+                  onChange={(e) =>
+                    setNewEmployee({ ...newEmployee, department: e.target.value })
+                  }
+                >
+                  {departments.map((dept) => (
+                    <option key={dept} value={dept}>
+                      {t(dept)}
+                    </option>
+                  ))}
                 </Select>
 
                 <Input
@@ -1138,10 +1163,7 @@ export default function EmployeesPage() {
                       setEditingEmployee({
                         ...editingEmployee,
                         privilege: selectedPrivilege,
-                        department:
-                          selectedPrivilege === 14
-                            ? "administration"
-                            : "employee",
+                        department: getDefaultDepartment(selectedPrivilege),
                       } as Employee);
                     }
                   }}
@@ -1151,15 +1173,21 @@ export default function EmployeesPage() {
                 </Select>
 
                 <Select
-                  value={editingEmployee?.department || "employee"}
-                  isDisabled
+                  value={editingEmployee?.department || getDefaultDepartment(0)}
+                  onChange={(e) => {
+                    if (editingEmployee) {
+                      setEditingEmployee({
+                        ...editingEmployee,
+                        department: e.target.value,
+                      } as Employee);
+                    }
+                  }}
                 >
-                  <option value="employee">
-                    {t("Employee (7:30 - 16:30)")}
-                  </option>
-                  <option value="administration">
-                    {t("Administration (8:30 - 17:30)")}
-                  </option>
+                  {departments.map((dept) => (
+                    <option key={dept} value={dept}>
+                      {t(dept)}
+                    </option>
+                  ))}
                 </Select>
 
                 <Input

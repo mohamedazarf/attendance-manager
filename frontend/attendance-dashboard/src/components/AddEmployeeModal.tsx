@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   Input,
@@ -28,9 +28,35 @@ export default function AddEmployeeModal({
   const [name, setName] = useState("");
   const [privilege, setPrivilege] = useState(0);
   const [department, setDepartment] = useState("employee");
+  const [departments, setDepartments] = useState<string[]>([
+    "employee",
+    "administration",
+  ]);
   const [loading, setLoading] = useState(false);
 
   const toast = useToast();
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const res = await axios.get(
+          "http://127.0.0.1:8000/api/v1/attendance/dashboard/departments",
+        );
+        const fetched = Array.isArray(res.data?.departments)
+          ? res.data.departments
+          : [];
+        if (fetched.length > 0) {
+          setDepartments(fetched);
+        }
+      } catch (err) {
+        console.error("Error fetching departments:", err);
+      }
+    };
+
+    if (isOpen) {
+      fetchDepartments();
+    }
+  }, [isOpen]);
 
   const handleCreateUser = async () => {
     if (!uid || !name) {
@@ -140,10 +166,11 @@ export default function AddEmployeeModal({
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
             >
-              <option value="employee">{t("Employee (7:30 - 16:30)")}</option>
-              <option value="administration">
-                {t("Administration (8:30 - 17:30)")}
-              </option>
+              {departments.map((dept) => (
+                <option key={dept} value={dept}>
+                  {t(dept)}
+                </option>
+              ))}
             </Select>
           </VStack>
         </ModalBody>
