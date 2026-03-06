@@ -270,9 +270,9 @@ class AttendanceProcessingService:
         if not processed.is_complete_day:
             anomalies.append(AnomalyType.INCOMPLETE_DAY)
         
-        # Check if worked less than expected
-        if processed.total_hours_worked < (processed.expected_hours * 0.9):  # 90% threshold
-            anomalies.append(AnomalyType.INCOMPLETE_DAY)
+        # # Check if worked less than expected
+        # if processed.total_hours_worked < (processed.expected_hours * 0.9):  # 90% threshold
+        #     anomalies.append(AnomalyType.INCOMPLETE_DAY)
         
         # Set anomaly status
         if anomalies:

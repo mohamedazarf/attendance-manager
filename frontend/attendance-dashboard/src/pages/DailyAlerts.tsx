@@ -26,14 +26,19 @@ export default function DailyAlerts({ employees }: Props) {
 
   return (
     <VStack spacing={4} align="stretch">
-      {employees.map(emp => (
+      {employees.map((emp) => {
+        const hasExtraHours = Number(emp.extra_hours ?? 0) > 0;
+
+        const bgColor = hasExtraHours ? "green.50" : "red.50";
+        const borderColor = hasExtraHours ? "green.200" : "red.200";
+        return (
         <Box
           key={emp.employee_id}
           p={4}
           borderRadius="md"
           border="1px solid"
-          borderColor="red.200"
-          bg="red.50"
+          borderColor={borderColor}
+          bg={bgColor}
         >
           <Text fontWeight="bold">{emp.employee_name}</Text>
 
@@ -52,15 +57,11 @@ export default function DailyAlerts({ employees }: Props) {
             )}
 
             {emp.anomalies.includes("retard") && (
-              <Badge colorScheme="yellow">
-                Late ({emp.late_minutes} min)
-              </Badge>
+              <Badge colorScheme="yellow">Late ({emp.late_minutes} min)</Badge>
             )}
 
             {emp.extra_hours && emp.extra_hours > 0 && (
-              <Badge colorScheme="blue">
-                Extra hours +{emp.extra_hours}h
-              </Badge>
+              <Badge colorScheme="blue">Extra hours +{emp.extra_hours}h</Badge>
             )}
           </HStack>
 
@@ -71,9 +72,7 @@ export default function DailyAlerts({ employees }: Props) {
             <Button
               size="sm"
               colorScheme="blue"
-              onClick={() =>
-                console.log("Manual punch for", emp.employee_id)
-              }
+              onClick={() => console.log("Manual punch for", emp.employee_id)}
             >
               Manual punch
             </Button>
@@ -82,9 +81,7 @@ export default function DailyAlerts({ employees }: Props) {
               size="sm"
               colorScheme="red"
               variant="outline"
-              onClick={() =>
-                console.log("Mark absent", emp.employee_id)
-              }
+              onClick={() => console.log("Mark absent", emp.employee_id)}
             >
               Mark absent
             </Button>

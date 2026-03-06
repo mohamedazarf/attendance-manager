@@ -8,21 +8,20 @@ import {
   Text,
   Spinner,
   Badge,
-  Button,
   HStack,
   IconButton,
   useDisclosure,
   Input,
   Alert,
   AlertIcon,
+  Tooltip,
 } from "@chakra-ui/react";
 import Navbar from "../components/layout/Navbar";
 import Sidebar from "../components/layout/Sidebar";
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { CloseIcon } from "@chakra-ui/icons/Close";
-import { HamburgerIcon } from "@chakra-ui/icons/Hamburger";
+import { AddIcon, CloseIcon, HamburgerIcon, TimeIcon, WarningIcon } from "@chakra-ui/icons";
 import { ManualPunchModal, MarkAbsentModal } from "../components/AttendanceModals";
 import { getCurrentDate } from "../../utils";
 
@@ -124,14 +123,19 @@ function DailyAlerts({
 
   return (
     <VStack spacing={4} align="stretch">
-      {employees.map((emp) => (
+      {employees.map((emp) => {
+        const hasExtraHours = Number(emp.extra_hours ?? 0) > 0;
+        const borderColor = hasExtraHours ? "green.200" : "red.200";
+        const bgColor = hasExtraHours ? "green.50" : "red.50";
+
+        return (
         <Box
           key={emp.employee_id}
           p={4}
           borderRadius="md"
           border="1px solid"
-          borderColor="red.200"
-          bg="red.50"
+          borderColor={borderColor}
+          bg={bgColor}
         >
           <HStack justify="space-between">
             <Text fontWeight="bold">{emp.employee_name}</Text>
@@ -178,53 +182,59 @@ function DailyAlerts({
 
             <HStack spacing={2} wrap="wrap">
               {!emp.check_in_time && (
-                <Button
-                  size="sm"
-                  colorScheme="blue"
-                  onClick={() =>
-                    onManualPunch({
-                      id: emp.employee_id,
-                      name: emp.employee_name,
-                      date: defaultDate,
-                      eventType: "check_in",
-                    })
-                  }
-                >
-                  {t("Manual punch")}
-                </Button>
-              )}
-              {emp.status === "absent" && !emp.justification && onMarkAbsent && (
-                <Button
-                  size="sm"
-                  colorScheme="red"
-                  variant="outline"
-                  onClick={() =>
-                    onMarkAbsent({
-                      id: emp.employee_id,
-                      name: emp.employee_name,
-                      date: defaultDate,
-                    })
-                  }
-                >
-                  {t("Mark absent")}
-                </Button>
-              )}
-              {allowManualCheckout &&
-                emp.anomalies.includes("entree_sans_sortie") && (
-                  <Button
+                <Tooltip label={t("Manual punch")} hasArrow>
+                  <IconButton
                     size="sm"
-                    colorScheme="orange"
+                    colorScheme="blue"
+                    aria-label={t("Manual punch")}
+                    icon={<AddIcon />}
                     onClick={() =>
                       onManualPunch({
                         id: emp.employee_id,
                         name: emp.employee_name,
                         date: defaultDate,
-                        eventType: "check_out",
+                        eventType: "check_in",
                       })
                     }
-                  >
-                    {t("Add manual check-out")}
-                  </Button>
+                  />
+                </Tooltip>
+              )}
+              {emp.status === "absent" && !emp.justification && onMarkAbsent && (
+                <Tooltip label={t("Mark absent")} hasArrow>
+                  <IconButton
+                    size="sm"
+                    colorScheme="red"
+                    variant="outline"
+                    aria-label={t("Mark absent")}
+                    icon={<WarningIcon />}
+                    onClick={() =>
+                      onMarkAbsent({
+                        id: emp.employee_id,
+                        name: emp.employee_name,
+                        date: defaultDate,
+                      })
+                    }
+                  />
+                </Tooltip>
+              )}
+              {allowManualCheckout &&
+                emp.anomalies.includes("entree_sans_sortie") && (
+                  <Tooltip label={t("Add manual check-out")} hasArrow>
+                    <IconButton
+                      size="sm"
+                      colorScheme="orange"
+                      aria-label={t("Add manual check-out")}
+                      icon={<TimeIcon />}
+                      onClick={() =>
+                        onManualPunch({
+                          id: emp.employee_id,
+                          name: emp.employee_name,
+                          date: defaultDate,
+                          eventType: "check_out",
+                        })
+                      }
+                    />
+                  </Tooltip>
                 )}
             </HStack>
           </HStack>
@@ -234,7 +244,7 @@ function DailyAlerts({
             </Text>
           )}
         </Box>
-      ))}
+      )})}
     </VStack>
   );
 }
