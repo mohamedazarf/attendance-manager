@@ -535,12 +535,25 @@ class SpecialDayPayload(BaseModel):
 class RamadanDepartmentHours(BaseModel):
     start_time: time
     end_time: time
+    pause_minutes: Optional[int] = 0
+
+
+class NormalDepartmentHours(BaseModel):
+    start_time: time
+    end_time: time
+    pause_minutes: Optional[int] = 75
 
 
 class RamadanConfigPayload(BaseModel):
     start_date: Optional[date]
     end_date: Optional[date]
     departments: Dict[str, RamadanDepartmentHours]
+
+
+class NormalConfigPayload(BaseModel):
+    start_date: Optional[date]
+    end_date: Optional[date]
+    departments: Dict[str, NormalDepartmentHours]
 
 
 @router.get("/dashboard/day-rules")
@@ -596,6 +609,12 @@ def get_ramadan_config():
     return service.get_ramadan_config()
 
 
+@router.get("/dashboard/normal-config")
+def get_normal_config():
+    service = DayRulesService()
+    return service.get_normal_config()
+
+
 @router.get("/dashboard/departments")
 def get_departments():
     service = DayRulesService()
@@ -647,6 +666,26 @@ def update_ramadan_config(payload: RamadanConfigPayload):
         }
 
     config = service.update_ramadan_config(
+        start_date=payload.start_date,
+        end_date=payload.end_date,
+        departments=departments_payload,
+    )
+    return config
+
+
+@router.put("/dashboard/normal-config")
+def update_normal_config(payload: NormalConfigPayload):
+    service = DayRulesService()
+
+    departments_payload = {}
+    for key, value in (payload.departments or {}).items():
+        departments_payload[key.lower()] = {
+            "start_time": value.start_time.strftime("%H:%M"),
+            "end_time": value.end_time.strftime("%H:%M"),
+            "pause_minutes": max(0, int(value.pause_minutes or 0)),
+        }
+
+    config = service.update_normal_config(
         start_date=payload.start_date,
         end_date=payload.end_date,
         departments=departments_payload,
