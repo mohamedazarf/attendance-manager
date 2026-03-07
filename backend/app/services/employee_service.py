@@ -33,6 +33,10 @@ class EmployeeService:
         """
         employees = self.fetch_from_zk()
         db_codes = self.repo.get_existing_codes()
+        db_employees = {
+            str(emp.get("employee_code")): emp
+            for emp in self.repo.get_all_employees()
+        }
         device_users = self.zk.list_users()
         fingerprint_counts = self.zk.get_all_fingerprint_counts()
 
@@ -42,6 +46,13 @@ class EmployeeService:
         for emp in employees:
             uid = id_to_uid_map.get(emp.employee_code)
             emp.fingerprint_count = fingerprint_counts.get(uid, 0) if uid is not None else 0
+
+            existing_emp = db_employees.get(emp.employee_code, {})
+            existing_department = existing_emp.get("department")
+            if emp.privilege == 14:
+                emp.department = "administration"
+            else:
+                emp.department = existing_department or "employee"
 
             if emp.employee_code in db_codes:
                 self.repo.update_employee(emp)
