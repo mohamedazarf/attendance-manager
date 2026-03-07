@@ -15,7 +15,7 @@ import {
   Badge,
   useToast,
 } from "@chakra-ui/react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { CloseIcon } from "@chakra-ui/icons/Close";
 import { HamburgerIcon } from "@chakra-ui/icons/Hamburger";
 import Navbar from "../components/layout/Navbar";
@@ -44,6 +44,8 @@ type PeriodDepartmentConfig = {
   end_date: string | null;
   departments: Record<string, DepartmentScheduleConfig>;
 };
+
+type DeleteDepartmentStrategy = "reassign_default" | "delete";
 
 const DEFAULT_DEPARTMENTS: Record<string, DepartmentScheduleConfig> = {
   administration: { start_time: "08:30", end_time: "17:30", pause_minutes: 75 },
@@ -107,6 +109,23 @@ export default function Parametrage() {
   const [newDepartmentName, setNewDepartmentName] = useState("");
   const [newDepartmentStartTime, setNewDepartmentStartTime] = useState("");
   const [newDepartmentEndTime, setNewDepartmentEndTime] = useState("");
+  const [deleteStrategyByDepartment, setDeleteStrategyByDepartment] = useState<
+    Record<string, DeleteDepartmentStrategy>
+  >({});
+  const [departmentActionLoading, setDepartmentActionLoading] = useState<
+    string | null
+  >(null);
+
+  const departmentNames = useMemo(() => {
+    const names = new Set<string>([
+      ...Object.keys(normalConfig?.departments ?? {}),
+      ...Object.keys(ramadanConfig?.departments ?? {}),
+    ]);
+    return Array.from(names).sort((a, b) => a.localeCompare(b));
+  }, [normalConfig, ramadanConfig]);
+
+  const isSystemDepartment = (name: string) =>
+    ["employee", "administration"].includes(name.toLowerCase());
 
   const fetchRules = useCallback((year: number) => {
     setRulesLoading(true);
@@ -481,6 +500,60 @@ export default function Parametrage() {
     }
   };
 
+  const deleteDepartment = async (department: string) => {
+    if (isSystemDepartment(department)) {
+      toast({
+        title: "Ce departement systeme ne peut pas etre supprime",
+        status: "warning",
+        duration: 2200,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const strategy = deleteStrategyByDepartment[department] ?? "reassign_default";
+    const confirmMessage =
+      strategy === "delete"
+        ? `Supprimer le departement "${department}" et tous ses employes ?`
+        : `Supprimer le departement "${department}" et reaffecter ses employes au departement par defaut ?`;
+    if (!window.confirm(confirmMessage)) return;
+
+    setDepartmentActionLoading(department);
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/v1/attendance/dashboard/departments/${encodeURIComponent(department)}?employee_strategy=${strategy}`,
+        { method: "DELETE" },
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.detail || "Echec suppression departement");
+      }
+
+      toast({
+        title: "Departement supprime",
+        description:
+          strategy === "delete"
+            ? `${data.employees_affected ?? 0} employe(s) supprime(s).`
+            : `${data.employees_affected ?? 0} employe(s) reaffecte(s) au departement par defaut.`,
+        status: "success",
+        duration: 2400,
+        isClosable: true,
+      });
+
+      fetchRules(selectedYear);
+    } catch (err) {
+      toast({
+        title: "Erreur lors de la suppression du departement",
+        status: "error",
+        duration: 2200,
+        isClosable: true,
+      });
+      console.error("Failed to delete department", err);
+    } finally {
+      setDepartmentActionLoading(null);
+    }
+  };
+
   return (
     <Box display="flex" minH="100vh" bg="gray.50">
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
@@ -621,11 +694,11 @@ export default function Parametrage() {
 
           <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" mb={8}>
             <Heading size="sm" mb={2}>
-              Ajouter un departement
+              Gestion des departements
             </Heading>
             <Text fontSize="sm" color="gray.600" mb={4}>
-              Le departement est ajoute aux horaires normaux et ramadhan. Vous pourrez
-              ensuite personnaliser chaque section separatement.
+              Creez ou supprimez un departement. Les horaires normaux et ramadhan
+              restent configurables separement dans les sections ci-dessous.
             </Text>
             <HStack spacing={3} wrap="wrap" align="end">
               <Box minW="220px">
@@ -668,6 +741,65 @@ export default function Parametrage() {
                 Ajouter departement
               </Button>
             </HStack>
+
+            <Divider my={5} />
+
+            <VStack align="stretch" spacing={3}>
+              {departmentNames.map((deptName) => {
+                const strategy =
+                  deleteStrategyByDepartment[deptName] ?? "reassign_default";
+                const blocked = isSystemDepartment(deptName);
+                return (
+                  <HStack
+                    key={`dept-row-${deptName}`}
+                    justify="space-between"
+                    wrap="wrap"
+                    p={3}
+                    border="1px solid"
+                    borderColor="gray.100"
+                    borderRadius="md"
+                  >
+                    <HStack>
+                      <Text fontWeight="medium">{deptName}</Text>
+                      {blocked && <Badge colorScheme="gray">Systeme</Badge>}
+                    </HStack>
+                    <HStack spacing={2} wrap="wrap">
+                      <Select
+                        size="sm"
+                        w="260px"
+                        value={strategy}
+                        onChange={(e) =>
+                          setDeleteStrategyByDepartment((prev) => ({
+                            ...prev,
+                            [deptName]: e.target
+                              .value as DeleteDepartmentStrategy,
+                          }))
+                        }
+                        isDisabled={blocked}
+                        bg="white"
+                      >
+                        <option value="reassign_default">
+                          Reaffecter les employes au departement par defaut
+                        </option>
+                        <option value="delete">
+                          Supprimer tous les employes du departement
+                        </option>
+                      </Select>
+                      <Button
+                        size="sm"
+                        colorScheme="red"
+                        variant="outline"
+                        isDisabled={blocked}
+                        isLoading={departmentActionLoading === deptName}
+                        onClick={() => deleteDepartment(deptName)}
+                      >
+                        Supprimer
+                      </Button>
+                    </HStack>
+                  </HStack>
+                );
+              })}
+            </VStack>
           </Box>
 
           <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" mb={8}>

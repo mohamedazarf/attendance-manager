@@ -653,6 +653,24 @@ def upsert_department(payload: dict = Body(default={})):
         raise HTTPException(status_code=400, detail=str(exc))
 
 
+@router.delete("/dashboard/departments/{department}")
+def delete_department(
+    department: str,
+    employee_strategy: str = Query(
+        "reassign_default",
+        description="delete | reassign_default",
+    ),
+):
+    service = DayRulesService()
+    try:
+        return service.delete_department(
+            department=department,
+            employee_strategy=employee_strategy,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
 @router.put("/dashboard/ramadan-config")
 def update_ramadan_config(payload: RamadanConfigPayload):
     service = DayRulesService()

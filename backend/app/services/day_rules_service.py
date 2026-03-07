@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional
 
 from app import utils
 from app.config.attendance_config import AttendanceConfig
+from app.services.zk_service import ZKService
 
 
 class DayRulesService:
@@ -50,6 +51,10 @@ class DayRulesService:
     @staticmethod
     def normalize_department_name(name: str) -> str:
         return (name or "").strip().lower()
+
+    @staticmethod
+    def default_department_name() -> str:
+        return "employee"
 
     def list_departments(self) -> List[str]:
         config = self.get_config()
@@ -114,6 +119,100 @@ class DayRulesService:
             "name": dept_key,
             "normal": normal_departments[dept_key],
             "ramadan": departments[dept_key],
+        }
+
+    def delete_department(
+        self,
+        department: str,
+        employee_strategy: str = "reassign_default",
+    ) -> Dict[str, Any]:
+        dept_key = self.normalize_department_name(department)
+        default_department = self.default_department_name()
+
+        if not dept_key:
+            raise ValueError("department name is required")
+        if dept_key in {default_department, "administration"}:
+            raise ValueError(
+                f"Le departement systeme '{dept_key}' ne peut pas etre supprime"
+            )
+        if employee_strategy not in {"delete", "reassign_default"}:
+            raise ValueError("employee_strategy must be 'delete' or 'reassign_default'")
+
+        employees_collection = self.db["employees"]
+        target_employees = list(
+            employees_collection.find({"department": dept_key}, {"_id": 0, "employee_code": 1})
+        )
+        target_codes = [str(item.get("employee_code")) for item in target_employees if item.get("employee_code")]
+
+        device_deleted = 0
+        device_not_found = 0
+        if employee_strategy == "delete" and target_codes:
+            device_result = ZKService().delete_users_bulk(target_codes)
+            failed_codes = [item.get("employee_code") for item in (device_result.get("failed_codes") or [])]
+            if failed_codes:
+                raise ValueError(
+                    "Suppression employee sur device echouee pour: "
+                    + ", ".join([code for code in failed_codes if code])
+                )
+            device_deleted = len(device_result.get("deleted_codes") or [])
+            device_not_found = len(device_result.get("not_found_codes") or [])
+
+        config = self.get_config()
+        normal_cfg = config.get("normal_config") or {}
+        ramadan_cfg = config.get("ramadan_config") or {}
+        normal_departments = dict(normal_cfg.get("departments") or {})
+        ramadan_departments = dict(ramadan_cfg.get("departments") or {})
+
+        existed = (dept_key in normal_departments) or (dept_key in ramadan_departments)
+        if not existed:
+            return {
+                "deleted": False,
+                "department": dept_key,
+                "employee_strategy": employee_strategy,
+                "employees_affected": 0,
+                "reason": "department_not_found",
+            }
+
+        normal_departments.pop(dept_key, None)
+        ramadan_departments.pop(dept_key, None)
+
+        self.collection.update_one(
+            {"key": self.config_key},
+            {
+                "$set": {
+                    "normal_config": {
+                        "start_date": normal_cfg.get("start_date"),
+                        "end_date": normal_cfg.get("end_date"),
+                        "departments": normal_departments,
+                    },
+                    "ramadan_config": {
+                        "start_date": ramadan_cfg.get("start_date"),
+                        "end_date": ramadan_cfg.get("end_date"),
+                        "departments": ramadan_departments,
+                    },
+                }
+            },
+            upsert=True,
+        )
+
+        if employee_strategy == "delete":
+            employee_result = employees_collection.delete_many({"department": dept_key})
+            affected = int(employee_result.deleted_count or 0)
+        else:
+            employee_result = employees_collection.update_many(
+                {"department": dept_key},
+                {"$set": {"department": default_department}},
+            )
+            affected = int(employee_result.modified_count or 0)
+
+        return {
+            "deleted": True,
+            "department": dept_key,
+            "employee_strategy": employee_strategy,
+            "employees_affected": affected,
+            "default_department": default_department,
+            "device_deleted": device_deleted,
+            "device_not_found": device_not_found,
         }
 
     def get_config(self) -> Dict[str, Any]:

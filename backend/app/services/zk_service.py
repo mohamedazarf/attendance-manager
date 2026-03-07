@@ -1,6 +1,7 @@
 from zk import ZK
 from app.repositories.employeeRepo import EmployeeRepository
 from app.schemas.employee import Employee
+from typing import Any, Dict, List
 class ZKService:
     def __init__(self, ip="192.168.100.5", port=4370):
         self.ip = ip
@@ -267,6 +268,46 @@ class ZKService:
                 "message": str(e)
             }
 
+        finally:
+            if conn:
+                conn.disconnect()
+
+    def delete_users_bulk(self, employee_codes: List[str]) -> Dict[str, Any]:
+        conn = None
+        deleted_codes: List[str] = []
+        not_found_codes: List[str] = []
+        failed_codes: List[Dict[str, str]] = []
+        unique_codes = [str(code) for code in set(employee_codes or []) if str(code).strip()]
+
+        if not unique_codes:
+            return {
+                "deleted_codes": deleted_codes,
+                "not_found_codes": not_found_codes,
+                "failed_codes": failed_codes,
+            }
+
+        try:
+            conn = self._connect()
+            users = conn.get_users()
+            by_user_id = {str(u.user_id): u for u in users}
+
+            for code in unique_codes:
+                user = by_user_id.get(code)
+                if not user:
+                    not_found_codes.append(code)
+                    continue
+
+                try:
+                    conn.delete_user(uid=user.uid)
+                    deleted_codes.append(code)
+                except Exception as exc:
+                    failed_codes.append({"employee_code": code, "error": str(exc)})
+
+            return {
+                "deleted_codes": deleted_codes,
+                "not_found_codes": not_found_codes,
+                "failed_codes": failed_codes,
+            }
         finally:
             if conn:
                 conn.disconnect()
