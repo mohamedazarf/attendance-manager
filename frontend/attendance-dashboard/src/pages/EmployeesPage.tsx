@@ -100,6 +100,7 @@ export default function EmployeesPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [privilege, setPrivilege] = useState("all");
+  const [department, setDepartment] = useState("all");
   const [departments, setDepartments] = useState<string[]>([
     "employee",
     "administration",
@@ -498,9 +499,11 @@ export default function EmployeesPage() {
         .includes(search.toLowerCase());
       const matchPrivilege =
         privilege === "all" || emp.privilege.toString() === privilege;
-      return matchSearch && matchPrivilege;
+      const matchDepartment =
+        department === "all" || emp.department === department;
+      return matchSearch && matchPrivilege && matchDepartment;
     });
-  }, [employees, search, privilege]);
+  }, [employees, search, privilege, department]);
 
   // -------------------- Fetch Employee History --------------------
   const openEmployeeHistory = (emp: Employee) => {
@@ -630,6 +633,19 @@ export default function EmployeesPage() {
               <option value="all">{t("All privileges")}</option>
               <option value="0">{t("User")}</option>
               <option value="14">{t("Admin")}</option>
+            </Select>
+
+            <Select
+              maxW="200px"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+            >
+              <option value="all">{t("All departments")}</option>
+              {departments.map((dept) => (
+                <option key={dept} value={dept}>
+                  {dept}
+                </option>
+              ))}
             </Select>
           </Flex>
 
