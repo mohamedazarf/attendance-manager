@@ -49,6 +49,18 @@ class EmployeeRepository:
             {"$set": {"is_active": False}}
         )
 
+    def update_remote_config(self, employee_code: str, start_date: str | None, end_date: str | None):
+        """
+        Update the remote work dates for an employee.
+        """
+        self.collection.update_one(
+            {"employee_code": employee_code},
+            {"$set": {
+                "remote_start_date": start_date,
+                "remote_end_date": end_date
+            }}
+        )
+
     def count(self):
         return self.collection.count_documents({})
 

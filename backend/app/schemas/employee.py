@@ -10,3 +10,5 @@ class Employee(BaseModel):
     fingerprint_count: int = 0
     is_active: bool = True
     department: str | None = "employee"
+    remote_start_date: str | None = None
+    remote_end_date: str | None = None

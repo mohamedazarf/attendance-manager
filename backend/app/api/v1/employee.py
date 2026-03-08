@@ -37,6 +37,23 @@ def get_next_employee_code():
         )
 
 
+@router.put("/{employee_code}/remote-config")
+def update_remote_config(
+    employee_code: str,
+    remote_start_date: str | None = None,
+    remote_end_date: str | None = None
+):
+    try:
+        repo = EmployeeRepository()
+        repo.update_remote_config(employee_code, remote_start_date, remote_end_date)
+        return {"message": "Remote config updated successfully."}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error updating remote config: {str(e)}"
+        )
+
+
 @router.get("/ingest-mock")
 @router.post("/ingest-mock")
 def ingest_employees_mock():

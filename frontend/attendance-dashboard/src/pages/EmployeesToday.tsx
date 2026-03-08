@@ -37,7 +37,7 @@ import { ManualPunchModal } from "../components/AttendanceModals";
 type Employee = {
   employee_id: number;
   employee_name: string;
-  status: "present" | "absent";
+  status: "present" | "absent" | "remote";
   check_in_time: string | null;
   check_out_time: string | null;
   worked_hours: number;
@@ -102,13 +102,14 @@ export default function EmployeesToday() {
     | "present"
     | "absent"
     | "late"
+    | "remote"
     | null;
   const urlDate = params.get("date");
   const isValidDate = !!urlDate && /^\d{4}-\d{2}-\d{2}$/.test(urlDate);
   const targetDate = isValidDate ? urlDate : getCurrentDate();
 
   const [filterState, setFilterState] = useState<
-    "all" | "present" | "absent" | "late"
+    "all" | "present" | "absent" | "late" | "remote"
   >(urlFilter || "all");
 
   // -------------------- Filtres principaux --------------------
@@ -142,7 +143,7 @@ export default function EmployeesToday() {
 
   // -------------------- Filtres drawer --------------------
   const [drawerFilterState, setDrawerFilterState] = useState<
-    "all" | "present" | "absent" | "late"
+    "all" | "present" | "absent" | "late" | "remote"
   >("all");
   const [drawerSelectedAnomalies, setDrawerSelectedAnomalies] = useState<
     string[]
@@ -177,6 +178,7 @@ export default function EmployeesToday() {
     .filter((emp) => {
       if (filterState === "present") return emp.status === "present";
       if (filterState === "absent") return emp.status === "absent";
+      if (filterState === "remote") return emp.status === "remote";
       if (filterState === "late") return emp.is_late;
       return true;
     })
@@ -254,7 +256,7 @@ export default function EmployeesToday() {
             gap={4}
           >
             <ButtonGroup>
-              {["all", "present", "absent", "late"].map((f) => (
+              {["all", "present", "absent", "remote", "late"].map((f) => (
                 <Button
                   key={f}
                   colorScheme={filterState === f ? "yellow" : "gray"}
@@ -313,7 +315,13 @@ export default function EmployeesToday() {
                   <Td>{emp.employee_name}</Td>
                   <Td>
                     <Badge
-                      colorScheme={emp.status === "present" ? "green" : "red"}
+                      colorScheme={
+                        emp.status === "present"
+                          ? "green"
+                          : emp.status === "remote"
+                            ? "purple"
+                            : "red"
+                      }
                     >
                       {emp.status}
                     </Badge>
@@ -392,7 +400,7 @@ export default function EmployeesToday() {
                 <Flex gap={2} mt={2} align="center" wrap="wrap">
                   {/* Status filters */}
                   <ButtonGroup size="sm">
-                    {["all", "present", "absent", "late"].map((f) => (
+                    {["all", "present", "absent", "remote", "late"].map((f) => (
                       <Button
                         key={f}
                         colorScheme={
@@ -460,6 +468,8 @@ export default function EmployeesToday() {
                               return h.status === "normal";
                             if (drawerFilterState === "absent")
                               return h.status === "absent";
+                            if (drawerFilterState === "remote")
+                              return h.status === "remote";
                             if (drawerFilterState === "late") return h.is_late;
                             return true;
                           })

@@ -70,6 +70,8 @@ interface Employee {
   fingerprint_count?: number;
   department?: string;
   password?: string;
+  remote_start_date?: string | null;
+  remote_end_date?: string | null;
 }
 
 interface DeviceUser {
@@ -170,6 +172,67 @@ export default function EmployeesPage() {
   const [editLoading, setEditLoading] = useState(false);
 
   const toast = useToast();
+
+  // -------------------- Remote Work State --------------------
+  const [isRemoteOpen, setIsRemoteOpen] = useState(false);
+  const [remoteEmployee, setRemoteEmployee] = useState<Employee | null>(null);
+  const [remoteStart, setRemoteStart] = useState("");
+  const [remoteEnd, setRemoteEnd] = useState("");
+  const [remoteLoading, setRemoteLoading] = useState(false);
+
+  const openRemoteModal = (emp: Employee) => {
+    setRemoteEmployee(emp);
+    setRemoteStart(emp.remote_start_date || "");
+    setRemoteEnd(emp.remote_end_date || "");
+    setIsRemoteOpen(true);
+  };
+
+  const handleUpdateRemote = async () => {
+    if (!remoteEmployee) return;
+    setRemoteLoading(true);
+    try {
+      const res = await axios.put(
+        `${BASE_URL}/employee/${remoteEmployee.employee_code}/remote-config`,
+        null,
+        {
+          params: {
+            remote_start_date: remoteStart || null,
+            remote_end_date: remoteEnd || null,
+          },
+        },
+      );
+      toast({
+        title: t("Remote Work Updated"),
+        description: res.data.message,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      setIsRemoteOpen(false);
+
+      setEmployees((prev) =>
+        prev.map((e) =>
+          e.employee_code === remoteEmployee.employee_code
+            ? {
+                ...e,
+                remote_start_date: remoteStart || null,
+                remote_end_date: remoteEnd || null,
+              }
+            : e,
+        ),
+      );
+    } catch (err: any) {
+      toast({
+        title: t("Update failed"),
+        description: err.response?.data?.message || err.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setRemoteLoading(false);
+    }
+  };
 
   const getDefaultDepartment = (selectedPrivilege: number) => {
     if (selectedPrivilege === 14 && departments.includes("administration")) {
@@ -313,11 +376,11 @@ export default function EmployeesPage() {
         console.error("Polling error", err);
       }
 
-        setTimeout(check, interval);
-      };
-
       setTimeout(check, interval);
     };
+
+    setTimeout(check, interval);
+  };
 
   const handleAddEmployee = async () => {
     setAddLoading(true);
@@ -475,7 +538,9 @@ export default function EmployeesPage() {
           axios.get(`${BASE_URL}/attendance/dashboard/departments`),
         ]);
         setEmployees(employeesRes.data);
-        const fetchedDepartments = Array.isArray(departmentsRes.data?.departments)
+        const fetchedDepartments = Array.isArray(
+          departmentsRes.data?.departments,
+        )
           ? departmentsRes.data.departments
           : [];
         if (fetchedDepartments.length > 0) {
@@ -758,6 +823,16 @@ export default function EmployeesPage() {
                       }}
                     >
                       {t("Edit")}
+                    </Button>
+                    <Button
+                      size="sm"
+                      colorScheme="purple"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openRemoteModal(emp);
+                      }}
+                    >
+                      {t("Remote Config")}
                     </Button>
                   </Flex>
                 </Box>
@@ -1086,7 +1161,10 @@ export default function EmployeesPage() {
                 <Select
                   value={newEmployee.department}
                   onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, department: e.target.value })
+                    setNewEmployee({
+                      ...newEmployee,
+                      department: e.target.value,
+                    })
                   }
                 >
                   {departments.map((dept) => (
@@ -1337,6 +1415,59 @@ export default function EmployeesPage() {
               {t("Save Password")}
             </Button>
             <Button variant="ghost" onClick={() => setIsPasswordOpen(false)}>
+              {t("Cancel")}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      {/* -------------------- Remote Config Modal -------------------- */}
+      <Modal isOpen={isRemoteOpen} onClose={() => setIsRemoteOpen(false)}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            {t("Remote Config")} - {remoteEmployee?.name}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Flex direction="column" gap={4}>
+              <Box>
+                <Text mb={2} fontWeight="bold">
+                  {t("Start Date")}
+                </Text>
+                <Input
+                  type="date"
+                  value={remoteStart}
+                  onChange={(e) => setRemoteStart(e.target.value)}
+                />
+              </Box>
+              <Box>
+                <Text mb={2} fontWeight="bold">
+                  {t("End Date")}
+                </Text>
+                <Input
+                  type="date"
+                  value={remoteEnd}
+                  onChange={(e) => setRemoteEnd(e.target.value)}
+                />
+              </Box>
+              <Text fontSize="sm" color="gray.500">
+                {t(
+                  "Leave both empty to disable remote work for this employee. If only start date is provided, it applies indefinitely from that date.",
+                )}
+              </Text>
+            </Flex>
+          </ModalBody>
+
+          <ModalFooter>
+            <Button
+              colorScheme="blue"
+              mr={3}
+              onClick={handleUpdateRemote}
+              isLoading={remoteLoading}
+            >
+              {t("Save")}
+            </Button>
+            <Button variant="ghost" onClick={() => setIsRemoteOpen(false)}>
               {t("Cancel")}
             </Button>
           </ModalFooter>

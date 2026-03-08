@@ -12,6 +12,20 @@ class AttendanceMetricsService:
     absence rate, and other statistics per employee.
     """
 
+from datetime import datetime, date, timedelta, time
+from typing import List, Dict, Optional
+from calendar import monthrange
+from app.repositories.attendanceRepo import AttendanceRepository
+from app import utils
+from app.services.attendance_processing_service import AttendanceProcessingService
+from app.config.attendance_config import AttendanceConfig
+
+class AttendanceMetricsService:
+    """
+    Service to calculate attendance metrics including presence rate,
+    absence rate, and other statistics per employee.
+    """
+
     def __init__(self):
         db = utils.get_db()
         self.attendance_repo = AttendanceRepository(db["attendance_logs"])
@@ -21,6 +35,31 @@ class AttendanceMetricsService:
     def _is_weekend(self, date_obj: date) -> bool:
         """Check if date is Saturday (5) or Sunday (6)"""
         return date_obj.weekday() >= 5
+
+    def _is_employee_remote(self, start_str: str | None, end_str: str | None, target_date: date) -> bool:
+        if not start_str and not end_str:
+            return False
+            
+        start_d = None
+        end_d = None
+        if start_str:
+            try:
+                start_d = date.fromisoformat(start_str)
+            except ValueError:
+                pass
+                
+        if end_str:
+            try:
+                end_d = date.fromisoformat(end_str)
+            except ValueError:
+                pass
+                
+        if start_d and target_date < start_d:
+            return False
+        if end_d and target_date > end_d:
+            return False
+            
+        return True
 
     def _calculate_weekend_hours(self, logs: List[dict]) -> tuple:
         """Calculate weekend days worked and hours. Returns (days, hours)"""
@@ -122,14 +161,29 @@ class AttendanceMetricsService:
         for log in logs:
             log_date = log["timestamp"].date()  # Extract YYYY-MM-DD
             days_with_attendance.add(log_date)
+            
+        # Get employee info for remote bounds
+        employees_collection = db["employees"]
+        emp = employees_collection.find_one({"employee_code": str(employee_id)}) or {}
+        remote_start = emp.get("remote_start_date")
+        remote_end = emp.get("remote_end_date")
+        
+        working_days = self.get_working_days_in_month(year, month)
+        
+        days_remote = 0
+        for day in range(1, last_day + 1):
+            current_date = date(year, month, day)
+            if current_date.weekday() < 5:  # working day
+                if current_date not in days_with_attendance:
+                    if self._is_employee_remote(remote_start, remote_end, current_date):
+                        days_remote += 1
         
         # Calculate weekend metrics
         weekend_days, weekend_hours = self._calculate_weekend_hours(logs)
         
         # Calculate metrics
-        working_days = self.get_working_days_in_month(year, month)
         days_present = len(days_with_attendance)
-        days_absent = working_days - days_present
+        days_absent = max(0, working_days - days_present - days_remote)
         
         # Prevent division by zero
         if working_days == 0:
@@ -245,14 +299,24 @@ class AttendanceMetricsService:
             days_with_attendance.add(log_date)
 
         total_working_days = 0
+        days_remote = 0
+        
+        # Get employee info for remote bounds
+        emp = collection.database["employees"].find_one({"employee_code": str(employee_id)}) or {}
+        remote_start = emp.get("remote_start_date")
+        remote_end = emp.get("remote_end_date")
+        
         current_date = start_date
         while current_date <= end_date:
             if current_date.weekday() < 5:
                 total_working_days += 1
+                if current_date not in days_with_attendance:
+                    if self._is_employee_remote(remote_start, remote_end, current_date):
+                        days_remote += 1
             current_date += timedelta(days=1)
 
         days_present = len(days_with_attendance)
-        days_absent = total_working_days - days_present
+        days_absent = max(0, total_working_days - days_present - days_remote)
 
         if total_working_days == 0:
             presence_rate = 0

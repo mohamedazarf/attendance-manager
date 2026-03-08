@@ -21,15 +21,24 @@ import Sidebar from "../components/layout/Sidebar";
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { AddIcon, CloseIcon, HamburgerIcon, TimeIcon, WarningIcon } from "@chakra-ui/icons";
-import { ManualPunchModal, MarkAbsentModal } from "../components/AttendanceModals";
+import {
+  AddIcon,
+  CloseIcon,
+  HamburgerIcon,
+  TimeIcon,
+  WarningIcon,
+} from "@chakra-ui/icons";
+import {
+  ManualPunchModal,
+  MarkAbsentModal,
+} from "../components/AttendanceModals";
 import { getCurrentDate } from "../../utils";
 
 /* -------------------- Types -------------------- */
 type Employee = {
   employee_id: number;
   employee_name: string;
-  status: "present" | "absent";
+  status: "present" | "absent" | "remote";
   check_in_time: string | null;
   check_out_time: string | null;
   anomalies: string[];
@@ -129,122 +138,128 @@ function DailyAlerts({
         const bgColor = hasExtraHours ? "green.50" : "red.50";
 
         return (
-        <Box
-          key={emp.employee_id}
-          p={4}
-          borderRadius="md"
-          border="1px solid"
-          borderColor={borderColor}
-          bg={bgColor}
-        >
-          <HStack justify="space-between">
-            <Text fontWeight="bold">{emp.employee_name}</Text>
-            {emp.justification && (
-              <Badge colorScheme="green" variant="subtle">
-                {t(emp.justification.reason)}
-              </Badge>
-            )}
-          </HStack>
-
-          <HStack mt={3} justify="space-between" align="start" wrap="wrap">
-            <HStack spacing={2} wrap="wrap">
-              {emp.status === "absent" && (
-                <Badge colorScheme="red">{t("Absent")}</Badge>
-              )}
-
-              {emp.anomalies.includes("entree_sans_sortie") && (
-                <Badge colorScheme="orange">{t("Missing check-out")}</Badge>
-              )}
-
-              {emp.anomalies.includes("sortie_sans_entree") && (
-                <Badge colorScheme="purple">{t("Missing check-in")}</Badge>
-              )}
-
-              {emp.anomalies.includes("retard") && (
-                <Badge colorScheme="yellow">
-                  {t("Late")} ({emp.late_minutes} min)
-                </Badge>
-              )}
-
-              {emp.anomalies.includes("early_departure") && (
-                <Badge colorScheme="pink">{t("Early departure")}</Badge>
-              )}
-              {emp.anomalies.includes("incomplete_day") && (
-                <Badge colorScheme="teal">{t("Incomplete day")}</Badge>
-              )}
-
-              {emp.extra_hours && emp.extra_hours > 0 && (
-                <Badge colorScheme="blue">
-                  {t("Extra hours")} +{emp.extra_hours}h
+          <Box
+            key={emp.employee_id}
+            p={4}
+            borderRadius="md"
+            border="1px solid"
+            borderColor={borderColor}
+            bg={bgColor}
+          >
+            <HStack justify="space-between">
+              <Text fontWeight="bold">{emp.employee_name}</Text>
+              {emp.justification && (
+                <Badge colorScheme="green" variant="subtle">
+                  {t(emp.justification.reason)}
                 </Badge>
               )}
             </HStack>
 
-            <HStack spacing={2} wrap="wrap">
-              {!emp.check_in_time && (
-                <Tooltip label={t("Manual punch")} hasArrow>
-                  <IconButton
-                    size="sm"
-                    colorScheme="blue"
-                    aria-label={t("Manual punch")}
-                    icon={<AddIcon />}
-                    onClick={() =>
-                      onManualPunch({
-                        id: emp.employee_id,
-                        name: emp.employee_name,
-                        date: defaultDate,
-                        eventType: "check_in",
-                      })
-                    }
-                  />
-                </Tooltip>
-              )}
-              {emp.status === "absent" && !emp.justification && onMarkAbsent && (
-                <Tooltip label={t("Mark absent")} hasArrow>
-                  <IconButton
-                    size="sm"
-                    colorScheme="red"
-                    variant="outline"
-                    aria-label={t("Mark absent")}
-                    icon={<WarningIcon />}
-                    onClick={() =>
-                      onMarkAbsent({
-                        id: emp.employee_id,
-                        name: emp.employee_name,
-                        date: defaultDate,
-                      })
-                    }
-                  />
-                </Tooltip>
-              )}
-              {allowManualCheckout &&
-                emp.anomalies.includes("entree_sans_sortie") && (
-                  <Tooltip label={t("Add manual check-out")} hasArrow>
+            <HStack mt={3} justify="space-between" align="start" wrap="wrap">
+              <HStack spacing={2} wrap="wrap">
+                {emp.status === "absent" && (
+                  <Badge colorScheme="red">{t("Absent")}</Badge>
+                )}
+                {emp.status === "remote" && (
+                  <Badge colorScheme="purple">{t("Remote")}</Badge>
+                )}
+
+                {emp.anomalies.includes("entree_sans_sortie") && (
+                  <Badge colorScheme="orange">{t("Missing check-out")}</Badge>
+                )}
+
+                {emp.anomalies.includes("sortie_sans_entree") && (
+                  <Badge colorScheme="purple">{t("Missing check-in")}</Badge>
+                )}
+
+                {emp.anomalies.includes("retard") && (
+                  <Badge colorScheme="yellow">
+                    {t("Late")} ({emp.late_minutes} min)
+                  </Badge>
+                )}
+
+                {emp.anomalies.includes("early_departure") && (
+                  <Badge colorScheme="pink">{t("Early departure")}</Badge>
+                )}
+                {emp.anomalies.includes("incomplete_day") && (
+                  <Badge colorScheme="teal">{t("Incomplete day")}</Badge>
+                )}
+
+                {emp.extra_hours && emp.extra_hours > 0 && (
+                  <Badge colorScheme="blue">
+                    {t("Extra hours")} +{emp.extra_hours}h
+                  </Badge>
+                )}
+              </HStack>
+
+              <HStack spacing={2} wrap="wrap">
+                {!emp.check_in_time && (
+                  <Tooltip label={t("Manual punch")} hasArrow>
                     <IconButton
                       size="sm"
-                      colorScheme="orange"
-                      aria-label={t("Add manual check-out")}
-                      icon={<TimeIcon />}
+                      colorScheme="blue"
+                      aria-label={t("Manual punch")}
+                      icon={<AddIcon />}
                       onClick={() =>
                         onManualPunch({
                           id: emp.employee_id,
                           name: emp.employee_name,
                           date: defaultDate,
-                          eventType: "check_out",
+                          eventType: "check_in",
                         })
                       }
                     />
                   </Tooltip>
                 )}
+                {emp.status === "absent" &&
+                  !emp.justification &&
+                  onMarkAbsent && (
+                    <Tooltip label={t("Mark absent")} hasArrow>
+                      <IconButton
+                        size="sm"
+                        colorScheme="red"
+                        variant="outline"
+                        aria-label={t("Mark absent")}
+                        icon={<WarningIcon />}
+                        onClick={() =>
+                          onMarkAbsent({
+                            id: emp.employee_id,
+                            name: emp.employee_name,
+                            date: defaultDate,
+                          })
+                        }
+                      />
+                    </Tooltip>
+                  )}
+                {allowManualCheckout &&
+                  emp.anomalies.includes("entree_sans_sortie") && (
+                    <Tooltip label={t("Add manual check-out")} hasArrow>
+                      <IconButton
+                        size="sm"
+                        colorScheme="orange"
+                        aria-label={t("Add manual check-out")}
+                        icon={<TimeIcon />}
+                        onClick={() =>
+                          onManualPunch({
+                            id: emp.employee_id,
+                            name: emp.employee_name,
+                            date: defaultDate,
+                            eventType: "check_out",
+                          })
+                        }
+                      />
+                    </Tooltip>
+                  )}
+              </HStack>
             </HStack>
-          </HStack>
-          {emp.justification?.notes && (
-            <Text fontSize="xs" color="gray.600" mt={2} fontStyle="italic">
-              {t("Note")}: {emp.justification.notes}
-            </Text>
-          )}
-        </Box>
-      )})}
+            {emp.justification?.notes && (
+              <Text fontSize="xs" color="gray.600" mt={2} fontStyle="italic">
+                {t("Note")}: {emp.justification.notes}
+              </Text>
+            )}
+          </Box>
+        );
+      })}
     </VStack>
   );
 }
@@ -339,7 +354,11 @@ export default function Pointages() {
     onManualOpen();
   };
 
-  const handleMarkAbsent = (emp: { id: number; name: string; date: string }) => {
+  const handleMarkAbsent = (emp: {
+    id: number;
+    name: string;
+    date: string;
+  }) => {
     setSelectedEmp({ id: emp.id, name: emp.name });
     setSelectedManualDate(emp.date);
     onAbsentOpen();
@@ -361,7 +380,9 @@ export default function Pointages() {
   const negativeAlerts =
     dashboard?.employees.filter(
       (emp) =>
-        (suppressAbsence ? false : emp.status === "absent" && !emp.justification) ||
+        (suppressAbsence
+          ? false
+          : emp.status === "absent" && !emp.justification) ||
         emp.anomalies.length > 0,
     ) ?? [];
   const previousDate = getPreviousDate(selectedDate);
@@ -433,8 +454,10 @@ export default function Pointages() {
                 {Object.entries(dashboard?.ramadan?.departments ?? {}).map(
                   ([dept, cfg]) => (
                     <Text key={dept} fontSize="sm">
-                      {dept === "administration" ? "Administration" : "Employés"} :{" "}
-                      entrée {cfg.start_time} - sortie {cfg.end_time}
+                      {dept === "administration"
+                        ? "Administration"
+                        : "Employés"}{" "}
+                      : entrée {cfg.start_time} - sortie {cfg.end_time}
                     </Text>
                   ),
                 )}

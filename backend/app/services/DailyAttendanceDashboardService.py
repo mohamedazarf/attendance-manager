@@ -17,6 +17,31 @@ class DailyAttendanceDashboardService:
         self.processor = AttendanceProcessingService()
         self.day_rules_service = DayRulesService()
 
+    def _is_employee_remote(self, start_str: str | None, end_str: str | None, target_date: date) -> bool:
+        if not start_str and not end_str:
+            return False
+            
+        start_d = None
+        end_d = None
+        if start_str:
+            try:
+                start_d = date.fromisoformat(start_str)
+            except ValueError:
+                pass
+                
+        if end_str:
+            try:
+                end_d = date.fromisoformat(end_str)
+            except ValueError:
+                pass
+                
+        if start_d and target_date < start_d:
+            return False
+        if end_d and target_date > end_d:
+            return False
+            
+        return True
+
     def _build_ramadan_context(self, target_date: date) -> Dict[str, Any]:
         """
         Retourne un petit contexte ramadhan pour la date:
@@ -61,7 +86,7 @@ class DailyAttendanceDashboardService:
         employees = list(
             self.employees_collection.find(
                 {"is_active": True},
-                {"_id": 0, "employee_code": 1, "name": 1, "department": 1},
+                {"_id": 0, "employee_code": 1, "name": 1, "department": 1, "remote_start_date": 1, "remote_end_date": 1},
             )
         )
 
@@ -132,7 +157,10 @@ class DailyAttendanceDashboardService:
                     else 0
                 )
             else:
-                status = "absent"
+                if self._is_employee_remote(emp.get("remote_start_date"), emp.get("remote_end_date"), target_date):
+                    status = "remote"
+                else:
+                    status = "absent"
                 check_in = None
                 check_out = None
                 worked_hours = 0
@@ -158,7 +186,7 @@ class DailyAttendanceDashboardService:
             )
 
         total_employees = len(employees)
-        raw_absent_today = total_employees - present_today
+        raw_absent_today = sum(1 for e in employees_data if e["status"] == "absent")
         absent_today = 0 if day_context.get("suppress_absence") else raw_absent_today
 
         attendance_rate = (

@@ -104,6 +104,7 @@ const resources = {
 
       /* ===== Employee status & Anomalies ===== */
       Absent: "Absent",
+      Remote: "Remote",
       "Missing check-out": "Missing check-out",
       "Missing check-in": "Missing check-in",
       Late: "Late",
@@ -325,6 +326,7 @@ const resources = {
 
       /* ===== Employee status & Anomalies ===== */
       Absent: "Absent",
+      Remote: "À distance",
       "Missing check-out": "Sortie manquante",
       "Missing check-in": "Entrée manquante",
       Late: "Retard",
