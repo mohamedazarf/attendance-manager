@@ -287,6 +287,8 @@
 
 
 # app/api/v1/zk_test.py
+from fastapi import APIRouter, HTTPException, Query
+from zk import ZK
 from app.config.attendance_config import AttendanceConfig
 
 router = APIRouter(tags=["ZK Test"])

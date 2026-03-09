@@ -21,6 +21,7 @@ from app.api.v1.device import router as device_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.roles import router as roles_router
 from app.api.v1.email_report import router as email_report_router
+from app.api.v1.platform_users import router as platform_users_router
 
 logger = logging.getLogger(__name__)
 
@@ -125,3 +126,4 @@ app.include_router(attendance_manual_router, prefix="/api/v1/attendance")
 app.include_router(auth_router, prefix="/api/v1/auth")
 app.include_router(roles_router, prefix="/api/v1/roles")
 app.include_router(email_report_router, prefix="/api/v1/email-report")
+app.include_router(platform_users_router, prefix="/api/v1/platform-users")

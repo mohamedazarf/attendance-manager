@@ -77,6 +77,15 @@ export default function Sidebar({
             {t("Settings")}
           </Text>
         )}
+
+        {isAdmin && (
+          <Text
+            _hover={{ color: "#B98112", cursor: "pointer" }}
+            onClick={() => handleNavigate("/user-management")}
+          >
+            {t("Platform Users")}
+          </Text>
+        )}
       </VStack>
     </Box>
   );
