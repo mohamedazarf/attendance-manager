@@ -19,23 +19,11 @@ class EmployeeService:
 
 
     def get_all(self):
-        employees = self.repo.get_all_employees()
-        device_users = self.zk.list_users()  # list of User objects
-        fingerprint_counts = self.zk.get_all_fingerprint_counts() # {uid: count} map
-
-        # Create a map of user_id (string) to uid (int) from device
-        id_to_uid_map = {str(u.user_id): u.uid for u in device_users}
-
-        for emp in employees:
-            employee_code = emp.get('employee_code')
-            uid = id_to_uid_map.get(employee_code)
-            
-            if uid is not None:
-                emp['fingerprint_count'] = fingerprint_counts.get(uid, 0)
-            else:
-                emp['fingerprint_count'] = 0
-
-        return employees
+        """
+        Get all employees from the database.
+        Fingerprint counts are already stored in the DB during sync/enrollment.
+        """
+        return self.repo.get_all_employees()
 
     def get_next_employee_code(self) -> str:
         """

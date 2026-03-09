@@ -363,6 +363,8 @@ export default function EmployeesPage() {
           if (pendingToastId) {
             toast.close(pendingToastId);
           }
+          // Ensure the new fingerprint count is saved to the DB
+          await axios.post(`${BASE_URL}/device/sync/employees`);
           toast({
             title: "Fingerprint Enrolled",
             description: "Fingerprint successfully enrolled on device.",

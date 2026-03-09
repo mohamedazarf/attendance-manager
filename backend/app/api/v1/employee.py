@@ -15,7 +15,8 @@ def get_employees():
     try:
         repo = EmployeeRepository()
         service = EmployeeService(repo)
-        service.sync_employees()
+        # Removed mandatory sync to improve performance
+        # service.sync_employees()
         return service.get_all()
     except Exception as e:
         raise HTTPException(
