@@ -87,21 +87,23 @@ export default function RapportPage() {
   const [loading, setLoading] = useState(false);
 
   const filteredData = data.filter((row) => {
+    // Bug 2 fix: chaque mot doit matcher
     const search = employeeSearchTerm.trim().toLowerCase();
+    const words = search.length > 0 ? search.split(/\s+/) : [];
     const matchesSearch =
-      search.length === 0 ||
-      row.employee_name.toLowerCase().includes(search) ||
-      String(row.employee_id).toLowerCase().includes(search);
+      words.length === 0 ||
+      words.every(
+        (word) =>
+          row.employee_name.toLowerCase().includes(word) ||
+          String(row.employee_id).toLowerCase().includes(word),
+      );
 
-    // Align filter behavior with displayed precision (2 decimals).
-    const overtimeValue = Number(row.overtime_hours ?? 0);
-    const overtimeDisplayed = Number(overtimeValue.toFixed(2));
-    const matchesOvertime = !overtimeOnly || overtimeDisplayed > 0;
+    // Bug 1 fix: parse robuste
+    const overtimeValue = parseFloat(row.overtime_hours as any) || 0;
+    const matchesOvertime = !overtimeOnly || overtimeValue > 0;
 
     return matchesSearch && matchesOvertime;
   });
-
-
 
   // -------------------- Employee History Drawer --------------------
   const [selectedEmployee, setSelectedEmployee] =
