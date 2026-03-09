@@ -1,7 +1,6 @@
-import { Box, VStack, Text, Image, HStack, Button } from "@chakra-ui/react";
+import { Box, VStack, Text, Image } from "@chakra-ui/react";
 import logo from "../../assets/logo.png";
 import { useNavigate } from "react-router-dom";
-import LanguageSwitcher from "./LanguageSwitcher";
 import { useAuth } from "../../context/AuthContext";
 
 import { useTranslation } from "react-i18next";
@@ -63,6 +62,13 @@ export default function Sidebar({
           </Text>
         )}
 
+        <Text
+          _hover={{ color: "#B98112", cursor: "pointer" }}
+          onClick={() => handleNavigate("/rapports")}
+        >
+          {t("Monthly Report")}
+        </Text>
+
         {isAdmin && (
           <Text
             _hover={{ color: "#B98112", cursor: "pointer" }}
@@ -71,39 +77,6 @@ export default function Sidebar({
             {t("Settings")}
           </Text>
         )}
-
-        {/* RAPPORTS MENU */}
-        <Text
-          fontWeight="bold"
-          mt={4}
-          mb={1}
-          color="gray.400"
-          textTransform="uppercase"
-          fontSize="sm"
-        >
-          {t("Reports")}
-        </Text>
-
-        {/* SUBMENU */}
-        <VStack align="start" pl={4} spacing={2}>
-          <Text
-            fontSize="sm"
-            color="gray.300"
-            _hover={{ color: "#B98112", cursor: "pointer" }}
-            onClick={() => handleNavigate("/rapports/charts")}
-          >
-            • {t("Charts")}
-          </Text>
-
-          <Text
-            fontSize="sm"
-            color="gray.300"
-            _hover={{ color: "#B98112", cursor: "pointer" }}
-            onClick={() => handleNavigate("/rapports")}
-          >
-            • {t("Monthly Report")}
-          </Text>
-        </VStack>
       </VStack>
     </Box>
   );
