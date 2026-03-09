@@ -2,10 +2,11 @@ from zk import ZK
 from app.repositories.employeeRepo import EmployeeRepository
 from app.schemas.employee import Employee
 from typing import Any, Dict, List
+from app.config.attendance_config import AttendanceConfig
 class ZKService:
-    def __init__(self, ip="192.168.100.5", port=4370):
-        self.ip = ip
-        self.port = port
+    def __init__(self, ip=None, port=None):
+        self.ip = ip or AttendanceConfig.DEVICE_IP
+        self.port = port or AttendanceConfig.DEVICE_PORT
 
     def _connect(self):
         zk = ZK(self.ip, port=self.port, timeout=5)
@@ -70,33 +71,10 @@ class ZKService:
             if conn:
                 conn.disconnect()
 
-    def enroll_fingerprint(self, uid):
-        try:
-            conn = self._connect()
-            print("Enrolling fingerprint on device...")
-            conn.enroll_user(uid=uid)
-            print("Enrollment started. Please scan fingerprint on device.")
-            conn.disconnect()
-            return {
-                "status": "enrollment_started",
-                "message": "Enrollment started. Please scan fingerprint on device."
-            }
-        except Exception as e:
-            return {"status": "error", "message": str(e)}
-
-    def get_attendances(self):
-        conn = self._connect()
-        attendances = conn.get_attendance()
-        conn.disconnect()
-        return attendances
-
-
-
-
     def enroll_fingerprint(self, uid: int):
         conn = self._connect()
         try:
-            print("Triggering enrollment mode...")
+            print(f"Triggering enrollment mode for user {uid}...")
             conn.enroll_user(uid=uid)
             return {
                 "status": "enroll_started",
@@ -104,9 +82,15 @@ class ZKService:
             }
         except Exception as e:
             print("ERROR during enrollment:", str(e))
-            raise e
+            return {"status": "error", "message": str(e)}
         finally:
             conn.disconnect()
+
+    def get_attendances(self):
+        conn = self._connect()
+        attendances = conn.get_attendance()
+        conn.disconnect()
+        return attendances
 
     def get_all_fingerprint_counts(self):
         """

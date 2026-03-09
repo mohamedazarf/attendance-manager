@@ -12,6 +12,15 @@ from datetime import datetime, date, time
 from app import utils
 from pydantic import BaseModel
 from app.services.day_rules_service import DayRulesService
+from app.config.attendance_config import AttendanceConfig
+from app.schemas.attendance import (
+    IncludeSundayPayload, 
+    SpecialDayPayload, 
+    RamadanDepartmentHours, 
+    NormalDepartmentHours, 
+    RamadanConfigPayload, 
+    NormalConfigPayload
+)
 
 router = APIRouter()
 
@@ -23,7 +32,7 @@ def ingest_logs():
     service = IngestionService(repo)
 
     try:
-        zk = ZK('192.168.100.5', port=4370, timeout=5)
+        zk = ZK(AttendanceConfig.DEVICE_IP, port=AttendanceConfig.DEVICE_PORT, timeout=5)
         conn = zk.connect()
         logs = conn.get_attendance()
         service.ingest_logs(logs)
@@ -44,7 +53,7 @@ def ingest_logs_mock():
     mock_collection = db["attendances_mock"]
     
     # Get mock logs
-    zk_mock = ZKMock('192.168.100.5', port=4370, timeout=5)
+    zk_mock = ZKMock(AttendanceConfig.DEVICE_IP, port=AttendanceConfig.DEVICE_PORT, timeout=5)
     conn = zk_mock.connect()
     logs = conn.get_attendance()
     conn.disconnect()
@@ -463,7 +472,7 @@ def read_logs_from_zk():
     """Read attendance logs directly from ZK device and return them"""
     try:
         # Connect to ZK device
-        zk = ZK('192.168.100.5', port=4370, timeout=5)
+        zk = ZK(AttendanceConfig.DEVICE_IP, port=AttendanceConfig.DEVICE_PORT, timeout=5)
         conn = zk.connect()
         
         # Get logs from device
@@ -487,7 +496,7 @@ def read_logs_from_zk():
         
         return {
             "status": "success",
-            "source": "zk_device_192.168.100.5",
+            "source": f"zk_device_{AttendanceConfig.DEVICE_IP}",
             "logs": formatted_logs,
             "count": len(logs),
             "read_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -511,7 +520,7 @@ def dashboard_today():
     service = DailyAttendanceDashboardService()
     return service.get_today_data()
 
-from app.services.DailyAttendanceDashboardService import DailyAttendanceDashboardService
+
 
 
 @router.get("/dashboard/day")
@@ -520,40 +529,6 @@ def dashboard_day(
 ):
     service = DailyAttendanceDashboardService()
     return service.get_today_data(day)
-
-
-class IncludeSundayPayload(BaseModel):
-    include_sunday: bool
-
-
-class SpecialDayPayload(BaseModel):
-    date: date
-    type: str
-    label: Optional[str] = ""
-
-
-class RamadanDepartmentHours(BaseModel):
-    start_time: time
-    end_time: time
-    pause_minutes: Optional[int] = 0
-
-
-class NormalDepartmentHours(BaseModel):
-    start_time: time
-    end_time: time
-    pause_minutes: Optional[int] = 75
-
-
-class RamadanConfigPayload(BaseModel):
-    start_date: Optional[date]
-    end_date: Optional[date]
-    departments: Dict[str, RamadanDepartmentHours]
-
-
-class NormalConfigPayload(BaseModel):
-    start_date: Optional[date]
-    end_date: Optional[date]
-    departments: Dict[str, NormalDepartmentHours]
 
 
 @router.get("/dashboard/day-rules")
@@ -709,8 +684,3 @@ def update_normal_config(payload: NormalConfigPayload):
         departments=departments_payload,
     )
     return config
-
-
-
-
-

@@ -1,7 +1,8 @@
 from fastapi import APIRouter
 from app.services.zk_service import ZKService
 from app.services.SyncService import SyncService
-from app.schemas.employee import Employee
+from app.schemas.employee import Employee, CreateEnrollRequest
+from typing import Optional
 
 router = APIRouter()
 zk_service = ZKService()
@@ -48,27 +49,8 @@ def sync_attendances():
     return sync_service.sync_attendances()
 
 
-from pydantic import BaseModel
-from typing import Optional
-
-class CreateEnrollRequest(BaseModel):
-    uid: int
-    name: str
-    privilege: int = 0
-    password: Optional[str] = None
-    department: Optional[str] = "employee"
-
-# @router.post("/users/create-and-enroll")
-# def create_and_enroll(request: CreateEnrollRequest):
-#     return zk_service.create_and_enroll_user(
-#          uid=request.uid,
-#         name=request.name,
-#         privilege=request.privilege,
-#         password=request.password or "",
-#         user_id=str(request.uid)
-#     )
 @router.post("/users/create")
-def create_user(request: CreateEnrollRequest):
+def create_user_request(request: CreateEnrollRequest):
     return zk_service.create_user(
         uid=request.uid,
         name=request.name,
@@ -95,7 +77,6 @@ def update_user(uid: int, name: Optional[str] = None, privilege: Optional[int] =
     # 1️⃣ Update sur le device et en DB (via update_user)
     update_result = zk_service.update_user(str(uid), name, privilege, department)
 
-
     # 2️⃣ Vérifie si l’update a réussi
     if update_result.get("status") != "success":
         return update_result  # retourne l’erreur directement
@@ -108,5 +89,3 @@ def update_user(uid: int, name: Optional[str] = None, privilege: Optional[int] =
         "update": update_result,
         "sync": sync_result
     }
-
-    

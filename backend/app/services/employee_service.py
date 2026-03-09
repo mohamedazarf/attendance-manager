@@ -1,6 +1,7 @@
 from app.repositories.employeeRepo import EmployeeRepository
 from app.schemas.employee import Employee
 from app.services.zk_service import ZKService
+from app.services.SyncService import SyncService
 from zk import ZK
 
 class EmployeeService:
@@ -8,56 +9,13 @@ class EmployeeService:
     def __init__(self, repo: EmployeeRepository):
         self.repo = repo
         self.zk = ZKService()
-
-    def fetch_from_zk(self):
-        zk = ZK("192.168.100.5", port=4370, timeout=5)
-        conn = zk.connect()
-
-        users = conn.get_users()
-        conn.disconnect()
-
-        employees = []
-        for user in users:
-            employees.append(Employee(
-                employee_code=str(user.user_id),
-                name=user.name,
-                privilege=user.privilege,
-                group_id=user.group_id,
-                card=user.card
-            ))
-        return employees
+        self.sync_service = SyncService()
 
     def sync_employees(self):
         """
-        Sync employees from device to DB.
+        Sync employees from device to DB by delegating to SyncService.
         """
-        employees = self.fetch_from_zk()
-        db_codes = self.repo.get_existing_codes()
-        db_employees = {
-            str(emp.get("employee_code")): emp
-            for emp in self.repo.get_all_employees()
-        }
-        device_users = self.zk.list_users()
-        fingerprint_counts = self.zk.get_all_fingerprint_counts()
-
-        # Map device user_id (employee_code) -> uid to attach template count
-        id_to_uid_map = {str(u.user_id): u.uid for u in device_users}
-        
-        for emp in employees:
-            uid = id_to_uid_map.get(emp.employee_code)
-            emp.fingerprint_count = fingerprint_counts.get(uid, 0) if uid is not None else 0
-
-            existing_emp = db_employees.get(emp.employee_code, {})
-            existing_department = existing_emp.get("department")
-            if emp.privilege == 14:
-                emp.department = "administration"
-            else:
-                emp.department = existing_department or "employee"
-
-            if emp.employee_code in db_codes:
-                self.repo.update_employee(emp)
-            else:
-                self.repo.insert_employee(emp)
+        return self.sync_service.sync_employees()
 
 
     def get_all(self):

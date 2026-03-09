@@ -287,10 +287,7 @@
 
 
 # app/api/v1/zk_test.py
-from fastapi import APIRouter, HTTPException, Query
-from zk import ZK
-from datetime import datetime
-from collections import defaultdict
+from app.config.attendance_config import AttendanceConfig
 
 router = APIRouter(tags=["ZK Test"])
 
@@ -298,8 +295,8 @@ router = APIRouter(tags=["ZK Test"])
 def get_user_logs(
     user_id: str = Query(..., description="User ID to fetch logs for"),
     date: str = Query(..., description="Date in YYYY-MM-DD format"),
-    ip: str = "192.168.100.5",
-    port: int = 4370,
+    ip: str = AttendanceConfig.DEVICE_IP,
+    port: int = AttendanceConfig.DEVICE_PORT,
     timeout: int = 5
 ):
     """

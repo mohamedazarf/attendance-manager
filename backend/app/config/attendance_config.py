@@ -14,6 +14,10 @@ class AttendanceConfig:
     All times are in HH:MM format.
     """
     
+    # Device Connection Config
+    DEVICE_IP = os.getenv("DEVICE_IP", "192.168.100.5")
+    DEVICE_PORT = int(os.getenv("DEVICE_PORT", "4370"))
+
     # Standard working hours
     START_TIME = time(8, 30)      # 8:30 AM
     END_TIME = time(17, 30)        # 5:30 PM

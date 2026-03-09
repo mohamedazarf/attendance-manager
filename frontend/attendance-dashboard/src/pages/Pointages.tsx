@@ -454,10 +454,8 @@ export default function Pointages() {
                 {Object.entries(dashboard?.ramadan?.departments ?? {}).map(
                   ([dept, cfg]) => (
                     <Text key={dept} fontSize="sm">
-                      {dept === "administration"
-                        ? "Administration"
-                        : "Employés"}{" "}
-                      : entrée {cfg.start_time} - sortie {cfg.end_time}
+                      {dept.charAt(0).toUpperCase() + dept.slice(1)} : entrée{" "}
+                      {cfg.start_time} - sortie {cfg.end_time}
                     </Text>
                   ),
                 )}
