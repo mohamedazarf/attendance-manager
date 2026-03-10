@@ -14,10 +14,37 @@ import {
   Button,
   Badge,
   useToast,
+  SimpleGrid,
+  Card,
+  CardBody,
+  CardHeader,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+  Flex,
+  Tooltip,
+  Icon,
 } from "@chakra-ui/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CloseIcon } from "@chakra-ui/icons/Close";
-import { HamburgerIcon } from "@chakra-ui/icons/Hamburger";
+import {
+  CloseIcon,
+  HamburgerIcon,
+  DeleteIcon,
+  EditIcon,
+  InfoIcon,
+  TimeIcon,
+  SettingsIcon,
+} from "@chakra-ui/icons";
 import Navbar from "../components/layout/Navbar";
 import Sidebar from "../components/layout/Sidebar";
 import { getCurrentDate } from "../../utils";
@@ -109,12 +136,21 @@ export default function Parametrage() {
   const [newDepartmentName, setNewDepartmentName] = useState("");
   const [newDepartmentStartTime, setNewDepartmentStartTime] = useState("");
   const [newDepartmentEndTime, setNewDepartmentEndTime] = useState("");
-  const [deleteStrategyByDepartment, setDeleteStrategyByDepartment] = useState<
-    Record<string, DeleteDepartmentStrategy>
-  >({});
   const [departmentActionLoading, setDepartmentActionLoading] = useState<
     string | null
   >(null);
+
+  const {
+    isOpen: isModalOpen,
+    onOpen: onModalOpen,
+    onClose: onModalClose,
+  } = useDisclosure();
+  const [selectedDeptName, setSelectedDeptName] = useState<string | null>(null);
+  const [deleteConfirmationStep, setDeleteConfirmationStep] = useState<
+    0 | 1 | 2
+  >(0);
+  const [deleteStrategy, setDeleteStrategy] =
+    useState<DeleteDepartmentStrategy>("reassign_default");
 
   const departmentNames = useMemo(() => {
     const names = new Set<string>([
@@ -259,10 +295,24 @@ export default function Parametrage() {
     value: string,
   ) => {
     const setter = mode === "normal" ? setNormalConfig : setRamadanConfig;
-    setter((prev) => ({
-      ...(prev || { start_date: null, end_date: null, departments: {} }),
-      [field]: value || null,
-    }));
+    setter((prev) => {
+      const updated = {
+        ...(prev || { start_date: null, end_date: null, departments: {} }),
+        [field]: value || null,
+      };
+
+      // Auto-calculate end date for ramadan if start_date is changed
+      if (mode === "ramadan" && field === "start_date" && value) {
+        const startDate = new Date(value);
+        if (!isNaN(startDate.getTime())) {
+          const endDate = new Date(startDate);
+          endDate.setDate(startDate.getDate() + 29);
+          updated.end_date = endDate.toISOString().split("T")[0];
+        }
+      }
+
+      return updated;
+    });
   };
 
   const handleDepartmentFieldChange = (
@@ -284,8 +334,7 @@ export default function Parametrage() {
         pause_minutes: mode === "normal" ? 75 : 0,
       };
 
-      const nextValue =
-        field === "pause_minutes" ? Number(value || 0) : value;
+      const nextValue = field === "pause_minutes" ? Number(value || 0) : value;
 
       return {
         ...base,
@@ -500,7 +549,10 @@ export default function Parametrage() {
     }
   };
 
-  const deleteDepartment = async (department: string) => {
+  const deleteDepartment = async (
+    department: string,
+    explicitStrategy?: DeleteDepartmentStrategy,
+  ) => {
     if (isSystemDepartment(department)) {
       toast({
         title: "Ce departement systeme ne peut pas etre supprime",
@@ -511,12 +563,19 @@ export default function Parametrage() {
       return;
     }
 
-    const strategy = deleteStrategyByDepartment[department] ?? "reassign_default";
-    const confirmMessage =
-      strategy === "delete"
-        ? `Supprimer le departement "${department}" et tous ses employes ?`
-        : `Supprimer le departement "${department}" et reaffecter ses employes au departement par defaut ?`;
-    if (!window.confirm(confirmMessage)) return;
+    const strategy =
+      explicitStrategy ??
+      deleteStrategyByDepartment[department] ??
+      "reassign_default";
+
+    // Only show window.confirm if explicitStrategy is NOT provided (backward compatibility)
+    if (!explicitStrategy) {
+      const confirmMessage =
+        strategy === "delete"
+          ? `Supprimer le departement "${department}" et tous ses employes ?`
+          : `Supprimer le departement "${department}" et reaffecter ses employes au departement par defaut ?`;
+      if (!window.confirm(confirmMessage)) return;
+    }
 
     setDepartmentActionLoading(department);
     try {
@@ -596,7 +655,9 @@ export default function Parametrage() {
             </HStack>
 
             <HStack justify="space-between" mb={4} wrap="wrap">
-              <Text>Inclure automatiquement le dimanche comme non ouvrable</Text>
+              <Text>
+                Inclure automatiquement le dimanche comme non ouvrable
+              </Text>
               <Switch
                 isChecked={rules?.include_sunday ?? true}
                 onChange={(e) => updateIncludeSunday(e.target.checked)}
@@ -625,7 +686,9 @@ export default function Parametrage() {
                 <Select
                   value={newSpecialType}
                   onChange={(e) =>
-                    setNewSpecialType(e.target.value as "holiday" | "remote_day")
+                    setNewSpecialType(
+                      e.target.value as "holiday" | "remote_day",
+                    )
                   }
                   size="sm"
                   bg="white"
@@ -669,8 +732,12 @@ export default function Parametrage() {
                     borderRadius="md"
                   >
                     <HStack>
-                      <Badge colorScheme={item.type === "holiday" ? "red" : "blue"}>
-                        {item.type === "holiday" ? "Jour ferie" : "Jour a distance"}
+                      <Badge
+                        colorScheme={item.type === "holiday" ? "red" : "blue"}
+                      >
+                        {item.type === "holiday"
+                          ? "Jour ferie"
+                          : "Jour a distance"}
                       </Badge>
                       <Text fontSize="sm">{item.date}</Text>
                       {item.label && (
@@ -694,16 +761,130 @@ export default function Parametrage() {
 
           <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" mb={8}>
             <Heading size="sm" mb={2}>
-              Gestion des departements
+              Gestion des départements
             </Heading>
-            <Text fontSize="sm" color="gray.600" mb={4}>
-              Creez ou supprimez un departement. Les horaires normaux et ramadhan
-              restent configurables separement dans les sections ci-dessous.
+            <Text fontSize="sm" color="gray.600" mb={6}>
+              Configurez les périodes globales et gérez les horaires par
+              département via les cartes.
             </Text>
-            <HStack spacing={3} wrap="wrap" align="end">
+
+            <SimpleGrid
+              columns={{ base: 1, md: 2 }}
+              spacing={6}
+              mb={8}
+              bg="blue.50"
+              p={4}
+              borderRadius="md"
+            >
+              <Box borderColor="orange.200" borderRadius="lg" p={4}>
+                <Heading
+                  size="xs"
+                  mb={3}
+                  textTransform="uppercase"
+                  color="orange.700"
+                  letterSpacing="wider"
+                >
+                  Période Ramadan
+                </Heading>
+                <VStack align="stretch" spacing={3}>
+                  <HStack spacing={3} align="flex-end">
+                    <Box flex={1}>
+                      <Text
+                        fontSize="xs"
+                        mb={1}
+                        fontWeight="bold"
+                        color="gray.600"
+                      >
+                        Début
+                      </Text>
+                      <Input
+                        type="date"
+                        value={ramadanConfig?.start_date ?? ""}
+                        onChange={(e) =>
+                          handlePeriodFieldChange(
+                            "ramadan",
+                            "start_date",
+                            e.target.value,
+                          )
+                        }
+                        bg="white"
+                        size="sm"
+                        borderColor="orange.200"
+                        _hover={{ borderColor: "orange.400" }}
+                        _focus={{
+                          borderColor: "orange.500",
+                          boxShadow:
+                            "0 0 0 1px var(--chakra-colors-orange-500)",
+                        }}
+                      />
+                    </Box>
+                    <Box flex={1}>
+                      <Text
+                        fontSize="xs"
+                        mb={1}
+                        fontWeight="bold"
+                        color="gray.600"
+                      >
+                        Fin
+                      </Text>
+                      <Input
+                        type="date"
+                        value={ramadanConfig?.end_date ?? ""}
+                        onChange={(e) =>
+                          handlePeriodFieldChange(
+                            "ramadan",
+                            "end_date",
+                            e.target.value,
+                          )
+                        }
+                        bg="white"
+                        size="sm"
+                        borderColor="orange.200"
+                        _hover={{ borderColor: "orange.400" }}
+                        _focus={{
+                          borderColor: "orange.500",
+                          boxShadow:
+                            "0 0 0 1px var(--chakra-colors-orange-500)",
+                        }}
+                      />
+                    </Box>
+                    <Button
+                      size="sm"
+                      colorScheme="orange"
+                      onClick={saveRamadanConfig}
+                      isLoading={ramadanLoading}
+                      loadingText="Enregistrement..."
+                      leftIcon={<span>🌙</span>}
+                      fontWeight="semibold"
+                      px={5}
+                      flexShrink={0}
+                      boxShadow="sm"
+                      _hover={{
+                        transform: "translateY(-1px)",
+                        boxShadow: "md",
+                      }}
+                      _active={{ transform: "translateY(0)" }}
+                      transition="all 0.15s ease"
+                    >
+                      Enregistrer
+                    </Button>
+                  </HStack>
+                </VStack>
+              </Box>
+            </SimpleGrid>
+
+            <HStack
+              spacing={3}
+              wrap="wrap"
+              align="end"
+              mb={8}
+              p={4}
+              bg="gray.100"
+              borderRadius="md"
+            >
               <Box minW="220px">
-                <Text fontSize="sm" mb={1}>
-                  Nom du departement
+                <Text fontSize="sm" mb={1} fontWeight="bold">
+                  Nom du nouveau département
                 </Text>
                 <Input
                   value={newDepartmentName}
@@ -714,8 +895,8 @@ export default function Parametrage() {
                 />
               </Box>
               <Box>
-                <Text fontSize="sm" mb={1}>
-                  Heure d'entree (par defaut)
+                <Text fontSize="sm" mb={1} fontWeight="bold">
+                  Heure d'entrée
                 </Text>
                 <Input
                   type="time"
@@ -726,8 +907,8 @@ export default function Parametrage() {
                 />
               </Box>
               <Box>
-                <Text fontSize="sm" mb={1}>
-                  Heure de sortie (par defaut)
+                <Text fontSize="sm" mb={1} fontWeight="bold">
+                  Heure de sortie
                 </Text>
                 <Input
                   type="time"
@@ -737,289 +918,370 @@ export default function Parametrage() {
                   bg="white"
                 />
               </Box>
-              <Button colorScheme="blue" size="sm" onClick={addDepartment}>
-                Ajouter departement
+              <Button
+                colorScheme="blue"
+                size="sm"
+                onClick={addDepartment}
+                leftIcon={<EditIcon />}
+              >
+                Ajouter
               </Button>
             </HStack>
 
-            <Divider my={5} />
-
-            <VStack align="stretch" spacing={3}>
+            <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={4}>
               {departmentNames.map((deptName) => {
-                const strategy =
-                  deleteStrategyByDepartment[deptName] ?? "reassign_default";
-                const blocked = isSystemDepartment(deptName);
+                const isSystem = isSystemDepartment(deptName);
+                const normalHours = normalConfig?.departments[deptName];
+
                 return (
-                  <HStack
-                    key={`dept-row-${deptName}`}
-                    justify="space-between"
-                    wrap="wrap"
-                    p={3}
-                    border="1px solid"
-                    borderColor="gray.100"
-                    borderRadius="md"
+                  <Card
+                    key={deptName}
+                    variant="outline"
+                    cursor="pointer"
+                    _hover={{ shadow: "md", borderColor: "blue.400" }}
+                    onClick={() => {
+                      setSelectedDeptName(deptName);
+                      setDeleteConfirmationStep(0);
+                      onModalOpen();
+                    }}
                   >
-                    <HStack>
-                      <Text fontWeight="medium">{deptName}</Text>
-                      {blocked && <Badge colorScheme="gray">Systeme</Badge>}
-                    </HStack>
-                    <HStack spacing={2} wrap="wrap">
-                      <Select
-                        size="sm"
-                        w="260px"
-                        value={strategy}
-                        onChange={(e) =>
-                          setDeleteStrategyByDepartment((prev) => ({
-                            ...prev,
-                            [deptName]: e.target
-                              .value as DeleteDepartmentStrategy,
-                          }))
-                        }
-                        isDisabled={blocked}
-                        bg="white"
-                      >
-                        <option value="reassign_default">
-                          Reaffecter les employes au departement par defaut
-                        </option>
-                        <option value="delete">
-                          Supprimer tous les employes du departement
-                        </option>
-                      </Select>
-                      <Button
-                        size="sm"
-                        colorScheme="red"
-                        variant="outline"
-                        isDisabled={blocked}
-                        isLoading={departmentActionLoading === deptName}
-                        onClick={() => deleteDepartment(deptName)}
-                      >
-                        Supprimer
-                      </Button>
-                    </HStack>
-                  </HStack>
+                    <CardHeader pb={2}>
+                      <Flex justify="space-between" align="center">
+                        <Heading size="xs" textTransform="uppercase">
+                          {deptName}
+                        </Heading>
+                        {isSystem && <Badge colorScheme="gray">Système</Badge>}
+                      </Flex>
+                    </CardHeader>
+                    <CardBody pt={2}>
+                      <VStack align="stretch" spacing={1}>
+                        <HStack fontSize="xs" color="gray.600">
+                          <Icon as={TimeIcon} />
+                          <Text>
+                            Normal: {normalHours?.start_time} -{" "}
+                            {normalHours?.end_time}
+                          </Text>
+                        </HStack>
+                        <HStack fontSize="xs" color="gray.500">
+                          <Icon as={InfoIcon} />
+                          <Text>Pause: {normalHours?.pause_minutes} min</Text>
+                        </HStack>
+                      </VStack>
+                    </CardBody>
+                  </Card>
                 );
               })}
-            </VStack>
+            </SimpleGrid>
           </Box>
 
-          <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" mb={8}>
-            <HStack justify="space-between" mb={4} wrap="wrap">
-              <Heading size="md">Horaires des jours normaux</Heading>
-              {normalLoading && <Spinner size="sm" />}
-            </HStack>
+          {/* Department Detail Modal */}
+          <Modal isOpen={isModalOpen} onClose={onModalClose} size="xl">
+            <ModalOverlay backdropFilter="blur(4px)" />
+            <ModalContent>
+              <ModalHeader borderBottomWidth="1px">
+                <HStack justifyContent="space-between" pr={10}>
+                  <HStack>
+                    <Icon as={SettingsIcon} color="blue.500" />
+                    <Text>Configuration: {selectedDeptName}</Text>
+                  </HStack>
+                  {selectedDeptName && isSystemDepartment(selectedDeptName) && (
+                    <Badge colorScheme="gray">Système</Badge>
+                  )}
+                </HStack>
+              </ModalHeader>
+              <ModalCloseButton mt={2} />
 
-            <HStack mb={4} spacing={3} wrap="wrap">
-              <Box>
-                <Text fontSize="sm" mb={1}>
-                  Date de debut
-                </Text>
-                <Input
-                  type="date"
-                  value={normalConfig?.start_date ?? ""}
-                  onChange={(e) =>
-                    handlePeriodFieldChange("normal", "start_date", e.target.value)
-                  }
-                  bg="white"
-                  size="sm"
-                />
-              </Box>
-              <Box>
-                <Text fontSize="sm" mb={1}>
-                  Date de fin
-                </Text>
-                <Input
-                  type="date"
-                  value={normalConfig?.end_date ?? ""}
-                  onChange={(e) =>
-                    handlePeriodFieldChange("normal", "end_date", e.target.value)
-                  }
-                  bg="white"
-                  size="sm"
-                />
-              </Box>
-            </HStack>
+              <ModalBody py={6}>
+                {selectedDeptName && (
+                  <Tabs colorScheme="blue" variant="enclosed">
+                    <TabList>
+                      <Tab>
+                        <Icon as={TimeIcon} mr={2} /> Horaires Normaux
+                      </Tab>
+                      <Tab>
+                        <Icon as={TimeIcon} mr={2} /> Ramadhan
+                      </Tab>
+                    </TabList>
+                    <TabPanels mt={4}>
+                      {/* Normal Hours Tab */}
+                      <TabPanel>
+                        <VStack spacing={4} align="stretch">
+                          <HStack spacing={4}>
+                            <Box flex={1}>
+                              <Text fontSize="sm" mb={1} fontWeight="bold">
+                                Heure d'entrée
+                              </Text>
+                              <Input
+                                type="time"
+                                value={
+                                  normalConfig?.departments[selectedDeptName]
+                                    ?.start_time ?? ""
+                                }
+                                onChange={(e) =>
+                                  handleDepartmentFieldChange(
+                                    "normal",
+                                    selectedDeptName,
+                                    "start_time",
+                                    e.target.value,
+                                  )
+                                }
+                                bg="white"
+                              />
+                            </Box>
+                            <Box flex={1}>
+                              <Text fontSize="sm" mb={1} fontWeight="bold">
+                                Heure de sortie
+                              </Text>
+                              <Input
+                                type="time"
+                                value={
+                                  normalConfig?.departments[selectedDeptName]
+                                    ?.end_time ?? ""
+                                }
+                                onChange={(e) =>
+                                  handleDepartmentFieldChange(
+                                    "normal",
+                                    selectedDeptName,
+                                    "end_time",
+                                    e.target.value,
+                                  )
+                                }
+                                bg="white"
+                              />
+                            </Box>
+                          </HStack>
+                          <Box>
+                            <Text fontSize="sm" mb={1} fontWeight="bold">
+                              Pause (minutes)
+                            </Text>
+                            <Input
+                              type="number"
+                              min={0}
+                              value={
+                                normalConfig?.departments[selectedDeptName]
+                                  ?.pause_minutes ?? 0
+                              }
+                              onChange={(e) =>
+                                handleDepartmentFieldChange(
+                                  "normal",
+                                  selectedDeptName,
+                                  "pause_minutes",
+                                  e.target.value,
+                                )
+                              }
+                              bg="white"
+                            />
+                          </Box>
+                          <Button
+                            colorScheme="blue"
+                            size="sm"
+                            alignSelf="flex-end"
+                            onClick={saveNormalConfig}
+                            isLoading={normalLoading}
+                          >
+                            Enregistrer ces horaires
+                          </Button>
+                        </VStack>
+                      </TabPanel>
 
-            <Divider my={4} />
+                      {/* Ramadan Hours Tab */}
+                      <TabPanel>
+                        <VStack spacing={4} align="stretch">
+                          <HStack spacing={4}>
+                            <Box flex={1}>
+                              <Text fontSize="sm" mb={1} fontWeight="bold">
+                                Heure d'entrée
+                              </Text>
+                              <Input
+                                type="time"
+                                value={
+                                  ramadanConfig?.departments[selectedDeptName]
+                                    ?.start_time ?? ""
+                                }
+                                onChange={(e) =>
+                                  handleDepartmentFieldChange(
+                                    "ramadan",
+                                    selectedDeptName,
+                                    "start_time",
+                                    e.target.value,
+                                  )
+                                }
+                                bg="white"
+                              />
+                            </Box>
+                            <Box flex={1}>
+                              <Text fontSize="sm" mb={1} fontWeight="bold">
+                                Heure de sortie
+                              </Text>
+                              <Input
+                                type="time"
+                                value={
+                                  ramadanConfig?.departments[selectedDeptName]
+                                    ?.end_time ?? ""
+                                }
+                                onChange={(e) =>
+                                  handleDepartmentFieldChange(
+                                    "ramadan",
+                                    selectedDeptName,
+                                    "end_time",
+                                    e.target.value,
+                                  )
+                                }
+                                bg="white"
+                              />
+                            </Box>
+                          </HStack>
+                          <Flex
+                            p={3}
+                            bg="orange.50"
+                            borderRadius="md"
+                            align="center"
+                          >
+                            <Icon as={InfoIcon} color="orange.400" mr={2} />
+                            <Text fontSize="sm" color="orange.800">
+                              En ramadhan, la pause est automatiquement fixée à
+                              0 minute.
+                            </Text>
+                          </Flex>
+                          <Button
+                            colorScheme="blue"
+                            size="sm"
+                            alignSelf="flex-end"
+                            onClick={saveRamadanConfig}
+                            isLoading={ramadanLoading}
+                          >
+                            Enregistrer ces horaires (Ramadhan)
+                          </Button>
+                        </VStack>
+                      </TabPanel>
+                    </TabPanels>
+                  </Tabs>
+                )}
+              </ModalBody>
 
-            <VStack align="stretch" spacing={4}>
-              {Object.entries(normalConfig?.departments ?? {}).map(
-                ([deptName, deptCfg]) => (
-                  <Box key={`normal-${deptName}`}>
-                    <Heading size="sm" mb={2}>
-                      {deptName}
-                    </Heading>
-                    <HStack spacing={3} wrap="wrap">
-                      <Box>
-                        <Text fontSize="sm" mb={1}>
-                          Heure d'entree
-                        </Text>
-                        <Input
-                          type="time"
-                          value={deptCfg?.start_time ?? ""}
+              <ModalFooter borderTopWidth="1px" bg="gray.50">
+                {deleteConfirmationStep === 0 ? (
+                  <HStack
+                    spacing={3}
+                    width="full"
+                    justifyContent="space-between"
+                  >
+                    <Button variant="ghost" onClick={onModalClose}>
+                      Fermer
+                    </Button>
+                    {!selectedDeptName ||
+                    !isSystemDepartment(selectedDeptName) ? (
+                      <Button
+                        colorScheme="red"
+                        variant="outline"
+                        leftIcon={<DeleteIcon />}
+                        onClick={() => setDeleteConfirmationStep(1)}
+                        isLoading={departmentActionLoading === selectedDeptName}
+                      >
+                        Supprimer le département
+                      </Button>
+                    ) : (
+                      <Tooltip label="Les départements système ne peuvent pas être supprimés">
+                        <Box>
+                          <Button
+                            isDisabled
+                            colorScheme="red"
+                            variant="outline"
+                            leftIcon={<DeleteIcon />}
+                          >
+                            Supprimer
+                          </Button>
+                        </Box>
+                      </Tooltip>
+                    )}
+                  </HStack>
+                ) : (
+                  <VStack spacing={3} width="full" align="stretch">
+                    <Text fontWeight="bold" color="red.600" fontSize="sm">
+                      {deleteConfirmationStep === 1
+                        ? "Confirmation : Choisir la stratégie de suppression"
+                        : "Dernière confirmation requise"}
+                    </Text>
+
+                    {deleteConfirmationStep === 1 ? (
+                      <>
+                        <Select
+                          size="sm"
+                          value={deleteStrategy}
                           onChange={(e) =>
-                            handleDepartmentFieldChange(
-                              "normal",
-                              deptName,
-                              "start_time",
-                              e.target.value,
+                            setDeleteStrategy(
+                              e.target.value as DeleteDepartmentStrategy,
                             )
                           }
-                          size="sm"
                           bg="white"
-                        />
-                      </Box>
-                      <Box>
-                        <Text fontSize="sm" mb={1}>
-                          Heure de sortie
+                        >
+                          <option value="reassign_default">
+                            Réaffecter les employés au département par défaut
+                          </option>
+                          <option value="delete">
+                            Supprimer définitivement tous les employés
+                          </option>
+                        </Select>
+                        <HStack spacing={3} justifyContent="flex-end">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setDeleteConfirmationStep(0)}
+                          >
+                            Annuler
+                          </Button>
+                          <Button
+                            size="sm"
+                            colorScheme="red"
+                            onClick={() => setDeleteConfirmationStep(2)}
+                          >
+                            Continuer
+                          </Button>
+                        </HStack>
+                      </>
+                    ) : (
+                      <HStack
+                        spacing={3}
+                        justifyContent="space-between"
+                        bg="red.50"
+                        p={2}
+                        borderRadius="md"
+                      >
+                        <Text fontSize="xs" color="red.800">
+                          Êtes-vous certain de vouloir supprimer "
+                          {selectedDeptName}" ? Cette action est irréversible.
                         </Text>
-                        <Input
-                          type="time"
-                          value={deptCfg?.end_time ?? ""}
-                          onChange={(e) =>
-                            handleDepartmentFieldChange(
-                              "normal",
-                              deptName,
-                              "end_time",
-                              e.target.value,
-                            )
-                          }
-                          size="sm"
-                          bg="white"
-                        />
-                      </Box>
-                      <Box>
-                        <Text fontSize="sm" mb={1}>
-                          Pause (minutes)
-                        </Text>
-                        <Input
-                          type="number"
-                          min={0}
-                          value={deptCfg?.pause_minutes ?? 0}
-                          onChange={(e) =>
-                            handleDepartmentFieldChange(
-                              "normal",
-                              deptName,
-                              "pause_minutes",
-                              e.target.value,
-                            )
-                          }
-                          size="sm"
-                          bg="white"
-                          w="140px"
-                        />
-                      </Box>
-                    </HStack>
-                  </Box>
-                ),
-              )}
-            </VStack>
-
-            <Button mt={6} colorScheme="blue" size="sm" onClick={saveNormalConfig}>
-              Enregistrer les horaires normaux
-            </Button>
-          </Box>
-
-          <Box bg="white" p={6} borderRadius="lg" boxShadow="sm">
-            <HStack justify="space-between" mb={4} wrap="wrap">
-              <Heading size="md">Horaires de ramadhan</Heading>
-              {ramadanLoading && <Spinner size="sm" />}
-            </HStack>
-
-            <HStack mb={2} spacing={3} wrap="wrap">
-              <Box>
-                <Text fontSize="sm" mb={1}>
-                  Date de debut
-                </Text>
-                <Input
-                  type="date"
-                  value={ramadanConfig?.start_date ?? ""}
-                  onChange={(e) =>
-                    handlePeriodFieldChange("ramadan", "start_date", e.target.value)
-                  }
-                  bg="white"
-                  size="sm"
-                />
-              </Box>
-              <Box>
-                <Text fontSize="sm" mb={1}>
-                  Date de fin
-                </Text>
-                <Input
-                  type="date"
-                  value={ramadanConfig?.end_date ?? ""}
-                  onChange={(e) =>
-                    handlePeriodFieldChange("ramadan", "end_date", e.target.value)
-                  }
-                  bg="white"
-                  size="sm"
-                />
-              </Box>
-            </HStack>
-            <Text fontSize="sm" color="gray.600">
-              En ramadhan la pause est automatiquement fixee a 0 minute.
-            </Text>
-
-            <Divider my={4} />
-
-            <VStack align="stretch" spacing={4}>
-              {Object.entries(ramadanConfig?.departments ?? {}).map(
-                ([deptName, deptCfg]) => (
-                  <Box key={`ramadan-${deptName}`}>
-                    <Heading size="sm" mb={2}>
-                      {deptName}
-                    </Heading>
-                    <HStack spacing={3} wrap="wrap" align="end">
-                      <Box>
-                        <Text fontSize="sm" mb={1}>
-                          Heure d'entree
-                        </Text>
-                        <Input
-                          type="time"
-                          value={deptCfg?.start_time ?? ""}
-                          onChange={(e) =>
-                            handleDepartmentFieldChange(
-                              "ramadan",
-                              deptName,
-                              "start_time",
-                              e.target.value,
-                            )
-                          }
-                          size="sm"
-                          bg="white"
-                        />
-                      </Box>
-                      <Box>
-                        <Text fontSize="sm" mb={1}>
-                          Heure de sortie
-                        </Text>
-                        <Input
-                          type="time"
-                          value={deptCfg?.end_time ?? ""}
-                          onChange={(e) =>
-                            handleDepartmentFieldChange(
-                              "ramadan",
-                              deptName,
-                              "end_time",
-                              e.target.value,
-                            )
-                          }
-                          size="sm"
-                          bg="white"
-                        />
-                      </Box>
-                      <Badge colorScheme="orange" alignSelf="center">
-                        Pause: 0 min
-                      </Badge>
-                    </HStack>
-                  </Box>
-                ),
-              )}
-            </VStack>
-
-            <Button mt={6} colorScheme="blue" size="sm" onClick={saveRamadanConfig}>
-              Enregistrer les horaires de ramadhan
-            </Button>
-          </Box>
+                        <HStack>
+                          <Button
+                            size="xs"
+                            variant="ghost"
+                            onClick={() => setDeleteConfirmationStep(1)}
+                          >
+                            Retour
+                          </Button>
+                          <Button
+                            size="xs"
+                            colorScheme="red"
+                            onClick={async () => {
+                              if (selectedDeptName) {
+                                await deleteDepartment(
+                                  selectedDeptName,
+                                  deleteStrategy,
+                                );
+                                onModalClose();
+                              }
+                            }}
+                          >
+                            Confirmer définitivement
+                          </Button>
+                        </HStack>
+                      </HStack>
+                    )}
+                  </VStack>
+                )}
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
         </Container>
       </VStack>
     </Box>
