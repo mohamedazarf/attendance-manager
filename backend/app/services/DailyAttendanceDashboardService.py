@@ -131,6 +131,7 @@ class DailyAttendanceDashboardService:
         )
 
         present_today = 0
+        remote_today = 0
         employees_data: List[Dict[str, Any]] = []
 
         for emp in employees:
@@ -159,6 +160,7 @@ class DailyAttendanceDashboardService:
             else:
                 if self._is_employee_remote(emp.get("remote_start_date"), emp.get("remote_end_date"), target_date):
                     status = "remote"
+                    remote_today += 1
                 else:
                     status = "absent"
                 check_in = None
@@ -202,6 +204,7 @@ class DailyAttendanceDashboardService:
             "global": {
                 "total_employees": total_employees,
                 "present_today": present_today,
+                "remote_today": remote_today,
                 "absent_today": absent_today,
                 "raw_absent_today": raw_absent_today,
                 "attendance_rate": attendance_rate,

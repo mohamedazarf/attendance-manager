@@ -70,6 +70,7 @@ type DashboardData = {
   global: {
     total_employees: number;
     present_today: number;
+    remote_today: number;
     absent_today: number;
     raw_absent_today?: number;
     attendance_rate: number;
@@ -364,7 +365,7 @@ export default function Pointages() {
     onAbsentOpen();
   };
 
-  const goToEmployeesToday = (filter?: "present" | "absent") => {
+  const goToEmployeesToday = (filter?: "present" | "absent" | "remote") => {
     const params = new URLSearchParams();
     params.set("date", selectedDate);
     if (filter) params.set("filter", filter);
@@ -463,7 +464,7 @@ export default function Pointages() {
             </Alert>
           )}
 
-          <SimpleGrid columns={{ base: 1, md: 4 }} spacing={6} mb={8}>
+          <SimpleGrid columns={{ base: 1, md: 5 }} spacing={6} mb={8}>
             <StatCard
               label={t("Total Employees")}
               value={dashboard?.global.total_employees ?? 0}
@@ -473,6 +474,11 @@ export default function Pointages() {
               label={t("Present Today")}
               value={dashboard?.global.present_today ?? 0}
               onClick={() => goToEmployeesToday("present")}
+            />
+            <StatCard
+              label={t("Remote Employees")}
+              value={dashboard?.global.remote_today ?? 0}
+              onClick={() => goToEmployeesToday("remote")}
             />
             <StatCard
               label={t("Absent Today")}

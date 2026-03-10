@@ -548,8 +548,6 @@ export default function EmployeesPage() {
         if (fetchedDepartments.length > 0) {
           setDepartments(fetchedDepartments);
         }
-        console.log("=== USERS FROM DATABASE ===");
-        console.log(employeesRes.data);
       } catch (err) {
         console.error("Error fetching employees:", err);
       } finally {
