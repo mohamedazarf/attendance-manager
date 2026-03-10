@@ -97,7 +97,6 @@ import { useTranslation } from "react-i18next";
 
 export default function EmployeesPage() {
   const { t } = useTranslation();
-  const { isAdmin } = useAuth();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -763,9 +762,7 @@ export default function EmployeesPage() {
                   <Text fontSize="sm" mb={1}>
                     <strong>{t("Code")}:</strong> {emp.employee_code}
                   </Text>
-                  <Text fontSize="sm" mb={1}>
-                    <strong>{t("Group")}:</strong> {emp.group_id || "-"}
-                  </Text>
+
                   <Text fontSize="sm" mb={1}>
                     <strong>{t("Department")}:</strong>{" "}
                     {t(emp.department || "employee")}
@@ -773,11 +770,12 @@ export default function EmployeesPage() {
                   <Text fontSize="sm">
                     <strong>{t("Card")}:</strong> {emp.card || "-"}
                   </Text>
-                  {isAdmin && (
-                    <Text fontSize="sm" mb={1}>
-                      <strong>{t("Password")}:</strong> {emp.password || "-"}
-                    </Text>
-                  )}
+                  <Text fontSize="sm">
+                    <strong>{t("Fingerprint")}:</strong>{" "}
+                    {emp.fingerprint_count > 0
+                      ? `${emp.fingerprint_count} ${t("enrolled")}`
+                      : t("None")}
+                  </Text>
 
                   <Flex gap={2} mt={3} wrap="wrap">
                     <Button
@@ -847,7 +845,7 @@ export default function EmployeesPage() {
                   <Th>{t("Code")}</Th>
                   <Th>{t("Privilege")}</Th>
                   <Th>{t("Department")}</Th>
-                  <Th>{t("Group")}</Th>
+                  {/* <Th>{t("Group")}</Th> */}
                   <Th>{t("Card")}</Th>
 
                   <Th>{t("Fingerprint")}</Th>
@@ -873,7 +871,7 @@ export default function EmployeesPage() {
                         </Badge>
                       </Td>
                       <Td>{t(emp.department || "employee")}</Td>
-                      <Td>{emp.group_id || "-"}</Td>
+                      {/* <Td>{emp.group_id || "-"}</Td> */}
                       <Td>{emp.card || "-"}</Td>
                       <Td>
                         {emp.fingerprint_count > 0
@@ -933,6 +931,16 @@ export default function EmployeesPage() {
                             }}
                           >
                             {t("Edit")}
+                          </Button>
+                          <Button
+                            size="xs"
+                            colorScheme="purple"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openRemoteModal(emp);
+                            }}
+                          >
+                            {t("Remote Config")}
                           </Button>
                         </Flex>
                       </Td>

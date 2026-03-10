@@ -5,8 +5,6 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
 import EmployeesPage from "./pages/EmployeesPage";
 import RapportPage from "./pages/RapportPage";
-import HoursByEmployeeChart from "./pages/charts/HoursByEmployeeChart";
-import RapportsChartsPage from "./pages/RapportChartsPage";
 import Pointages from "./pages/Pointages";
 import EmployeesToday from "./pages/EmployeesToday";
 import TestI18nPage from "./pages/TestI18nPage";
@@ -73,24 +71,6 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <RapportPage />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/rapports/charts"
-              element={
-                <ProtectedRoute>
-                  <RapportsChartsPage />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/charts/hoursByEmployee"
-              element={
-                <ProtectedRoute>
-                  <HoursByEmployeeChart />
                 </ProtectedRoute>
               }
             />
