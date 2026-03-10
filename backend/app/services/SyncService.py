@@ -134,37 +134,62 @@ class SyncService:
     
 
     def sync_attendances(self):
+        """
+        Sync attendance logs from the device incrementally.
+        Uses the latest timestamp in DB as starting point.
+        """
         try:
-            # Get today's date at midnight (UTC)
-            today_start = datetime.now(timezone.utc).replace(
-                hour=0, minute=0, second=0, microsecond=0
-            )
+            now_utc = datetime.now(timezone.utc)
             
+            # 1. Get the latest VALID (non-future) timestamp from DB
+            latest_db_timestamp = self.attendance_repo.get_latest_timestamp(max_timestamp=now_utc)
+            
+            if latest_db_timestamp is None:
+                # Fallback to today at midnight if no valid logs exist
+                start_date = now_utc.replace(
+                    hour=0, minute=0, second=0, microsecond=0
+                )
+            else:
+                # Ensure latest_db_timestamp is timezone-aware
+                if latest_db_timestamp.tzinfo is None:
+                    start_date = latest_db_timestamp.replace(tzinfo=timezone.utc)
+                else:
+                    start_date = latest_db_timestamp
+
+            # 2. Fetch all logs from device
             attendances = self.zk_service.get_attendances()
             
             new_logs = []
             for att in attendances:
-                # Si att.timestamp est naive, le rendre aware (supposé UTC)
+                # Ensure att.timestamp is timezone-aware (device timestamps are usually naive)
                 if att.timestamp.tzinfo is None:
                     att_timestamp = att.timestamp.replace(tzinfo=timezone.utc)
                 else:
                     att_timestamp = att.timestamp
                 
-                # Comparaison (maintenant les deux sont aware)
-                if att_timestamp >= today_start:
+                # Ignore logs from the future (erroneous device time)
+                if att_timestamp > now_utc:
+                    continue
+
+                # Incrementally add logs that are strictly newer than the latest in DB
+                if att_timestamp > start_date:
                     log_data = AttendanceLog(
                         user_id=int(att.user_id),
-                        timestamp=att.timestamp  # Garder le timestamp original
+                        timestamp=att.timestamp
                     )
                     new_logs.append(log_data)
             
+            # 3. Bulk insert new logs
             if new_logs:
+                # Sorted by timestamp to be safe, though not strictly required by insert_many
+                new_logs.sort(key=lambda x: x.timestamp)
                 self.attendance_repo.insert_many(new_logs)
             
             return {
                 "attendance_logs_synced": len(new_logs),
                 "total_device_logs": len(attendances),
-                "from_date": today_start.isoformat()
+                "last_db_timestamp": start_date.isoformat() if latest_db_timestamp else "None (started from today)",
+                "status": "success"
             }
 
         except Exception as e:
