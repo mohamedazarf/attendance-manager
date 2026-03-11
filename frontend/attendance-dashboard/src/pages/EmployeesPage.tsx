@@ -103,7 +103,7 @@ export default function EmployeesPage() {
   const [privilege, setPrivilege] = useState("all");
   const [department, setDepartment] = useState("all");
   const [departments, setDepartments] = useState<string[]>([
-    "employee",
+    "usine",
     "administration",
   ]);
 
@@ -146,7 +146,7 @@ export default function EmployeesPage() {
     group_id: "",
     card: "",
     password: "",
-    department: "employee",
+    department: "usine",
   });
 
   const [addLoading, setAddLoading] = useState(false);
@@ -237,10 +237,7 @@ export default function EmployeesPage() {
     if (selectedPrivilege === 14 && departments.includes("administration")) {
       return "administration";
     }
-    if (departments.includes("employee")) {
-      return "employee";
-    }
-    return departments[0] || "employee";
+    return departments.includes("usine") ? "usine" : departments[0] || "usine";
   };
 
   const resolveDeviceUid = async (employeeCode: string): Promise<number> => {
@@ -765,7 +762,7 @@ export default function EmployeesPage() {
 
                   <Text fontSize="sm" mb={1}>
                     <strong>{t("Department")}:</strong>{" "}
-                    {t(emp.department || "employee")}
+                    {t(emp.department || "usine")}
                   </Text>
                   <Text fontSize="sm">
                     <strong>{t("Card")}:</strong> {emp.card || "-"}
@@ -870,7 +867,7 @@ export default function EmployeesPage() {
                           {emp.privilege === 14 ? t("Admin") : t("User")}
                         </Badge>
                       </Td>
-                      <Td>{t(emp.department || "employee")}</Td>
+                      <Td>{t(emp.department || "usine")}</Td>
                       {/* <Td>{emp.group_id || "-"}</Td> */}
                       <Td>{emp.card || "-"}</Td>
                       <Td>

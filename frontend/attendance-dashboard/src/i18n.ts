@@ -257,7 +257,7 @@ const resources = {
       "Creation Failed": "Creation Failed",
       "Add New Employee": "Add New Employee",
       "UID (integer)": "UID (integer)",
-      "Employee (7:30 - 16:30)": "Employee (7:30 - 16:30)",
+      "Usine (7:30 - 16:30)": "Usine (7:30 - 16:30)",
       "Administration (8:30 - 17:30)": "Administration (8:30 - 17:30)",
       "Create & Enroll": "Create & Enroll",
       "Enrollment check timed out": "Enrollment check timed out",
@@ -267,7 +267,7 @@ const resources = {
         "Fingerprint successfully enrolled on device.",
       "User created successfully. You can now enroll fingerprint.":
         "User created successfully. You can now enroll fingerprint.",
-      Department: "Department",
+      Department: "Usine",
       "Error fetching employees": "Error fetching employees",
       "Error fetching history": "Error fetching history",
 
@@ -481,7 +481,7 @@ const resources = {
       "Creation Failed": "Échec de la création",
       "Add New Employee": "Ajouter un nouvel employé",
       "UID (integer)": "UID (entier)",
-      "Employee (7:30 - 16:30)": "Employé (7:30 - 16:30)",
+      "Employee (7:30 - 16:30)": "Usine (7:30 - 16:30)",
       "Administration (8:30 - 17:30)": "Administration (8:30 - 17:30)",
       "Create & Enroll": "Créer et enrôler",
       "Enrollment check timed out": "Délai d'enrôlement expiré",
@@ -491,7 +491,7 @@ const resources = {
         "Empreinte enrôlée avec succès sur l'appareil.",
       "User created successfully. You can now enroll fingerprint.":
         "Utilisateur créé avec succès. Vous pouvez maintenant enrôler l'empreinte.",
-      Department: "Département",
+      Department: "Usine",
       "Error fetching employees": "Erreur lors de la récupération des employés",
       "Error fetching history":
         "Erreur lors de la récupération de l'historique",

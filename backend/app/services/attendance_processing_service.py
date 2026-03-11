@@ -54,7 +54,7 @@ class AttendanceProcessingService:
 
         processed = {}
         for (user_id, log_date), date_logs in grouped_logs.items():
-            dept = user_departments.get(user_id, "employee")
+            dept = user_departments.get(user_id, "usine")
             processed[(user_id, log_date)] = self._process_daily_logs(
                 user_id, log_date, date_logs, department=dept
             )
@@ -62,7 +62,7 @@ class AttendanceProcessingService:
         return processed
 
     def _process_daily_logs(
-        self, user_id: int, log_date: date, logs: List[dict], department: str = "employee"
+        self, user_id: int, log_date: date, logs: List[dict], department: str = "usine"
     ) -> ProcessedAttendance:
         """
         Process all logs for a specific user on a specific day.
@@ -127,7 +127,7 @@ class AttendanceProcessingService:
         return events
 
     def _get_effective_department_schedule(
-        self, processed: ProcessedAttendance, department: str = "employee"
+        self, processed: ProcessedAttendance, department: str = "usine"
     ) -> Dict[str, object]:
         """
         Resolve department working schedule for a specific date:
@@ -146,7 +146,7 @@ class AttendanceProcessingService:
                 "source": "default",
             }
 
-    def calculate_hours(self, processed: ProcessedAttendance, department: str = "employee"):
+    def calculate_hours(self, processed: ProcessedAttendance, department: str = "usine"):
         """Calculate total working hours from in/out pairs"""
         if not processed.events:
             processed.total_hours_worked = 0.0
@@ -179,7 +179,7 @@ class AttendanceProcessingService:
         expected_hours = (total_seconds_expected / 3600) - pause_hours
         processed.expected_hours = expected_hours
 
-    def _detect_anomalies(self, processed: ProcessedAttendance, department: str = "employee"):
+    def _detect_anomalies(self, processed: ProcessedAttendance, department: str = "usine"):
         """Detect various types of attendance anomalies"""
         anomalies = []
 

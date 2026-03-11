@@ -161,7 +161,7 @@ export default function Parametrage() {
   }, [normalConfig, ramadanConfig]);
 
   const isSystemDepartment = (name: string) =>
-    ["employee", "administration"].includes(name.toLowerCase());
+    ["usine", "administration"].includes(name.toLowerCase());
 
   const fetchRules = useCallback((year: number) => {
     setRulesLoading(true);

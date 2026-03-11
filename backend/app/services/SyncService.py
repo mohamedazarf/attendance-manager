@@ -49,7 +49,7 @@ class SyncService:
                 if user.privilege == 14:
                     department = "administration"
                 else:
-                    department = existing_department or "employee"
+                    department = existing_department or "usine"
 
                 uid = id_to_uid_map.get(user_id_str)
                 fingerprint_count = fingerprint_counts.get(uid, 0) if uid is not None else 0

@@ -27,9 +27,9 @@ export default function AddEmployeeModal({
   const [uid, setUid] = useState("");
   const [name, setName] = useState("");
   const [privilege, setPrivilege] = useState(0);
-  const [department, setDepartment] = useState("employee");
+  const [department, setDepartment] = useState("usine");
   const [departments, setDepartments] = useState<string[]>([
-    "employee",
+    "usine",
     "administration",
   ]);
   const [loading, setLoading] = useState(false);
@@ -110,7 +110,7 @@ export default function AddEmployeeModal({
       setUid("");
       setName("");
       setPrivilege(0);
-      setDepartment("employee");
+      setDepartment("usine");
 
       // Close modal if you want
       // onClose();
@@ -155,7 +155,7 @@ export default function AddEmployeeModal({
                 if (selectedPrivilege === 14) {
                   setDepartment("administration");
                 } else {
-                  setDepartment("employee");
+                  setDepartment("usine");
                 }
               }}
             >

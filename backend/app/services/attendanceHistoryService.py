@@ -41,7 +41,7 @@ class AttendanceHistoryService:
 
         logs = [log for log in logs if log.get("timestamp") is not None]
 
-        user_departments = {employee_id: employee.get("department", "employee")}
+        user_departments = {employee_id: employee.get("department", "usine")}
         processed_map = self.processor.process_logs(logs, user_departments=user_departments)
 
         history = []

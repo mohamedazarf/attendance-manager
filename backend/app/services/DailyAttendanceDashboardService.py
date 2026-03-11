@@ -95,7 +95,7 @@ class DailyAttendanceDashboardService:
         for emp in employees:
             try:
                 user_departments[int(emp["employee_code"])] = emp.get(
-                    "department", "employee"
+                    "department", "usine"
                 )
             except (ValueError, TypeError):
                 continue

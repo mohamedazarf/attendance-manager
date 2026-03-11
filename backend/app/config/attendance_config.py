@@ -28,7 +28,7 @@ class AttendanceConfig:
             "start_time": time(8, 30),
             "end_time": time(17, 30)
         },
-        "employee": {
+        "usine": {
             "start_time": time(7, 30),
             "end_time": time(16, 30)
         }
@@ -40,7 +40,7 @@ class AttendanceConfig:
         department = (department or "administration").lower()
         return AttendanceConfig.DEPARTMENT_CONFIG.get(
             department, 
-            AttendanceConfig.DEPARTMENT_CONFIG["employee"]
+            AttendanceConfig.DEPARTMENT_CONFIG["usine"]
         )
 
     # Pause/Break duration (in minutes)

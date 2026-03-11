@@ -9,7 +9,7 @@ class Employee(BaseModel):
     password: str | None = None
     fingerprint_count: int = 0
     is_active: bool = True
-    department: str | None = "employee"
+    department: str | None = "usine"
     remote_start_date: str | None = None
     remote_end_date: str | None = None
 
@@ -18,4 +18,4 @@ class CreateEnrollRequest(BaseModel):
     name: str
     privilege: int = 0
     password: str | None = None
-    department: str | None = "employee"
+    department: str | None = "usine"

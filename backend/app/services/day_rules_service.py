@@ -22,9 +22,9 @@ class DayRulesService:
                 "end_time": "17:30",
                 "pause_minutes": pause_minutes,
             },
-            "employee": {
-                "start_time": "07:30",
-                "end_time": "16:30",
+            "usine": {
+                "start_time": "07:00",
+                "end_time": "14:00",
                 "pause_minutes": pause_minutes,
             },
         }
@@ -54,7 +54,7 @@ class DayRulesService:
 
     @staticmethod
     def default_department_name() -> str:
-        return "employee"
+        return "usine"
 
     def list_departments(self) -> List[str]:
         config = self.get_config()
@@ -62,7 +62,7 @@ class DayRulesService:
         ramadan = config.get("ramadan_config") or {}
         normal_departments = normal.get("departments", {}) or {}
         departments = ramadan.get("departments", {}) or {}
-        names = set(["employee", "administration"])
+        names = set(["usine", "administration"])
         for key in normal_departments.keys():
             normalized = self.normalize_department_name(key)
             if normalized:
@@ -508,7 +508,7 @@ class DayRulesService:
         target_date: date,
         department: str,
     ) -> Dict[str, Any]:
-        dept_key = self.normalize_department_name(department) or "employee"
+        dept_key = self.normalize_department_name(department) or "usine"
 
         # Ramadan config takes priority if active for target date.
         ramadan_cfg = self._get_config_for_date(
