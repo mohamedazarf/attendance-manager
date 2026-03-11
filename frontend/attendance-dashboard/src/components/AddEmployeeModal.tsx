@@ -15,6 +15,7 @@ import {
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
+import API_BASE_URL from "../config/apiConfig";
 
 export default function AddEmployeeModal({
   isOpen,
@@ -40,7 +41,7 @@ export default function AddEmployeeModal({
     const fetchDepartments = async () => {
       try {
         const res = await axios.get(
-          "http://127.0.0.1:8000/api/v1/attendance/dashboard/departments",
+          `${API_BASE_URL}/api/v1/attendance/dashboard/departments`,
         );
         const fetched = Array.isArray(res.data?.departments)
           ? res.data.departments
@@ -74,7 +75,7 @@ export default function AddEmployeeModal({
 
     try {
       const res = await axios.post(
-        "http://localhost:8000/api/v1/device/users/create",
+        `${API_BASE_URL}/api/v1/device/users/create`,
         {
           uid: Number(uid),
           name,

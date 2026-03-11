@@ -48,6 +48,7 @@ import {
 import Navbar from "../components/layout/Navbar";
 import Sidebar from "../components/layout/Sidebar";
 import { getCurrentDate } from "../../utils";
+import API_BASE_URL from "../config/apiConfig";
 
 type SpecialDay = {
   date: string;
@@ -169,18 +170,18 @@ export default function Parametrage() {
     setRamadanLoading(true);
 
     Promise.all([
-      fetch("http://127.0.0.1:8000/api/v1/attendance/dashboard/day-rules").then(
+      fetch(`${API_BASE_URL}/api/v1/attendance/dashboard/day-rules`).then(
         (res) => res.json(),
       ),
       fetch(
-        `http://127.0.0.1:8000/api/v1/attendance/dashboard/special-days?start_date=${year}-01-01&end_date=${year}-12-31`,
+        `${API_BASE_URL}/api/v1/attendance/dashboard/special-days?start_date=${year}-01-01&end_date=${year}-12-31`,
       ).then((res) => res.json()),
-      fetch(
-        "http://127.0.0.1:8000/api/v1/attendance/dashboard/normal-config",
-      ).then((res) => res.json()),
-      fetch(
-        "http://127.0.0.1:8000/api/v1/attendance/dashboard/ramadan-config",
-      ).then((res) => res.json()),
+      fetch(`${API_BASE_URL}/api/v1/attendance/dashboard/normal-config`).then(
+        (res) => res.json(),
+      ),
+      fetch(`${API_BASE_URL}/api/v1/attendance/dashboard/ramadan-config`).then(
+        (res) => res.json(),
+      ),
     ])
       .then(([config, specialDays, normal, ramadan]) => {
         setRules({
@@ -224,14 +225,11 @@ export default function Parametrage() {
 
   const updateIncludeSunday = async (value: boolean) => {
     try {
-      await fetch(
-        "http://127.0.0.1:8000/api/v1/attendance/dashboard/day-rules",
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ include_sunday: value }),
-        },
-      );
+      await fetch(`${API_BASE_URL}/api/v1/attendance/dashboard/day-rules`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ include_sunday: value }),
+      });
       fetchRules(selectedYear);
     } catch (err) {
       console.error("Failed to update include_sunday", err);
@@ -242,7 +240,7 @@ export default function Parametrage() {
     if (!newSpecialDate) return;
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/v1/attendance/dashboard/special-days",
+        `${API_BASE_URL}/api/v1/attendance/dashboard/special-days`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -278,7 +276,7 @@ export default function Parametrage() {
   const deleteSpecialDay = async (day: string) => {
     try {
       await fetch(
-        `http://127.0.0.1:8000/api/v1/attendance/dashboard/special-days/${day}`,
+        `${API_BASE_URL}/api/v1/attendance/dashboard/special-days/${day}`,
         {
           method: "DELETE",
         },
@@ -360,7 +358,7 @@ export default function Parametrage() {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/v1/attendance/dashboard/normal-config",
+        `${API_BASE_URL}/api/v1/attendance/dashboard/normal-config`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -415,7 +413,7 @@ export default function Parametrage() {
       );
 
       const response = await fetch(
-        "http://127.0.0.1:8000/api/v1/attendance/dashboard/ramadan-config",
+        `${API_BASE_URL}/api/v1/attendance/dashboard/ramadan-config`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -471,7 +469,7 @@ export default function Parametrage() {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/v1/attendance/dashboard/departments",
+        `${API_BASE_URL}/api/v1/attendance/dashboard/departments`,
         {
           method: "POST",
           headers: {
@@ -580,7 +578,7 @@ export default function Parametrage() {
     setDepartmentActionLoading(department);
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/api/v1/attendance/dashboard/departments/${encodeURIComponent(department)}?employee_strategy=${strategy}`,
+        `${API_BASE_URL}/api/v1/attendance/dashboard/departments/${encodeURIComponent(department)}?employee_strategy=${strategy}`,
         { method: "DELETE" },
       );
       const data = await response.json();

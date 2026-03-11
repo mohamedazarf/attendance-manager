@@ -32,6 +32,7 @@ import { useEffect, useState } from "react";
 import { CloseIcon, HamburgerIcon } from "@chakra-ui/icons";
 import { useLocation } from "react-router-dom";
 import { ManualPunchModal } from "../components/AttendanceModals";
+import API_BASE_URL from "../config/apiConfig";
 
 // -------------------- Types --------------------
 type Employee = {
@@ -151,9 +152,7 @@ export default function EmployeesToday() {
 
   // -------------------- Fetch dashboard --------------------
   useEffect(() => {
-    fetch(
-      `http://127.0.0.1:8000/api/v1/attendance/dashboard/day?day=${targetDate}`,
-    )
+    fetch(`${API_BASE_URL}/api/v1/attendance/dashboard/day?day=${targetDate}`)
       .then((res) => res.json())
       .then((data) => {
         setDashboard(data);
@@ -195,7 +194,7 @@ export default function EmployeesToday() {
     setHistoryLoading(true);
 
     fetch(
-      `http://127.0.0.1:8000/api/v1/employee/${employee_id}/history?date_from=${dateFrom}&date_to=${dateTo}`,
+      `${API_BASE_URL}/api/v1/employee/${employee_id}/history?date_from=${dateFrom}&date_to=${dateTo}`,
     )
       .then((res) => res.json())
       .then((data) => {

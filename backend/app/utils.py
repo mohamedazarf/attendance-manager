@@ -1,9 +1,12 @@
+import os
 from pymongo import MongoClient
 from datetime import datetime
 
 def get_db():
-    client = MongoClient("mongodb://localhost:27017")
-    db = client["gestionDePointage"]
+    mongo_url = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
+    db_name = os.getenv("DATABASE_NAME", "gestionDePointage")
+    client = MongoClient(mongo_url)
+    db = client[db_name]
     return db
 
 # def to_datetime(ts):

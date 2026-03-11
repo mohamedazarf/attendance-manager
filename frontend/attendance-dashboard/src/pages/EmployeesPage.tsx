@@ -50,7 +50,9 @@ import AddEmployeeModal from "../components/AddEmployeeModal";
 import { useAuth } from "../context/AuthContext";
 import { ManualPunchModal } from "../components/AttendanceModals";
 
-const BASE_URL = "http://localhost:8000/api/v1";
+import API_BASE_URL from "../config/apiConfig";
+
+const BASE_URL = `${API_BASE_URL}/api/v1`;
 
 const anomalyColors: Record<string, string> = {
   retard: "orange",

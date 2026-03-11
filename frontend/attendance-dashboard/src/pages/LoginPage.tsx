@@ -19,6 +19,8 @@ import {
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import { useTranslation } from "react-i18next";
 
+import { API_ENDPOINTS } from "../config/apiConfig";
+
 const LoginPage: React.FC = () => {
   const { t } = useTranslation();
   const [username, setUsername] = useState("");
@@ -41,7 +43,7 @@ const LoginPage: React.FC = () => {
       formData.append("username", username);
       formData.append("password", password);
 
-      const response = await fetch("http://localhost:8000/api/v1/auth/login", {
+      const response = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
         method: "POST",
         body: formData,
       });
@@ -52,14 +54,11 @@ const LoginPage: React.FC = () => {
 
       const data = await response.json();
 
-      const userResponse = await fetch(
-        "http://localhost:8000/api/v1/roles/me",
-        {
-          headers: {
-            Authorization: `Bearer ${data.access_token}`,
-          },
+      const userResponse = await fetch(API_ENDPOINTS.ROLES.ME, {
+        headers: {
+          Authorization: `Bearer ${data.access_token}`,
         },
-      );
+      });
 
       const userData = await userResponse.json();
 

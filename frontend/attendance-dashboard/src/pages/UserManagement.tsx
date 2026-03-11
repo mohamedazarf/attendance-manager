@@ -38,6 +38,7 @@ import {
 } from "@chakra-ui/icons";
 import Navbar from "../components/layout/Navbar";
 import Sidebar from "../components/layout/Sidebar";
+import API_BASE_URL from "../config/apiConfig";
 
 interface UserPlatform {
   id: string;
@@ -71,14 +72,11 @@ export default function UserManagement() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(
-        "http://127.0.0.1:8000/api/v1/platform-users/",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const response = await fetch(`${API_BASE_URL}/api/v1/platform-users/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
       if (response.ok) {
         const data = await response.json();
         setUsers(data);
@@ -127,8 +125,8 @@ export default function UserManagement() {
     const token = localStorage.getItem("token");
     const method = editingUser ? "PUT" : "POST";
     const url = editingUser
-      ? `http://127.0.0.1:8000/api/v1/platform-users/${editingUser.id}`
-      : "http://127.0.0.1:8000/api/v1/platform-users/";
+      ? `${API_BASE_URL}/api/v1/platform-users/${editingUser.id}`
+      : `${API_BASE_URL}/api/v1/platform-users/`;
 
     // Remove password if empty during edit
     const payload = { ...formData };
@@ -175,7 +173,7 @@ export default function UserManagement() {
     const token = localStorage.getItem("token");
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/api/v1/platform-users/${id}`,
+        `${API_BASE_URL}/api/v1/platform-users/${id}`,
         {
           method: "DELETE",
           headers: {

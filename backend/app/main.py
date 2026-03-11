@@ -94,9 +94,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 # Allow your frontend origin
-origins = [
-    "http://localhost:5173",  # Vite dev server
-]
+import os
+origins_env = os.getenv("CORS_ORIGINS", "http://localhost:5173")
+origins = [origin.strip() for origin in origins_env.split(",")]
 
 app.add_middleware(
     CORSMiddleware,

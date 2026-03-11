@@ -33,6 +33,7 @@ import {
   MarkAbsentModal,
 } from "../components/AttendanceModals";
 import { getCurrentDate } from "../../utils";
+import API_BASE_URL from "../config/apiConfig";
 
 /* -------------------- Types -------------------- */
 type Employee = {
@@ -303,7 +304,7 @@ export default function Pointages() {
 
   const fetchDashboard = useCallback((day: string) => {
     setLoading(true);
-    fetch(`http://127.0.0.1:8000/api/v1/attendance/dashboard/day?day=${day}`)
+    fetch(`${API_BASE_URL}/api/v1/attendance/dashboard/day?day=${day}`)
       .then((res) => res.json())
       .then((data) => {
         setDashboard(data);
@@ -328,9 +329,7 @@ export default function Pointages() {
 
   const fetchYesterdayDashboard = useCallback((day: string) => {
     const yesterday = getPreviousDate(day);
-    fetch(
-      `http://127.0.0.1:8000/api/v1/attendance/dashboard/day?day=${yesterday}`,
-    )
+    fetch(`${API_BASE_URL}/api/v1/attendance/dashboard/day?day=${yesterday}`)
       .then((res) => res.json())
       .then((data) => setYesterdayDashboard(data))
       .catch((err) => {

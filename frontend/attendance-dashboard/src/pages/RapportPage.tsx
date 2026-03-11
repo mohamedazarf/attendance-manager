@@ -30,7 +30,9 @@ import { HamburgerIcon, CloseIcon, DownloadIcon } from "@chakra-ui/icons";
 import axios from "axios";
 import * as XLSX from "xlsx";
 
-const BASE_URL = "http://localhost:8000/api/v1";
+import API_BASE_URL from "../config/apiConfig";
+
+const BASE_URL = `${API_BASE_URL}/api/v1`;
 
 // Couleurs anomalies
 const anomalyColors: Record<string, string> = {
