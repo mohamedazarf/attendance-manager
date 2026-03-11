@@ -36,6 +36,7 @@ import {
   Icon,
 } from "@chakra-ui/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   CloseIcon,
   HamburgerIcon,
@@ -110,6 +111,7 @@ function normalizeDepartmentConfig(
 }
 
 export default function Parametrage() {
+  const { t } = useTranslation();
   const toast = useToast();
 
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -255,7 +257,7 @@ export default function Parametrage() {
         throw new Error("Invalid payload");
       }
       toast({
-        title: "Jour special enregistre",
+        title: t("Jour special enregistre"),
         status: "success",
         duration: 1800,
         isClosable: true,
@@ -264,7 +266,7 @@ export default function Parametrage() {
       setNewSpecialLabel("");
     } catch (err) {
       toast({
-        title: "Erreur d'enregistrement",
+        title: t("Erreur d'enregistrement"),
         status: "error",
         duration: 1800,
         isClosable: true,
@@ -382,7 +384,7 @@ export default function Parametrage() {
       });
 
       toast({
-        title: "Horaires normaux enregistres",
+        title: t("Horaires normaux enregistres"),
         status: "success",
         duration: 2000,
         isClosable: true,
@@ -390,7 +392,7 @@ export default function Parametrage() {
     } catch (err) {
       console.error("Failed to save normal config", err);
       toast({
-        title: "Erreur lors de l'enregistrement des horaires normaux",
+        title: t("Erreur lors de l'enregistrement des horaires normaux"),
         status: "error",
         duration: 2000,
         isClosable: true,
@@ -439,7 +441,7 @@ export default function Parametrage() {
         departments,
       });
       toast({
-        title: "Horaires de ramadhan enregistres",
+        title: t("Horaires de ramadhan enregistres"),
         status: "success",
         duration: 2000,
         isClosable: true,
@@ -447,7 +449,7 @@ export default function Parametrage() {
     } catch (err) {
       console.error("Failed to save ramadan config", err);
       toast({
-        title: "Erreur lors de l'enregistrement des horaires de ramadhan",
+        title: t("Erreur lors de l'enregistrement des horaires de ramadhan"),
         status: "error",
         duration: 2000,
         isClosable: true,
@@ -459,7 +461,7 @@ export default function Parametrage() {
     const name = newDepartmentName.trim().toLowerCase();
     if (!name || !newDepartmentStartTime || !newDepartmentEndTime) {
       toast({
-        title: "Veuillez remplir le nom et les horaires",
+        title: t("Veuillez remplir le nom et les horaires"),
         status: "warning",
         duration: 2000,
         isClosable: true,
@@ -488,7 +490,7 @@ export default function Parametrage() {
       }
 
       toast({
-        title: "Departement enregistre",
+        title: t("Departement enregistre"),
         status: "success",
         duration: 1800,
         isClosable: true,
@@ -538,7 +540,7 @@ export default function Parametrage() {
       fetchRules(selectedYear);
     } catch (err) {
       toast({
-        title: "Erreur lors de la creation du departement",
+        title: t("Erreur lors de la creation du departement"),
         status: "error",
         duration: 2000,
         isClosable: true,
@@ -553,7 +555,7 @@ export default function Parametrage() {
   ) => {
     if (isSystemDepartment(department)) {
       toast({
-        title: "Ce departement systeme ne peut pas etre supprime",
+        title: t("Ce departement systeme ne peut pas etre supprime"),
         status: "warning",
         duration: 2200,
         isClosable: true,
@@ -570,8 +572,13 @@ export default function Parametrage() {
     if (!explicitStrategy) {
       const confirmMessage =
         strategy === "delete"
-          ? `Supprimer le departement "${department}" et tous ses employes ?`
-          : `Supprimer le departement "${department}" et reaffecter ses employes au departement par defaut ?`;
+          ? t('Supprimer le departement "{{department}}" et tous ses employes ?', {
+              department,
+            })
+          : t(
+              'Supprimer le departement "{{department}}" et reaffecter ses employes au departement par defaut ?',
+              { department },
+            );
       if (!window.confirm(confirmMessage)) return;
     }
 
@@ -587,11 +594,16 @@ export default function Parametrage() {
       }
 
       toast({
-        title: "Departement supprime",
+        title: t("Departement supprime"),
         description:
           strategy === "delete"
-            ? `${data.employees_affected ?? 0} employe(s) supprime(s).`
-            : `${data.employees_affected ?? 0} employe(s) reaffecte(s) au departement par defaut.`,
+            ? t("{{count}} employe(s) supprime(s).", {
+                count: data.employees_affected ?? 0,
+              })
+            : t(
+                "{{count}} employe(s) reaffecte(s) au departement par defaut.",
+                { count: data.employees_affected ?? 0 },
+              ),
         status: "success",
         duration: 2400,
         isClosable: true,
@@ -600,7 +612,7 @@ export default function Parametrage() {
       fetchRules(selectedYear);
     } catch (err) {
       toast({
-        title: "Erreur lors de la suppression du departement",
+        title: t("Erreur lors de la suppression du departement"),
         status: "error",
         duration: 2200,
         isClosable: true,
@@ -616,7 +628,7 @@ export default function Parametrage() {
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       <IconButton
         icon={isSidebarOpen ? <CloseIcon /> : <HamburgerIcon />}
-        aria-label="Toggle Sidebar"
+        aria-label={t("sidebar.toggle")}
         display={["inline-flex", "none"]}
         onClick={toggleSidebar}
         position="fixed"
@@ -629,13 +641,13 @@ export default function Parametrage() {
         <Navbar />
 
         <Container maxW="100%" flex={1} p={6}>
-          <Heading mb={2}>Parametrage</Heading>
+          <Heading mb={2}>{t("Parametrage")}</Heading>
 
           <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" mb={8}>
             <HStack justify="space-between" mb={4} wrap="wrap">
-              <Heading size="md">Jours speciaux</Heading>
+              <Heading size="md">{t("Jours speciaux")}</Heading>
               <HStack>
-                <Text fontSize="sm">Annee</Text>
+                <Text fontSize="sm">{t("Annee")}</Text>
                 <Input
                   type="number"
                   value={selectedYear}
@@ -653,9 +665,7 @@ export default function Parametrage() {
             </HStack>
 
             <HStack justify="space-between" mb={4} wrap="wrap">
-              <Text>
-                Inclure automatiquement le dimanche comme non ouvrable
-              </Text>
+              <Text>{t("Inclure automatiquement le dimanche comme non ouvrable")}</Text>
               <Switch
                 isChecked={rules?.include_sunday ?? true}
                 onChange={(e) => updateIncludeSunday(e.target.checked)}
@@ -667,7 +677,7 @@ export default function Parametrage() {
             <HStack mb={4} spacing={3} wrap="wrap" align="end">
               <Box>
                 <Text fontSize="sm" mb={1}>
-                  Date
+                  {t("Date")}
                 </Text>
                 <Input
                   type="date"
@@ -679,7 +689,7 @@ export default function Parametrage() {
               </Box>
               <Box>
                 <Text fontSize="sm" mb={1}>
-                  Type
+                  {t("Type")}
                 </Text>
                 <Select
                   value={newSpecialType}
@@ -691,31 +701,31 @@ export default function Parametrage() {
                   size="sm"
                   bg="white"
                 >
-                  <option value="holiday">Jour ferie</option>
-                  <option value="remote_day">Jour a distance</option>
+                  <option value="holiday">{t("Jour ferie")}</option>
+                  <option value="remote_day">{t("Jour a distance")}</option>
                 </Select>
               </Box>
               <Box flex={1} minW="220px">
                 <Text fontSize="sm" mb={1}>
-                  Libelle (optionnel)
+                  {t("Libelle (optionnel)")}
                 </Text>
                 <Input
                   value={newSpecialLabel}
                   onChange={(e) => setNewSpecialLabel(e.target.value)}
-                  placeholder="Ex: Fete nationale"
+                  placeholder={t("Ex: Fete nationale")}
                   size="sm"
                   bg="white"
                 />
               </Box>
               <Button colorScheme="blue" size="sm" onClick={addSpecialDay}>
-                Ajouter / Mettre a jour
+                {t("Ajouter / Mettre a jour")}
               </Button>
             </HStack>
 
             <VStack align="stretch" spacing={2}>
               {(rules?.special_days ?? []).length === 0 && (
                 <Text color="gray.500" fontSize="sm">
-                  Aucun jour special configure.
+                  {t("Aucun jour special configure.")}
                 </Text>
               )}
               {(rules?.special_days ?? [])
@@ -734,8 +744,8 @@ export default function Parametrage() {
                         colorScheme={item.type === "holiday" ? "red" : "blue"}
                       >
                         {item.type === "holiday"
-                          ? "Jour ferie"
-                          : "Jour a distance"}
+                          ? t("Jour ferie")
+                          : t("Jour a distance")}
                       </Badge>
                       <Text fontSize="sm">{item.date}</Text>
                       {item.label && (
@@ -750,7 +760,7 @@ export default function Parametrage() {
                       variant="outline"
                       onClick={() => deleteSpecialDay(item.date)}
                     >
-                      Supprimer
+                      {t("Supprimer")}
                     </Button>
                   </HStack>
                 ))}
@@ -759,11 +769,12 @@ export default function Parametrage() {
 
           <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" mb={8}>
             <Heading size="sm" mb={2}>
-              Gestion des départements
+              {t("Gestion des départements")}
             </Heading>
             <Text fontSize="sm" color="gray.600" mb={6}>
-              Configurez les périodes globales et gérez les horaires par
-              département via les cartes.
+              {t(
+                "Configurez les périodes globales et gérez les horaires par département via les cartes.",
+              )}
             </Text>
 
             <SimpleGrid
@@ -782,7 +793,7 @@ export default function Parametrage() {
                   color="orange.700"
                   letterSpacing="wider"
                 >
-                  Période Ramadan
+                  {t("Période Ramadan")}
                 </Heading>
                 <VStack align="stretch" spacing={3}>
                   <HStack spacing={3} align="flex-end">
@@ -793,7 +804,7 @@ export default function Parametrage() {
                         fontWeight="bold"
                         color="gray.600"
                       >
-                        Début
+                        {t("Début")}
                       </Text>
                       <Input
                         type="date"
@@ -823,7 +834,7 @@ export default function Parametrage() {
                         fontWeight="bold"
                         color="gray.600"
                       >
-                        Fin
+                        {t("Fin")}
                       </Text>
                       <Input
                         type="date"
@@ -851,7 +862,7 @@ export default function Parametrage() {
                       colorScheme="orange"
                       onClick={saveRamadanConfig}
                       isLoading={ramadanLoading}
-                      loadingText="Enregistrement..."
+                      loadingText={t("Enregistrement...")}
                       leftIcon={<span>🌙</span>}
                       fontWeight="semibold"
                       px={5}
@@ -864,12 +875,21 @@ export default function Parametrage() {
                       _active={{ transform: "translateY(0)" }}
                       transition="all 0.15s ease"
                     >
-                      Enregistrer
+                      {t("Enregistrer")}
                     </Button>
                   </HStack>
                 </VStack>
               </Box>
             </SimpleGrid>
+
+            <Box mb={3}>
+              <Heading size="sm">{t("Gestion des départements")}</Heading>
+              <Text fontSize="sm" color="gray.600">
+                {t(
+                  "Configurez les périodes globales et gérez les horaires par département via les cartes.",
+                )}
+              </Text>
+            </Box>
 
             <HStack
               spacing={3}
@@ -882,19 +902,19 @@ export default function Parametrage() {
             >
               <Box minW="220px">
                 <Text fontSize="sm" mb={1} fontWeight="bold">
-                  Nom du nouveau département
+                  {t("Nom du nouveau département")}
                 </Text>
                 <Input
                   value={newDepartmentName}
                   onChange={(e) => setNewDepartmentName(e.target.value)}
-                  placeholder="Ex: logistique"
+                  placeholder={t("Ex: logistique")}
                   size="sm"
                   bg="white"
                 />
               </Box>
               <Box>
                 <Text fontSize="sm" mb={1} fontWeight="bold">
-                  Heure d'entrée
+                  {t("Heure d'entrée")}
                 </Text>
                 <Input
                   type="time"
@@ -906,7 +926,7 @@ export default function Parametrage() {
               </Box>
               <Box>
                 <Text fontSize="sm" mb={1} fontWeight="bold">
-                  Heure de sortie
+                  {t("Heure de sortie")}
                 </Text>
                 <Input
                   type="time"
@@ -922,7 +942,7 @@ export default function Parametrage() {
                 onClick={addDepartment}
                 leftIcon={<EditIcon />}
               >
-                Ajouter
+                {t("Ajouter")}
               </Button>
             </HStack>
 
@@ -948,7 +968,9 @@ export default function Parametrage() {
                         <Heading size="xs" textTransform="uppercase">
                           {deptName}
                         </Heading>
-                        {isSystem && <Badge colorScheme="gray">Système</Badge>}
+                        {isSystem && (
+                          <Badge colorScheme="gray">{t("Système")}</Badge>
+                        )}
                       </Flex>
                     </CardHeader>
                     <CardBody pt={2}>
@@ -956,13 +978,15 @@ export default function Parametrage() {
                         <HStack fontSize="xs" color="gray.600">
                           <Icon as={TimeIcon} />
                           <Text>
-                            Normal: {normalHours?.start_time} -{" "}
+                            {t("Normal")}: {normalHours?.start_time} -{" "}
                             {normalHours?.end_time}
                           </Text>
                         </HStack>
                         <HStack fontSize="xs" color="gray.500">
                           <Icon as={InfoIcon} />
-                          <Text>Pause: {normalHours?.pause_minutes} min</Text>
+                          <Text>
+                            {t("Pause")}: {normalHours?.pause_minutes} min
+                          </Text>
                         </HStack>
                       </VStack>
                     </CardBody>
@@ -980,10 +1004,12 @@ export default function Parametrage() {
                 <HStack justifyContent="space-between" pr={10}>
                   <HStack>
                     <Icon as={SettingsIcon} color="blue.500" />
-                    <Text>Configuration: {selectedDeptName}</Text>
+                    <Text>
+                      {t("Configuration")}: {selectedDeptName}
+                    </Text>
                   </HStack>
                   {selectedDeptName && isSystemDepartment(selectedDeptName) && (
-                    <Badge colorScheme="gray">Système</Badge>
+                    <Badge colorScheme="gray">{t("Système")}</Badge>
                   )}
                 </HStack>
               </ModalHeader>
@@ -994,10 +1020,10 @@ export default function Parametrage() {
                   <Tabs colorScheme="blue" variant="enclosed">
                     <TabList>
                       <Tab>
-                        <Icon as={TimeIcon} mr={2} /> Horaires Normaux
+                        <Icon as={TimeIcon} mr={2} /> {t("Horaires Normaux")}
                       </Tab>
                       <Tab>
-                        <Icon as={TimeIcon} mr={2} /> Ramadhan
+                        <Icon as={TimeIcon} mr={2} /> {t("Ramadhan")}
                       </Tab>
                     </TabList>
                     <TabPanels mt={4}>
@@ -1007,7 +1033,7 @@ export default function Parametrage() {
                           <HStack spacing={4}>
                             <Box flex={1}>
                               <Text fontSize="sm" mb={1} fontWeight="bold">
-                                Heure d'entrée
+                                {t("Heure d'entrée")}
                               </Text>
                               <Input
                                 type="time"
@@ -1028,7 +1054,7 @@ export default function Parametrage() {
                             </Box>
                             <Box flex={1}>
                               <Text fontSize="sm" mb={1} fontWeight="bold">
-                                Heure de sortie
+                                {t("Heure de sortie")}
                               </Text>
                               <Input
                                 type="time"
@@ -1050,7 +1076,7 @@ export default function Parametrage() {
                           </HStack>
                           <Box>
                             <Text fontSize="sm" mb={1} fontWeight="bold">
-                              Pause (minutes)
+                              {t("Pause (minutes)")}
                             </Text>
                             <Input
                               type="number"
@@ -1077,7 +1103,7 @@ export default function Parametrage() {
                             onClick={saveNormalConfig}
                             isLoading={normalLoading}
                           >
-                            Enregistrer ces horaires
+                            {t("Enregistrer ces horaires")}
                           </Button>
                         </VStack>
                       </TabPanel>
@@ -1088,7 +1114,7 @@ export default function Parametrage() {
                           <HStack spacing={4}>
                             <Box flex={1}>
                               <Text fontSize="sm" mb={1} fontWeight="bold">
-                                Heure d'entrée
+                                {t("Heure d'entrée")}
                               </Text>
                               <Input
                                 type="time"
@@ -1109,7 +1135,7 @@ export default function Parametrage() {
                             </Box>
                             <Box flex={1}>
                               <Text fontSize="sm" mb={1} fontWeight="bold">
-                                Heure de sortie
+                                {t("Heure de sortie")}
                               </Text>
                               <Input
                                 type="time"
@@ -1137,8 +1163,9 @@ export default function Parametrage() {
                           >
                             <Icon as={InfoIcon} color="orange.400" mr={2} />
                             <Text fontSize="sm" color="orange.800">
-                              En ramadhan, la pause est automatiquement fixée à
-                              0 minute.
+                              {t(
+                                "En ramadhan, la pause est automatiquement fixée à 0 minute.",
+                              )}
                             </Text>
                           </Flex>
                           <Button
@@ -1148,7 +1175,7 @@ export default function Parametrage() {
                             onClick={saveRamadanConfig}
                             isLoading={ramadanLoading}
                           >
-                            Enregistrer ces horaires (Ramadhan)
+                            {t("Enregistrer ces horaires (Ramadhan)")}
                           </Button>
                         </VStack>
                       </TabPanel>
@@ -1165,7 +1192,7 @@ export default function Parametrage() {
                     justifyContent="space-between"
                   >
                     <Button variant="ghost" onClick={onModalClose}>
-                      Fermer
+                      {t("Fermer")}
                     </Button>
                     {!selectedDeptName ||
                     !isSystemDepartment(selectedDeptName) ? (
@@ -1176,10 +1203,14 @@ export default function Parametrage() {
                         onClick={() => setDeleteConfirmationStep(1)}
                         isLoading={departmentActionLoading === selectedDeptName}
                       >
-                        Supprimer le département
+                        {t("Supprimer le département")}
                       </Button>
                     ) : (
-                      <Tooltip label="Les départements système ne peuvent pas être supprimés">
+                      <Tooltip
+                        label={t(
+                          "Les départements système ne peuvent pas être supprimés",
+                        )}
+                      >
                         <Box>
                           <Button
                             isDisabled
@@ -1187,7 +1218,7 @@ export default function Parametrage() {
                             variant="outline"
                             leftIcon={<DeleteIcon />}
                           >
-                            Supprimer
+                            {t("Supprimer")}
                           </Button>
                         </Box>
                       </Tooltip>
@@ -1197,8 +1228,8 @@ export default function Parametrage() {
                   <VStack spacing={3} width="full" align="stretch">
                     <Text fontWeight="bold" color="red.600" fontSize="sm">
                       {deleteConfirmationStep === 1
-                        ? "Confirmation : Choisir la stratégie de suppression"
-                        : "Dernière confirmation requise"}
+                        ? t("Confirmation : Choisir la stratégie de suppression")
+                        : t("Dernière confirmation requise")}
                     </Text>
 
                     {deleteConfirmationStep === 1 ? (
@@ -1214,10 +1245,12 @@ export default function Parametrage() {
                           bg="white"
                         >
                           <option value="reassign_default">
-                            Réaffecter les employés au département par défaut
+                            {t(
+                              "Réaffecter les employés au département par défaut",
+                            )}
                           </option>
                           <option value="delete">
-                            Supprimer définitivement tous les employés
+                            {t("Supprimer définitivement tous les employés")}
                           </option>
                         </Select>
                         <HStack spacing={3} justifyContent="flex-end">
@@ -1226,14 +1259,14 @@ export default function Parametrage() {
                             variant="ghost"
                             onClick={() => setDeleteConfirmationStep(0)}
                           >
-                            Annuler
+                            {t("Annuler")}
                           </Button>
                           <Button
                             size="sm"
                             colorScheme="red"
                             onClick={() => setDeleteConfirmationStep(2)}
                           >
-                            Continuer
+                            {t("Continuer")}
                           </Button>
                         </HStack>
                       </>
@@ -1246,8 +1279,10 @@ export default function Parametrage() {
                         borderRadius="md"
                       >
                         <Text fontSize="xs" color="red.800">
-                          Êtes-vous certain de vouloir supprimer "
-                          {selectedDeptName}" ? Cette action est irréversible.
+                          {t(
+                            "Êtes-vous certain de vouloir supprimer \"{{department}}\" ? Cette action est irréversible.",
+                            { department: selectedDeptName },
+                          )}
                         </Text>
                         <HStack>
                           <Button
@@ -1255,7 +1290,7 @@ export default function Parametrage() {
                             variant="ghost"
                             onClick={() => setDeleteConfirmationStep(1)}
                           >
-                            Retour
+                            {t("Retour")}
                           </Button>
                           <Button
                             size="xs"
@@ -1270,7 +1305,7 @@ export default function Parametrage() {
                               }
                             }}
                           >
-                            Confirmer définitivement
+                            {t("Confirmer définitivement")}
                           </Button>
                         </HStack>
                       </HStack>
@@ -1285,3 +1320,5 @@ export default function Parametrage() {
     </Box>
   );
 }
+
+

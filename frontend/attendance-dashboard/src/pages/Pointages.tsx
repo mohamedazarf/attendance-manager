@@ -1,4 +1,4 @@
-// src/pages/Pointages.tsx
+﻿// src/pages/Pointages.tsx
 import {
   Box,
   Container,
@@ -18,7 +18,7 @@ import {
 } from "@chakra-ui/react";
 import Navbar from "../components/layout/Navbar";
 import Sidebar from "../components/layout/Sidebar";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -371,11 +371,52 @@ export default function Pointages() {
     navigate(`/employeesToday?${params.toString()}`);
   };
 
-  if (loading && !dashboard) return <Spinner size="lg" />;
-
   const isSpecialDay = dashboard?.day_context?.is_special_day;
   const suppressAbsence = dashboard?.day_context?.suppress_absence;
   const isRamadanDay = dashboard?.ramadan?.is_ramadan;
+  const ramadanDepartments = useMemo(() => {
+    const apiDepartments = dashboard?.ramadan?.departments ?? {};
+    if (Object.keys(apiDepartments).length > 0) {
+      return apiDepartments;
+    }
+
+    return {
+      administration: { start_time: "07:30", end_time: "14:00" },
+      employee: { start_time: "07:00", end_time: "14:00" },
+      logistique: { start_time: "09:06", end_time: "17:15" },
+      usine: { start_time: "07:00", end_time: "14:00" },
+    };
+  }, [dashboard?.ramadan?.departments]);
+
+  const ramadanDepartmentEntries = useMemo(() => {
+    const byLower = new Map<
+      string,
+      { label: string; cfg: { start_time: string; end_time: string } }
+    >();
+
+    Object.entries(ramadanDepartments).forEach(([name, cfg]) => {
+      const lower = name.toLowerCase();
+      if (!byLower.has(lower)) {
+        byLower.set(lower, { label: name, cfg });
+      }
+    });
+
+    const preferredOrder = ["administration", "employee", "logistique", "usine"];
+    const ordered = preferredOrder
+      .map((key) => byLower.get(key))
+      .filter(Boolean) as {
+      label: string;
+      cfg: { start_time: string; end_time: string };
+    }[];
+
+    preferredOrder.forEach((key) => byLower.delete(key));
+
+    const remaining = Array.from(byLower.values()).sort((a, b) =>
+      a.label.localeCompare(b.label),
+    );
+
+    return [...ordered, ...remaining];
+  }, [ramadanDepartments]);
 
   const negativeAlerts =
     dashboard?.employees.filter(
@@ -399,12 +440,14 @@ export default function Pointages() {
         emp.anomalies.includes("entree_sans_sortie"),
     ) ?? [];
 
+  if (loading && !dashboard) return <Spinner size="lg" />;
+
   return (
     <Box display="flex" minH="100vh" bg="gray.50">
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       <IconButton
         icon={isSidebarOpen ? <CloseIcon /> : <HamburgerIcon />}
-        aria-label="Toggle Sidebar"
+        aria-label={t("sidebar.toggle")}
         display={["inline-flex", "none"]}
         onClick={toggleSidebar}
         position="fixed"
@@ -449,16 +492,17 @@ export default function Pointages() {
               <AlertIcon />
               <VStack align="start" spacing={1}>
                 <Text fontSize="sm" fontWeight="bold">
-                  Jour de ramadhan (paramétré)
+                  {t("Jour de ramadhan (paramétré)")}
                 </Text>
-                {Object.entries(dashboard?.ramadan?.departments ?? {}).map(
-                  ([dept, cfg]) => (
-                    <Text key={dept} fontSize="sm">
-                      {dept.charAt(0).toUpperCase() + dept.slice(1)} : entrée{" "}
-                      {cfg.start_time} - sortie {cfg.end_time}
-                    </Text>
-                  ),
-                )}
+                {ramadanDepartmentEntries.map(({ label, cfg }) => (
+                  <Text key={label} fontSize="sm">
+                    {t("{{dept}} : entrée {{start}} - sortie {{end}}", {
+                      dept: label.charAt(0).toUpperCase() + label.slice(1),
+                      start: cfg.start_time,
+                      end: cfg.end_time,
+                    })}
+                  </Text>
+                ))}
               </VStack>
             </Alert>
           )}
@@ -601,3 +645,4 @@ export default function Pointages() {
     </Box>
   );
 }
+

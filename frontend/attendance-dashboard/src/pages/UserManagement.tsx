@@ -29,6 +29,7 @@ import {
   FormLabel,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   CloseIcon,
   HamburgerIcon,
@@ -51,6 +52,7 @@ interface UserPlatform {
 }
 
 export default function UserManagement() {
+  const { t } = useTranslation();
   const [users, setUsers] = useState<UserPlatform[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -82,7 +84,7 @@ export default function UserManagement() {
         setUsers(data);
       } else {
         toast({
-          title: "Erreur lors de la récupération des utilisateurs",
+          title: t("Erreur lors de la récupération des utilisateurs"),
           status: "error",
           duration: 3000,
         });
@@ -146,7 +148,9 @@ export default function UserManagement() {
 
       if (response.ok) {
         toast({
-          title: editingUser ? "Utilisateur mis à jour" : "Utilisateur créé",
+          title: editingUser
+            ? t("Utilisateur mis à jour")
+            : t("Utilisateur créé"),
           status: "success",
           duration: 3000,
         });
@@ -155,8 +159,8 @@ export default function UserManagement() {
       } else {
         const errorData = await response.json();
         toast({
-          title: "Erreur",
-          description: errorData.detail || "Une erreur est survenue",
+          title: t("Erreur"),
+          description: errorData.detail || t("Une erreur est survenue"),
           status: "error",
           duration: 3000,
         });
@@ -167,7 +171,11 @@ export default function UserManagement() {
   };
 
   const handleDeleteUser = async (id: string) => {
-    if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?"))
+    if (
+      !window.confirm(
+        t("Êtes-vous sûr de vouloir supprimer cet utilisateur ?"),
+      )
+    )
       return;
 
     const token = localStorage.getItem("token");
@@ -184,7 +192,7 @@ export default function UserManagement() {
 
       if (response.ok) {
         toast({
-          title: "Utilisateur supprimé",
+          title: t("Utilisateur supprimé"),
           status: "success",
           duration: 3000,
         });
@@ -192,9 +200,9 @@ export default function UserManagement() {
       } else {
         const errorData = await response.json();
         toast({
-          title: "Erreur",
+          title: t("Erreur"),
           description:
-            errorData.detail || "Impossible de supprimer l'utilisateur",
+            errorData.detail || t("Impossible de supprimer l'utilisateur"),
           status: "error",
           duration: 3000,
         });
@@ -209,7 +217,7 @@ export default function UserManagement() {
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       <IconButton
         icon={isSidebarOpen ? <CloseIcon /> : <HamburgerIcon />}
-        aria-label="Toggle Sidebar"
+        aria-label={t("sidebar.toggle")}
         display={["inline-flex", "none"]}
         onClick={toggleSidebar}
         position="fixed"
@@ -223,13 +231,13 @@ export default function UserManagement() {
 
         <Container maxW="100%" flex={1} p={6}>
           <Flex justify="space-between" align="center" mb={6}>
-            <Heading size="lg">Gestion des Utilisateurs Platform</Heading>
+            <Heading size="lg">{t("Gestion des Utilisateurs Platform")}</Heading>
             <Button
               leftIcon={<AddIcon />}
               colorScheme="blue"
               onClick={() => handleOpenModal()}
             >
-              Ajouter un utilisateur
+              {t("Ajouter un utilisateur")}
             </Button>
           </Flex>
 
@@ -237,12 +245,12 @@ export default function UserManagement() {
             <Table variant="simple">
               <Thead bg="gray.50">
                 <Tr>
-                  <Th>Nom d'utilisateur</Th>
-                  <Th>Nom complet</Th>
-                  <Th>Email</Th>
-                  <Th>Rôle</Th>
-                  <Th>Date de création</Th>
-                  <Th textAlign="right">Actions</Th>
+                  <Th>{t("Nom d'utilisateur")}</Th>
+                  <Th>{t("Nom complet")}</Th>
+                  <Th>{t("Email")}</Th>
+                  <Th>{t("Rôle")}</Th>
+                  <Th>{t("Date de création")}</Th>
+                  <Th textAlign="right">{t("Actions")}</Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -265,7 +273,7 @@ export default function UserManagement() {
                         display="inline-block"
                         textTransform="uppercase"
                       >
-                        {user.role}
+                        {t(user.role)}
                       </Text>
                     </Td>
                     <Td fontSize="sm" color="gray.600">
@@ -274,7 +282,7 @@ export default function UserManagement() {
                     <Td textAlign="right">
                       <HStack spacing={2} justify="flex-end">
                         <IconButton
-                          aria-label="Edit user"
+                          aria-label={t("Modifier")}
                           icon={<EditIcon />}
                           size="sm"
                           variant="ghost"
@@ -282,7 +290,7 @@ export default function UserManagement() {
                           onClick={() => handleOpenModal(user)}
                         />
                         <IconButton
-                          aria-label="Delete user"
+                          aria-label={t("Supprimer")}
                           icon={<DeleteIcon />}
                           size="sm"
                           variant="ghost"
@@ -296,7 +304,7 @@ export default function UserManagement() {
                 {users.length === 0 && !loading && (
                   <Tr>
                     <Td colSpan={6} textAlign="center" py={10} color="gray.500">
-                      Aucun utilisateur trouvé.
+                      {t("Aucun utilisateur trouvé.")}
                     </Td>
                   </Tr>
                 )}
@@ -311,15 +319,17 @@ export default function UserManagement() {
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>
-            {editingUser ? "Modifier l'utilisateur" : "Ajouter un utilisateur"}
+            {editingUser
+              ? t("Modifier l'utilisateur")
+              : t("Ajouter un utilisateur")}
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
             <VStack spacing={4}>
               <FormControl isRequired>
-                <FormLabel>Nom d'utilisateur</FormLabel>
+                <FormLabel>{t("Nom d'utilisateur")}</FormLabel>
                 <Input
-                  placeholder="admin_arfaoui"
+                  placeholder={t("admin_arfaoui")}
                   value={formData.username}
                   onChange={(e) =>
                     setFormData({ ...formData, username: e.target.value })
@@ -329,9 +339,9 @@ export default function UserManagement() {
               </FormControl>
 
               <FormControl isRequired>
-                <FormLabel>Nom complet</FormLabel>
+                <FormLabel>{t("Nom complet")}</FormLabel>
                 <Input
-                  placeholder="Mohamed Aziz Arfaoui"
+                  placeholder={t("Mohamed Aziz Arfaoui")}
                   value={formData.full_name}
                   onChange={(e) =>
                     setFormData({ ...formData, full_name: e.target.value })
@@ -340,10 +350,10 @@ export default function UserManagement() {
               </FormControl>
 
               <FormControl>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>{t("Email")}</FormLabel>
                 <Input
                   type="email"
-                  placeholder="email@example.com"
+                  placeholder={t("email@example.com")}
                   value={formData.email}
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
@@ -352,26 +362,26 @@ export default function UserManagement() {
               </FormControl>
 
               <FormControl isRequired>
-                <FormLabel>Rôle</FormLabel>
+                <FormLabel>{t("Rôle")}</FormLabel>
                 <Select
                   value={formData.role}
                   onChange={(e) =>
                     setFormData({ ...formData, role: e.target.value })
                   }
                 >
-                  <option value="simple_user">Utilisateur Simple</option>
-                  <option value="admin">Administrateur</option>
+                  <option value="simple_user">{t("Utilisateur Simple")}</option>
+                  <option value="admin">{t("Administrateur")}</option>
                 </Select>
               </FormControl>
 
               <FormControl isRequired={!editingUser}>
                 <FormLabel>
-                  Mot de passe{" "}
-                  {editingUser && "(laisser vide pour ne pas changer)"}
+                  {t("Mot de passe")}{" "}
+                  {editingUser && t("(laisser vide pour ne pas changer)")}
                 </FormLabel>
                 <Input
                   type="password"
-                  placeholder="********"
+                  placeholder={t("********")}
                   value={formData.password}
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
@@ -383,10 +393,10 @@ export default function UserManagement() {
 
           <ModalFooter>
             <Button variant="ghost" mr={3} onClick={onClose}>
-              Annuler
+              {t("Annuler")}
             </Button>
             <Button colorScheme="blue" onClick={handleSaveUser}>
-              {editingUser ? "Mettre à jour" : "Créer"}
+              {editingUser ? t("Mettre à jour") : t("Créer")}
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -394,3 +404,4 @@ export default function UserManagement() {
     </Box>
   );
 }
+

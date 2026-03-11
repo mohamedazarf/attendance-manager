@@ -1,0 +1,198 @@
+Absence %
+Absences
+Absent
+Absent Today
+Actions
+Add / Update
+Add Another Fingerprint
+Add Employee
+Add New Employee
+Add manual check-out
+Admin
+Administration (8:30 - 17:30)
+Alertes de pointage
+All
+All Anomalies
+All Employees Today
+All privileges
+Anomalies
+Are you sure you want to delete
+Attendance Charts
+Attendance Rate
+Attendance Report
+Attendance dashboard
+Authentication Failed
+Cancel
+Card
+Cards
+Charts
+Check-In
+Check-Out
+Check-in
+Check-out
+Code
+Confirm
+Confirm absence for
+Confirm late
+Could not verify fingerprint enrollment. Please check on the device.
+Create & Enroll
+Creation Failed
+Daily Alerts
+Dashboard
+Dashboard RH
+Date
+Delete
+Department
+Early departure
+Edit
+Employee (7:30 - 16:30)
+Employee History
+Employee ID
+Employee Updated
+Employees
+End Date
+Enroll Fingerprint
+Enrollment Failed
+Enrollment Started
+Enrollment Timed Out
+Enrollment check timed out
+Enter new password
+Enter username
+Error
+Error creating employee
+Error fetching employees
+Error fetching history
+Event Type
+Ex: National holiday
+Expected hours
+Export CSV
+Export Excel
+Extra hours
+Failed to record manual punch
+Failed to set password
+Filter
+Filter by employee...
+Fingerprint
+Fingerprint Enrolled
+Fingerprint successfully enrolled on device.
+Global Presence Rate
+Group
+Hours by Employee
+Inactive Employees
+Include Sunday automatically as non-working day
+Incomplete day
+Insufficient
+Invalid username or password
+Label (optional)
+Late
+Late Minutes
+Loading
+Logout
+Manual punch
+Manual punch for
+Manual punch recorded successfully
+Mark absent
+Missing check-in
+Missing check-out
+Missing fields
+Month
+Monthly Report
+Monthly attendance report
+Most Anomalies
+Name
+National holiday
+No
+No alerts 🎉
+No data available
+No extra hours or missing check-out yesterday
+No extra hours reported yesterday
+No inactive employees found
+No missing check-out
+No missing check-out yesterday
+No special days configured
+None
+Note
+Optional notes...
+Other
+Overtime Hours
+Overtime Hours (beyond 173.33 h/month)
+Password
+Password Set
+Period
+Pointages
+Presence %
+Presence vs Absence per Employee
+Presences
+Present
+Present Today
+Privilege
+Reason
+Remote
+Remote day
+Reports
+Save
+Save Employee
+Save Password
+Save error
+Search employee...
+Settings
+Sick Leave
+Sign In
+Sign in to manage your workplace
+Something went wrong
+Special Days
+Special date
+Special day saved
+Start Date
+Status
+Success
+Successfully signed in as
+Sunday
+Table
+This action cannot be undone
+This page is reserved for administrators
+Time
+Total Employees
+Total Extra Hours in That Period..
+Total Hours
+Total Weekend Hours
+Total Worked Hours in That Period
+UID (integer)
+UID and Name are required
+Unjustified Absence
+Update Employee
+Update failed
+User
+User Created
+User created successfully. Please scan fingerprint on the device.
+User created successfully. You can now enroll fingerprint.
+Username
+Usine (7:30 - 16:30)
+Vacation
+Weekend Worked Hours
+Weekend hours
+Welcome back!
+Worked Hours
+Worked vs Expected Hours
+Working day
+Working days
+Year
+Yes
+Yesterday
+charts.reports
+early_departure
+employee(s) found
+en
+enrolled
+entree_sans_sortie
+escapeValue
+fallbackLng
+fr
+incomplete_day
+interpolation
+lng
+retard
+sidebar.toggle
+sortie_sans_entree
+today
+translation

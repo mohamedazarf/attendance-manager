@@ -1,0 +1,116 @@
+(laisser vide pour ne pas changer)
+********
+-
+Absent
+Absent Today
+Actions
+Add manual check-out
+Administrateur
+Ajouter
+Ajouter / Mettre a jour
+Ajouter un utilisateur
+Annee
+Annuler
+Attendance Rate
+Attendance dashboard
+Aucun jour special configure.
+Aucun utilisateur trouvé.
+Ce departement systeme ne peut pas etre supprime
+Configuration
+Confirmation : Choisir la stratégie de suppression
+Confirmer définitivement
+Continuer
+Créer
+Daily Alerts
+Date
+Date de création
+Departement enregistre
+Departement supprime
+Dernière confirmation requise
+Début
+Early departure
+Email
+Enregistrement...
+Enregistrer
+Enregistrer ces horaires
+Enregistrer ces horaires (Ramadhan)
+Erreur
+Erreur d'enregistrement
+Erreur lors de l'enregistrement des horaires de ramadhan
+Erreur lors de l'enregistrement des horaires normaux
+Erreur lors de la creation du departement
+Erreur lors de la récupération des utilisateurs
+Erreur lors de la suppression du departement
+Ex: Fete nationale
+Ex: logistique
+Extra hours
+Fermer
+Fin
+Gestion des Utilisateurs Platform
+Gestion des départements
+Heure d'entrée
+Heure de sortie
+Horaires Normaux
+Horaires de ramadhan enregistres
+Horaires normaux enregistres
+Impossible de supprimer l'utilisateur
+Inclure automatiquement le dimanche comme non ouvrable
+Incomplete day
+Jour a distance
+Jour de ramadhan (paramétré)
+Jour ferie
+Jour special enregistre
+Jours speciaux
+Late
+Libelle (optionnel)
+Manual punch
+Mark absent
+Mettre à jour
+Missing check-in
+Missing check-out
+Modifier
+Modifier l'utilisateur
+Mohamed Aziz Arfaoui
+Mot de passe
+No alerts 🎉
+No extra hours reported yesterday
+No missing check-out yesterday
+Nom complet
+Nom d'utilisateur
+Nom du nouveau département
+Normal
+Note
+Parametrage
+Pause
+Pause (minutes)
+Present Today
+Période Ramadan
+Ramadhan
+Remote
+Remote Employees
+Retour
+Rôle
+Special date
+Supprimer
+Supprimer définitivement tous les employés
+Supprimer le département
+Système
+T
+Total Employees
+Type
+Une erreur est survenue
+Utilisateur Simple
+Utilisateur créé
+Utilisateur mis à jour
+Utilisateur supprimé
+Veuillez remplir le nom et les horaires
+Yesterday
+admin_arfaoui
+date
+email@example.com
+filter
+sidebar.toggle
+today
+{{count}} employe(s) supprime(s).
+{{dept}} : entrée {{start}} - sortie {{end}}
+Êtes-vous sûr de vouloir supprimer cet utilisateur ?

@@ -1,6 +1,6 @@
-# Documentation - Taux de Présence et d'Absentéisme
+﻿# Documentation - Taux de Présence et d'Absentéisme
 
-## Overview
+## Aperçu
 
 Ce module implémente le calcul automatique des taux de présence et d'absentéisme pour chaque employé sur une période donnée.
 
@@ -18,14 +18,14 @@ class AttendanceMetricsService:
     - get_employee_metrics_date_range(employee_id, start_date, end_date) → Dict
 ```
 
-### 2. **API Endpoints** (Ajoutés à `app/api/v1/attendance.py`)
+### 2. **Endpoints API** (Ajoutés à `app/api/v1/attendance.py`)
 
 #### a) Métriques d'un employé pour un mois
 ```
 GET /api/v1/attendance/metrics/employee/{employee_id}?year=2024&month=1
 ```
 
-**Response:**
+**Réponse :**
 ```json
 {
   "status": "success",
@@ -49,7 +49,7 @@ GET /api/v1/attendance/metrics/employee/{employee_id}?year=2024&month=1
 GET /api/v1/attendance/metrics/all-employees?year=2024&month=1
 ```
 
-**Response:**
+**Réponse :**
 ```json
 {
   "status": "success",
@@ -74,7 +74,7 @@ GET /api/v1/attendance/metrics/all-employees?year=2024&month=1
 GET /api/v1/attendance/metrics/employee/{employee_id}/range?start_date=2024-01-01&end_date=2024-01-31
 ```
 
-**Response:**
+**Réponse :**
 ```json
 {
   "status": "success",
@@ -97,7 +97,7 @@ GET /api/v1/attendance/metrics/employee/{employee_id}/range?start_date=2024-01-0
 ### Jours Ouvrés
 - Compte uniquement les jours de **lundi à vendredi**
 - Exclut les weekends (samedi, dimanche)
-- Les jours fériés ne sont **pas encore gérés** (À ajouter si nécessaire)
+- Les jours fériés ne sont **pas encore gérés** (à ajouter si nécessaire)
 
 ### Présence
 - Un jour est compté comme "présent" s'il y a **au moins 1 pointage** enregistré
@@ -113,7 +113,7 @@ Où:
 - Jours Présents = Jours avec au moins 1 pointage
 ```
 
-## Frontend Component
+## Composant Frontend
 
 ### AttendanceMetrics.tsx
 
@@ -123,7 +123,7 @@ Composant React affichant les métriques dans une interface Chakra UI :
 <AttendanceMetrics />
 ```
 
-**Features:**
+**Fonctionnalités :**
 - ✅ Filtres par année et mois
 - ✅ Tableau avec tous les employés
 - ✅ Barres de progression pour les taux
@@ -131,7 +131,7 @@ Composant React affichant les métriques dans une interface Chakra UI :
 - ✅ Statistiques récapitulatives (moyenne, total)
 - ✅ Responsive design
 
-**Placement:** 
+**Emplacement :**
 - Dashboard principal (`src/pages/Dashboard.tsx`)
 - Peut être réutilisé dans d'autres pages
 
@@ -194,7 +194,7 @@ curl "http://localhost:8000/api/v1/attendance/metrics/employee/1/range?start_dat
 
 ### "No logs found"
 **Problème:** Pas de données de pointage pour la période
-**Solution:** 
+**Solution:**
 1. Générer données mock: `GET /api/v1/attendance/ingest-logs-mock`
 2. Puis traiter: `GET /api/v1/attendance/process-logs-mock`
 
@@ -215,7 +215,7 @@ curl "http://localhost:8000/api/v1/attendance/metrics/employee/1/range?start_dat
 - **Bulk (tous employés):** ~500-1000ms selon nombre employés
 - **Optimisation:** Les requêtes MongoDB utilisent indices sur user_id et timestamp
 
-## Code Examples
+## Exemples de code
 
 ### Python (utiliser le service)
 

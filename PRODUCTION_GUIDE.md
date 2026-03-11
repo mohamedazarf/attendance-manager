@@ -1,4 +1,4 @@
-# Guide de Déploiement en Production (IIS)
+﻿# Guide de Déploiement en Production (IIS)
 
 Ce document explique comment déployer l'application sur un serveur IIS local.
 
