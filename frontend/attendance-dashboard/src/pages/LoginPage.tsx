@@ -92,43 +92,37 @@ const LoginPage: React.FC = () => {
       display="flex"
       alignItems="center"
       justifyContent="center"
-      bgGradient="linear(to-br, blue.900, purple.900, black)"
+      bg="black"
       px={4}
     >
       <Container maxW="md">
-        <Box
-          bg="whiteAlpha.100"
-          backdropFilter="blur(20px)"
-          p={8}
-          borderRadius="2xl"
-          border="1px solid"
-          borderColor="whiteAlpha.200"
-          boxShadow="2xl"
-        >
+        <Box bg="white" p={8} borderRadius="lg" boxShadow="sm">
           <VStack spacing={8} align="stretch">
             <VStack spacing={2} textAlign="center">
-              <Heading color="white" size="xl" letterSpacing="tight">
-                {t("Attendance")}
+              <Heading color="gray.800" size="xl" letterSpacing="tight">
+                {t("Gestion des pointages")}
               </Heading>
-              <Text color="purple.200">
-                {t("Sign in to manage your workplace")}
+              <Text color="gray.500">
+                {t(
+                  "Connectez-vous pour gérer les présences dans votre société",
+                )}
               </Text>
             </VStack>
 
             <form onSubmit={handleSubmit}>
               <VStack spacing={4}>
                 <FormControl isRequired>
-                  <FormLabel color="purple.100">{t("Username")}</FormLabel>
+                  <FormLabel color="gray.700">{t("Username")}</FormLabel>
                   <Input
                     type="text"
-                    bg="whiteAlpha.50"
+                    bg="white"
                     border="1px solid"
-                    borderColor="whiteAlpha.200"
-                    color="white"
-                    _hover={{ borderColor: "purple.400" }}
+                    borderColor="gray.200"
+                    color="gray.800"
+                    _hover={{ borderColor: "gray.300" }}
                     _focus={{
-                      borderColor: "purple.500",
-                      boxShadow: "0 0 0 1px purple.500",
+                      borderColor: "blue.500",
+                      boxShadow: "0 0 0 1px #3182ce",
                     }}
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
@@ -137,18 +131,18 @@ const LoginPage: React.FC = () => {
                 </FormControl>
 
                 <FormControl isRequired>
-                  <FormLabel color="purple.100">{t("Password")}</FormLabel>
+                  <FormLabel color="gray.700">{t("Password")}</FormLabel>
                   <InputGroup>
                     <Input
                       type={showPassword ? "text" : "password"}
-                      bg="whiteAlpha.50"
+                      bg="white"
                       border="1px solid"
-                      borderColor="whiteAlpha.200"
-                      color="white"
-                      _hover={{ borderColor: "purple.400" }}
+                      borderColor="gray.200"
+                      color="gray.800"
+                      _hover={{ borderColor: "gray.300" }}
                       _focus={{
-                        borderColor: "purple.500",
-                        boxShadow: "0 0 0 1px purple.500",
+                        borderColor: "blue.500",
+                        boxShadow: "0 0 0 1px #3182ce",
                       }}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -161,9 +155,9 @@ const LoginPage: React.FC = () => {
                         }
                         icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
                         variant="ghost"
-                        color="whiteAlpha.600"
+                        color="gray.500"
                         onClick={() => setShowPassword(!showPassword)}
-                        _hover={{ bg: "whiteAlpha.200" }}
+                        _hover={{ bg: "gray.100" }}
                       />
                     </InputRightElement>
                   </InputGroup>
@@ -172,28 +166,31 @@ const LoginPage: React.FC = () => {
                 <Button
                   type="submit"
                   w="full"
-                  mb={10}
-                  bgGradient="linear(to-r, purple.600, blue.600)"
+                  mt={4}
+                  bg="blue.500"
                   color="white"
                   isLoading={loading}
                   _hover={{
-                    bgGradient: "linear(to-r, purple.500, blue.500)",
-                    transform: "translateY(-1px)",
+                    bg: "blue.600",
+                    transform: "translateY(-2px)",
                     boxShadow: "lg",
                   }}
-                  _active={{ transform: "translateY(0)" }}
+                  _active={{
+                    bg: "blue.700",
+                    transform: "translateY(0)",
+                  }}
                   transition="all 0.2s"
-                  borderRadius="xl"
+                  borderRadius="md"
                   py={6}
-                  fontSize="lg"
-                  fontWeight="bold"
+                  fontSize="md"
+                  fontWeight="medium"
                 >
                   {t("Sign In")}
                 </Button>
               </VStack>
             </form>
 
-            <Text textAlign="center" color="whiteAlpha.400" fontSize="xs">
+            <Text textAlign="center" color="gray.400" fontSize="xs" mt={4}>
               © 2026 {t("Attendance Management System")}.{" "}
               {t("All rights reserved.")}
             </Text>
