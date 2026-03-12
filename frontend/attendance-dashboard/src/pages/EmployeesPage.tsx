@@ -47,7 +47,6 @@ import axios from "axios";
 import Sidebar from "../components/layout/Sidebar";
 import Navbar from "../components/layout/Navbar";
 import AddEmployeeModal from "../components/AddEmployeeModal";
-import { useAuth } from "../context/AuthContext";
 import { ManualPunchModal } from "../components/AttendanceModals";
 
 import API_BASE_URL from "../config/apiConfig";
@@ -113,7 +112,7 @@ export default function EmployeesPage() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen, onClose } = useDisclosure();
 
   const [viewMode, setViewMode] = useState<"cards" | "table">("table");
 
@@ -779,7 +778,7 @@ export default function EmployeesPage() {
                   </Text>
                   <Text fontSize="sm">
                     <strong>{t("Fingerprint")}:</strong>{" "}
-                    {emp.fingerprint_count > 0
+                    {(emp.fingerprint_count ?? 0) > 0
                       ? `${emp.fingerprint_count} ${t("enrolled")}`
                       : t("None")}
                   </Text>
@@ -814,7 +813,7 @@ export default function EmployeesPage() {
                         handleEnrollFingerprint(emp);
                       }}
                     >
-                      {emp.fingerprint_count > 0
+                      {(emp.fingerprint_count ?? 0) > 0
                         ? t("Add Another Fingerprint")
                         : t("Enroll Fingerprint")}
                     </Button>
@@ -882,7 +881,7 @@ export default function EmployeesPage() {
                       <Td>{emp.card || "-"}</Td>
                       <Td>{emp.matricule || "-"}</Td>
                       <Td>
-                        {emp.fingerprint_count > 0
+                        {(emp.fingerprint_count ?? 0) > 0
                           ? `${emp.fingerprint_count} ${t("enrolled")}`
                           : t("None")}
                       </Td>
@@ -923,7 +922,7 @@ export default function EmployeesPage() {
                               handleEnrollFingerprint(emp);
                             }}
                           >
-                            {emp.fingerprint_count > 0
+                            {(emp.fingerprint_count ?? 0) > 0
                               ? t("Add Another Fingerprint")
                               : t("Enroll Fingerprint")}
                           </Button>
@@ -1340,8 +1339,8 @@ export default function EmployeesPage() {
                   value={editingEmployee?.card}
                   onChange={(e) =>
                     setEditingEmployee({
-                      ...editingEmployee,
-                      card: e.target.value,
+                      ...(editingEmployee as Employee),
+                      card: Number(e.target.value),
                     })
                   }
                 />
@@ -1357,7 +1356,7 @@ export default function EmployeesPage() {
 
                     if (/^\d*$/.test(value)) {
                       setEditingEmployee({
-                        ...editingEmployee,
+                        ...(editingEmployee as Employee),
                         password: value,
                       });
                     }

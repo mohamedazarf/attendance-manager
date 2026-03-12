@@ -114,7 +114,9 @@ export const ManualPunchModal: React.FC<ManualPunchModalProps> = ({
             <FormLabel>{t("Event Type")}</FormLabel>
             <Select
               value={eventType}
-              onChange={(e) => setEventType(e.target.value)}
+              onChange={(e) =>
+                setEventType(e.target.value as "check_in" | "check_out")
+              }
             >
               <option value="check_in">{t("Check-In")}</option>
               <option value="check_out">{t("Check-Out")}</option>

@@ -100,7 +100,8 @@ export default function DailyAlerts({ employees }: Props) {
             )}
           </HStack>
         </Box>
-      ))}
+        );
+      })}
     </VStack>
   );
 }

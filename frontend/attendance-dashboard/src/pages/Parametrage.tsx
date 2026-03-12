@@ -563,10 +563,7 @@ export default function Parametrage() {
       return;
     }
 
-    const strategy =
-      explicitStrategy ??
-      deleteStrategyByDepartment[department] ??
-      "reassign_default";
+    const strategy = explicitStrategy ?? deleteStrategy;
 
     // Only show window.confirm if explicitStrategy is NOT provided (backward compatibility)
     if (!explicitStrategy) {
