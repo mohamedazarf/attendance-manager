@@ -18,7 +18,7 @@ class ZKService:
         conn.disconnect()
         return users
 
-    def create_user(self, uid, name, user_id=None, privilege=0, password='', department='employee'):
+    def create_user(self, uid, name, user_id=None, privilege=0, password='', department='employee', matricule=None):
         if user_id is None:
             user_id = str(uid)
 
@@ -33,7 +33,8 @@ class ZKService:
                 privilege=privilege,
                 card=None,
                 is_active=True,
-                department=department
+                department=department,
+                matricule=matricule
             )
             EmployeeRepository().insert_employee(employee)
             
@@ -194,7 +195,7 @@ class ZKService:
         return mapping
 
     
-    def update_user(self, employee_code: str, name: str = None, privilege: int = None, department: str = None):
+    def update_user(self, employee_code: str, name: str = None, privilege: int = None, department: str = None, matricule: str = None):
         conn = None
         try:
             conn = self._connect()
@@ -217,6 +218,7 @@ class ZKService:
             existing_employees = EmployeeRepository().get_all_employees()
             emp_in_db = next((e for e in existing_employees if e["employee_code"] == str(employee_code)), {})
             updated_dept = department if department is not None else emp_in_db.get("department", "employee")
+            updated_matricule = matricule if matricule is not None else emp_in_db.get("matricule")
 
             # Update on device (overwrite)
             conn.set_user(
@@ -232,7 +234,8 @@ class ZKService:
                 privilege=updated_privilege,
                 card=user.card,
                 is_active=True,
-                department=updated_dept
+                department=updated_dept,
+                matricule=updated_matricule
             )
 
             # Update in DB

@@ -42,8 +42,10 @@ class SyncService:
                 existing_emp = db_emp_map.get(user_id_str)
 
                 existing_department = None
+                existing_matricule = None
                 if existing_emp is not None:
                     existing_department = existing_emp.get("department")
+                    existing_matricule = existing_emp.get("matricule")
 
                 # Auto fix based on privilege
                 if user.privilege == 14:
@@ -62,6 +64,7 @@ class SyncService:
                     is_active=True,  # mark as active since it's on device
                     department=department,
                     fingerprint_count=fingerprint_count,
+                    matricule=existing_matricule,
                 )
 
                 if user_id_str in db_user_ids:
@@ -82,54 +85,6 @@ class SyncService:
         except Exception as e:
             logging.error(f"Error syncing employees: {e}")
             raise e
-
-    # def sync_attendances(self,from_date: datetime=None):
-    #     """
-    #     Sync attendance logs from the device incrementally.
-    #     """
-    #     try:
-    #         # 1. Get the latest timestamp from DB
-    #         if from_date is None:
-    #         # Default to today at midnight
-    #             start_date = datetime.now(timezone.utc).replace(
-    #                 hour=0, minute=0, second=0, microsecond=0
-    #             )
-    #         else:
-    #         # Ensure timezone awareness
-    #             if from_date.tzinfo is None:
-    #                 start_date = from_date.replace(tzinfo=timezone.utc)
-    #             else:
-    #                 start_date = from_date
-
-            
-    #         # 2. Fetch all logs from device (ZK library limitation usually requires fetching all)
-    #         attendances = self.zk_service.get_attendances()
-            
-    #         new_logs = []
-    #         for att in attendances:
-    #              # Only include logs from start_date onwards
-    #             if att.timestamp >= start_date:
-    #                 log_data = AttendanceLog(
-    #                     user_id=int(att.user_id),
-    #                     timestamp=att.timestamp
-    #                 )
-    #                 new_logs.append(log_data)
-            
-    #         # 3. Bulk insert new logs
-    #         if new_logs:
-    #             self.attendance_repo.insert_many(new_logs)
-            
-    #         return {
-    #             "attendance_logs_synced": len(new_logs),
-    #             "total_device_logs": len(attendances),
-    #             "from_date": start_date.isoformat(),
-    #             "to_date": datetime.now(timezone.utc).isoformat()
-    #         }
-                # If we have a latest_timestamp, skip logs that are older or equal
-
-        # except Exception as e:
-        #     logging.error(f"Error syncing attendances: {e}")
-        #     raise e
 
     
 

@@ -55,6 +55,7 @@ interface Employee {
   group_id?: string;
   card?: number;
   is_active?: boolean;
+  matricule?: string | null;
 }
 
 type EmployeeHistoryItem = {
@@ -270,8 +271,11 @@ export default function InactiveEmployeesPage() {
                   <Text fontSize="sm" mb={1}>
                     <strong>{t("Group")}:</strong> {emp.group_id || "-"}
                   </Text>
-                  <Text fontSize="sm">
+                  <Text fontSize="sm" mb={1}>
                     <strong>{t("Card")}:</strong> {emp.card || "-"}
+                  </Text>
+                  <Text fontSize="sm">
+                    <strong>{t("Matricule")}:</strong> {emp.matricule || "-"}
                   </Text>
                 </Box>
               ))}
@@ -287,6 +291,7 @@ export default function InactiveEmployeesPage() {
                     <Th>{t("Privilege")}</Th>
                     <Th>{t("Group")}</Th>
                     <Th>{t("Card")}</Th>
+                    <Th>{t("Matricule")}</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
@@ -308,6 +313,7 @@ export default function InactiveEmployeesPage() {
                       </Td>
                       <Td>{emp.group_id || "-"}</Td>
                       <Td>{emp.card || "-"}</Td>
+                      <Td>{emp.matricule || "-"}</Td>
                     </Tr>
                   ))}
                 </Tbody>

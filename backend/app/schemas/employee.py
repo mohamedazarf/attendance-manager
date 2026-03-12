@@ -12,6 +12,7 @@ class Employee(BaseModel):
     department: str | None = "usine"
     remote_start_date: str | None = None
     remote_end_date: str | None = None
+    matricule: str | None = None
 
 class CreateEnrollRequest(BaseModel):
     uid: int
@@ -19,3 +20,4 @@ class CreateEnrollRequest(BaseModel):
     privilege: int = 0
     password: str | None = None
     department: str | None = "usine"
+    matricule: str | None = None

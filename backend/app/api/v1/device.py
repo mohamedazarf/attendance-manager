@@ -57,7 +57,8 @@ def create_user_request(request: CreateEnrollRequest):
         privilege=request.privilege,
         password=request.password or "",
         user_id=str(request.uid),
-        department=request.department
+        department=request.department,
+        matricule=request.matricule
     )
 
 @router.get("/users/{uid}/fingerprint-status")
@@ -73,9 +74,9 @@ def set_password(uid: int, password: str):
     return zk_service.set_user_password(uid, password)
 
 @router.put("/users/{uid}")
-def update_user(uid: int, name: Optional[str] = None, privilege: Optional[int] = None, department: Optional[str] = None):
+def update_user(uid: int, name: Optional[str] = None, privilege: Optional[int] = None, department: Optional[str] = None, matricule: Optional[str] = None):
     # 1️⃣ Update sur le device et en DB (via update_user)
-    update_result = zk_service.update_user(str(uid), name, privilege, department)
+    update_result = zk_service.update_user(str(uid), name, privilege, department, matricule)
 
     # 2️⃣ Vérifie si l’update a réussi
     if update_result.get("status") != "success":

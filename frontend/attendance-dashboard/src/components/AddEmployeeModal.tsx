@@ -29,6 +29,7 @@ export default function AddEmployeeModal({
   const [name, setName] = useState("");
   const [privilege, setPrivilege] = useState(0);
   const [department, setDepartment] = useState("usine");
+  const [matricule, setMatricule] = useState("");
   const [departments, setDepartments] = useState<string[]>([
     "usine",
     "administration",
@@ -81,6 +82,7 @@ export default function AddEmployeeModal({
           name,
           privilege,
           department,
+          matricule,
         },
       );
 
@@ -112,6 +114,7 @@ export default function AddEmployeeModal({
       setName("");
       setPrivilege(0);
       setDepartment("usine");
+      setMatricule("");
 
       // Close modal if you want
       // onClose();
@@ -145,6 +148,11 @@ export default function AddEmployeeModal({
               placeholder={t("Name")}
               value={name}
               onChange={(e) => setName(e.target.value)}
+            />
+            <Input
+              placeholder={t("Matricule")}
+              value={matricule}
+              onChange={(e) => setMatricule(e.target.value)}
             />
             <Select
               value={privilege}

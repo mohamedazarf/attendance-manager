@@ -74,6 +74,7 @@ interface Employee {
   password?: string;
   remote_start_date?: string | null;
   remote_end_date?: string | null;
+  matricule?: string | null;
 }
 
 interface DeviceUser {
@@ -149,6 +150,7 @@ export default function EmployeesPage() {
     card: "",
     password: "",
     department: "usine",
+    matricule: "",
   });
 
   const [addLoading, setAddLoading] = useState(false);
@@ -392,6 +394,7 @@ export default function EmployeesPage() {
         privilege: newEmployee.privilege,
         password: newEmployee.password,
         department: newEmployee.department,
+        matricule: newEmployee.matricule,
       });
       await axios.post(`${BASE_URL}/device/sync/employees`);
 
@@ -439,6 +442,7 @@ export default function EmployeesPage() {
         card: "",
         password: "",
         department: getDefaultDepartment(0),
+        matricule: "",
       });
     } catch (err: any) {
       toast({
@@ -493,6 +497,7 @@ export default function EmployeesPage() {
             name: editingEmployee.name,
             privilege: editingEmployee.privilege,
             department: editingEmployee.department,
+            matricule: editingEmployee.matricule,
           },
         },
       );
@@ -769,6 +774,9 @@ export default function EmployeesPage() {
                   <Text fontSize="sm">
                     <strong>{t("Card")}:</strong> {emp.card || "-"}
                   </Text>
+                  <Text fontSize="sm" mb={1}>
+                    <strong>{t("Matricule")}:</strong> {emp.matricule || "-"}
+                  </Text>
                   <Text fontSize="sm">
                     <strong>{t("Fingerprint")}:</strong>{" "}
                     {emp.fingerprint_count > 0
@@ -846,7 +854,7 @@ export default function EmployeesPage() {
                   <Th>{t("Department")}</Th>
                   {/* <Th>{t("Group")}</Th> */}
                   <Th>{t("Card")}</Th>
-
+                  <Th>{t("Matricule")}</Th>
                   <Th>{t("Fingerprint")}</Th>
                   <Th>{t("Actions")}</Th>
                 </Tr>
@@ -872,6 +880,7 @@ export default function EmployeesPage() {
                       <Td>{t(emp.department || "usine")}</Td>
                       {/* <Td>{emp.group_id || "-"}</Td> */}
                       <Td>{emp.card || "-"}</Td>
+                      <Td>{emp.matricule || "-"}</Td>
                       <Td>
                         {emp.fingerprint_count > 0
                           ? `${emp.fingerprint_count} ${t("enrolled")}`
@@ -1150,6 +1159,14 @@ export default function EmployeesPage() {
                   }
                 />
 
+                <Input
+                  placeholder={t("Matricule")}
+                  value={newEmployee.matricule}
+                  onChange={(e) =>
+                    setNewEmployee({ ...newEmployee, matricule: e.target.value })
+                  }
+                />
+
                 <Select
                   value={newEmployee.privilege}
                   onChange={(e) => {
@@ -1251,6 +1268,19 @@ export default function EmployeesPage() {
                       setEditingEmployee({
                         ...editingEmployee,
                         name: e.target.value,
+                      } as Employee);
+                    }
+                  }}
+                />
+
+                <Input
+                  placeholder={t("Matricule")}
+                  value={editingEmployee?.matricule || ""}
+                  onChange={(e) => {
+                    if (editingEmployee) {
+                      setEditingEmployee({
+                        ...editingEmployee,
+                        matricule: e.target.value,
                       } as Employee);
                     }
                   }}
