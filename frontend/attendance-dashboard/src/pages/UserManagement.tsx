@@ -57,9 +57,16 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isDeleteOpen,
+    onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
+  } = useDisclosure();
   const toast = useToast();
 
   const [editingUser, setEditingUser] = useState<UserPlatform | null>(null);
+  const [userToDelete, setUserToDelete] = useState<UserPlatform | null>(null);
+
   const [formData, setFormData] = useState({
     username: "",
     full_name: "",
@@ -170,18 +177,58 @@ export default function UserManagement() {
     }
   };
 
-  const handleDeleteUser = async (id: string) => {
-    if (
-      !window.confirm(
-        t("Êtes-vous sûr de vouloir supprimer cet utilisateur ?"),
-      )
-    )
-      return;
+  // const handleDeleteUser = async (id: string) => {
+  //   if (
+  //     !window.confirm(t("Êtes-vous sûr de vouloir supprimer cet utilisateur ?"))
+  //   )
+  //     return;
+
+  //   const token = localStorage.getItem("token");
+  //   try {
+  //     const response = await fetch(
+  //       `${API_BASE_URL}/api/v1/platform-users/${id}`,
+  //       {
+  //         method: "DELETE",
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       },
+  //     );
+
+  //     if (response.ok) {
+  //       toast({
+  //         title: t("Utilisateur supprimé"),
+  //         status: "success",
+  //         duration: 3000,
+  //       });
+  //       fetchUsers();
+  //     } else {
+  //       const errorData = await response.json();
+  //       toast({
+  //         title: t("Erreur"),
+  //         description:
+  //           errorData.detail || t("Impossible de supprimer l'utilisateur"),
+  //         status: "error",
+  //         duration: 3000,
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error("Error deleting user:", error);
+  //   }
+  // };
+
+  const handleOpenDeleteModal = (user: UserPlatform) => {
+    setUserToDelete(user);
+    onDeleteOpen();
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
 
     const token = localStorage.getItem("token");
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/v1/platform-users/${id}`,
+        `${API_BASE_URL}/api/v1/platform-users/${userToDelete.id}`,
         {
           method: "DELETE",
           headers: {
@@ -196,6 +243,7 @@ export default function UserManagement() {
           status: "success",
           duration: 3000,
         });
+        onDeleteClose();
         fetchUsers();
       } else {
         const errorData = await response.json();
@@ -209,6 +257,14 @@ export default function UserManagement() {
       }
     } catch (error) {
       console.error("Error deleting user:", error);
+      toast({
+        title: t("Erreur"),
+        description: t("Une erreur est survenue lors de la suppression"),
+        status: "error",
+        duration: 3000,
+      });
+    } finally {
+      setUserToDelete(null);
     }
   };
 
@@ -231,7 +287,9 @@ export default function UserManagement() {
 
         <Container maxW="100%" flex={1} p={6}>
           <Flex justify="space-between" align="center" mb={6}>
-            <Heading size="lg">{t("Gestion des Utilisateurs Platform")}</Heading>
+            <Heading size="lg">
+              {t("Gestion des Utilisateurs Platform")}
+            </Heading>
             <Button
               leftIcon={<AddIcon />}
               colorScheme="blue"
@@ -295,7 +353,7 @@ export default function UserManagement() {
                           size="sm"
                           variant="ghost"
                           colorScheme="red"
-                          onClick={() => handleDeleteUser(user.id)}
+                          onClick={() => handleOpenDeleteModal(user)}
                         />
                       </HStack>
                     </Td>
@@ -401,7 +459,36 @@ export default function UserManagement() {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={isDeleteOpen} onClose={onDeleteClose} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>{t("Confirmer la suppression")}</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text>
+              {t("Êtes-vous sûr de vouloir supprimer l'utilisateur")}{" "}
+              <Text as="span" fontWeight="bold">
+                {userToDelete?.username}
+              </Text>{" "}
+              ?
+            </Text>
+            <Text mt={2} fontSize="sm" color="gray.600">
+              {t("Cette action est irréversible.")}
+            </Text>
+          </ModalBody>
+
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onDeleteClose}>
+              {t("Annuler")}
+            </Button>
+            <Button colorScheme="red" onClick={handleConfirmDelete}>
+              {t("Supprimer")}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 }
-
