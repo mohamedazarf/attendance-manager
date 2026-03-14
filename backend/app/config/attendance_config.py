@@ -87,6 +87,10 @@ class AttendanceConfig:
     def get_smtp_use_tls(cls) -> bool:
         return os.getenv("SMTP_USE_TLS", "true").lower() == "true"
 
+    @classmethod
+    def get_enable_holidays(cls) -> bool:
+        return os.getenv("ENABLE_HOLIDAYS", "true").lower() == "true"
+
     # Propriétés de classe pour la compatibilité avec le code existant
     # (= appel dynamique à chaque accès)
     @property
@@ -117,6 +121,10 @@ class AttendanceConfig:
     def SMTP_USE_TLS(self) -> bool:
         return self.get_smtp_use_tls()
 
+    @property
+    def ENABLE_HOLIDAYS(self) -> bool:
+        return self.get_enable_holidays()
+
 
     @staticmethod
     def get_expected_working_hours() -> float:
@@ -142,4 +150,4 @@ class AnomalyType:
     ENTREE_SANS_SORTIE = "entree_sans_sortie"  # Check-in without check-out
     SORTIE_SANS_ENTREE = "sortie_sans_entree"  # Check-out without check-in
     EARLY_DEPARTURE = "early_departure"      # Left significantly early
-    INCOMPLETE_DAY = "incomplete_day"         # Day not fully worked
+    INCOMPLETE_DAY = "incomplete_day"          # Day not fully worked

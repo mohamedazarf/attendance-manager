@@ -269,10 +269,14 @@ class DayRulesService:
                     },
                     upsert=True,
                 )
+            
+            # Add static config flags
+            config["enable_holidays"] = AttendanceConfig.get_enable_holidays()
             return config
 
         config = self._default_config()
         self.collection.insert_one(config)
+        config["enable_holidays"] = AttendanceConfig.get_enable_holidays()
         return config
 
     def set_include_sunday(self, include_sunday: bool) -> Dict[str, Any]:
@@ -362,6 +366,9 @@ class DayRulesService:
 
         for item in special_days:
             if item.get("date") == target_date.isoformat():
+                if item.get("type") == "holiday" and not AttendanceConfig.get_enable_holidays():
+                    continue
+
                 day_type = item.get("type")
                 label = item.get("label") or (
                     "Jour ferie" if day_type == "holiday" else "Jour a distance"

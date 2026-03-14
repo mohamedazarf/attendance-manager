@@ -59,6 +59,7 @@ type SpecialDay = {
 
 type DayRulesConfig = {
   include_sunday: boolean;
+  enable_holidays: boolean;
   special_days: SpecialDay[];
 };
 
@@ -125,7 +126,7 @@ export default function Parametrage() {
     useState<string>(getCurrentDate());
   const [newSpecialType, setNewSpecialType] = useState<
     "holiday" | "remote_day"
-  >("holiday");
+  >("remote_day");
   const [newSpecialLabel, setNewSpecialLabel] = useState<string>("");
 
   const [normalConfig, setNormalConfig] =
@@ -188,6 +189,7 @@ export default function Parametrage() {
       .then(([config, specialDays, normal, ramadan]) => {
         setRules({
           include_sunday: config.include_sunday ?? true,
+          enable_holidays: config.enable_holidays ?? true,
           special_days: specialDays.special_days ?? [],
         });
 
@@ -224,6 +226,12 @@ export default function Parametrage() {
   useEffect(() => {
     fetchRules(selectedYear);
   }, [selectedYear, fetchRules]);
+
+  useEffect(() => {
+    if (rules && !rules.enable_holidays && newSpecialType === "holiday") {
+      setNewSpecialType("remote_day");
+    }
+  }, [rules, newSpecialType]);
 
   const updateIncludeSunday = async (value: boolean) => {
     try {
@@ -640,129 +648,134 @@ export default function Parametrage() {
         <Container maxW="100%" flex={1} p={6}>
           <Heading mb={2}>{t("Parametrage")}</Heading>
 
-          <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" mb={8}>
-            <HStack justify="space-between" mb={4} wrap="wrap">
-              <Heading size="md">{t("Jours speciaux")}</Heading>
-              <HStack>
-                <Text fontSize="sm">{t("Annee")}</Text>
-                <Input
-                  type="number"
-                  value={selectedYear}
-                  onChange={(e) =>
-                    setSelectedYear(Number(e.target.value || currentYear))
-                  }
-                  min={2000}
-                  max={2100}
-                  size="sm"
-                  w="120px"
-                  bg="white"
-                />
-                {rulesLoading && <Spinner size="sm" />}
+          {rules?.enable_holidays && (
+            <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" mb={8}>
+              <HStack justify="space-between" mb={4} wrap="wrap">
+                <Heading size="md">{t("Jours speciaux")}</Heading>
+                <HStack>
+                  <Text fontSize="sm">{t("Annee")}</Text>
+                  <Input
+                    type="number"
+                    value={selectedYear}
+                    onChange={(e) =>
+                      setSelectedYear(Number(e.target.value || currentYear))
+                    }
+                    min={2000}
+                    max={2100}
+                    size="sm"
+                    w="120px"
+                    bg="white"
+                  />
+                  {rulesLoading && <Spinner size="sm" />}
+                </HStack>
               </HStack>
-            </HStack>
 
-            <HStack justify="space-between" mb={4} wrap="wrap">
-              <Text>{t("Inclure automatiquement le dimanche comme non ouvrable")}</Text>
-              <Switch
-                isChecked={rules?.include_sunday ?? true}
-                onChange={(e) => updateIncludeSunday(e.target.checked)}
-              />
-            </HStack>
-
-            <Divider mb={4} />
-
-            <HStack mb={4} spacing={3} wrap="wrap" align="end">
-              <Box>
-                <Text fontSize="sm" mb={1}>
-                  {t("Date")}
+              <HStack justify="space-between" mb={4} wrap="wrap">
+                <Text>
+                  {t("Inclure automatiquement le dimanche comme non ouvrable")}
                 </Text>
-                <Input
-                  type="date"
-                  value={newSpecialDate}
-                  onChange={(e) => setNewSpecialDate(e.target.value)}
-                  bg="white"
-                  size="sm"
+                <Switch
+                  isChecked={rules?.include_sunday ?? true}
+                  onChange={(e) => updateIncludeSunday(e.target.checked)}
                 />
-              </Box>
-              <Box>
-                <Text fontSize="sm" mb={1}>
-                  {t("Type")}
-                </Text>
-                <Select
-                  value={newSpecialType}
-                  onChange={(e) =>
-                    setNewSpecialType(
-                      e.target.value as "holiday" | "remote_day",
-                    )
-                  }
-                  size="sm"
-                  bg="white"
-                >
-                  <option value="holiday">{t("Jour ferie")}</option>
-                  <option value="remote_day">{t("Jour a distance")}</option>
-                </Select>
-              </Box>
-              <Box flex={1} minW="220px">
-                <Text fontSize="sm" mb={1}>
-                  {t("Libelle (optionnel)")}
-                </Text>
-                <Input
-                  value={newSpecialLabel}
-                  onChange={(e) => setNewSpecialLabel(e.target.value)}
-                  placeholder={t("Ex: Fete nationale")}
-                  size="sm"
-                  bg="white"
-                />
-              </Box>
-              <Button colorScheme="blue" size="sm" onClick={addSpecialDay}>
-                {t("Ajouter / Mettre a jour")}
-              </Button>
-            </HStack>
+              </HStack>
 
-            <VStack align="stretch" spacing={2}>
-              {(rules?.special_days ?? []).length === 0 && (
-                <Text color="gray.500" fontSize="sm">
-                  {t("Aucun jour special configure.")}
-                </Text>
-              )}
-              {(rules?.special_days ?? [])
-                .sort((a, b) => a.date.localeCompare(b.date))
-                .map((item) => (
-                  <HStack
-                    key={item.date}
-                    justify="space-between"
-                    p={3}
-                    border="1px solid"
-                    borderColor="gray.100"
-                    borderRadius="md"
+              <Divider mb={4} />
+
+              <HStack mb={4} spacing={3} wrap="wrap" align="end">
+                <Box>
+                  <Text fontSize="sm" mb={1}>
+                    {t("Date")}
+                  </Text>
+                  <Input
+                    type="date"
+                    value={newSpecialDate}
+                    onChange={(e) => setNewSpecialDate(e.target.value)}
+                    bg="white"
+                    size="sm"
+                  />
+                </Box>
+                <Box>
+                  <Text fontSize="sm" mb={1}>
+                    {t("Type")}
+                  </Text>
+                  <Select
+                    value={newSpecialType}
+                    onChange={(e) =>
+                      setNewSpecialType(
+                        e.target.value as "holiday" | "remote_day",
+                      )
+                    }
+                    size="sm"
+                    bg="white"
                   >
-                    <HStack>
-                      <Badge
-                        colorScheme={item.type === "holiday" ? "red" : "blue"}
-                      >
-                        {item.type === "holiday"
-                          ? t("Jour ferie")
-                          : t("Jour a distance")}
-                      </Badge>
-                      <Text fontSize="sm">{item.date}</Text>
-                      {item.label && (
-                        <Text fontSize="sm" color="gray.600">
-                          - {item.label}
-                        </Text>
-                      )}
-                    </HStack>
-                    <Button
-                      size="xs"
-                      colorScheme="red"
-                      variant="outline"
-                      onClick={() => deleteSpecialDay(item.date)}
+                    <option value="remote_day">{t("Jour a distance")}</option>
+                    <option value="holiday">{t("Jour ferie")}</option>
+                  </Select>
+                </Box>
+                <Box flex={1} minW="220px">
+                  <Text fontSize="sm" mb={1}>
+                    {t("Libelle (optionnel)")}
+                  </Text>
+                  <Input
+                    value={newSpecialLabel}
+                    onChange={(e) => setNewSpecialLabel(e.target.value)}
+                    placeholder={t("Ex: Fete nationale")}
+                    size="sm"
+                    bg="white"
+                  />
+                </Box>
+                <Button colorScheme="blue" size="sm" onClick={addSpecialDay}>
+                  {t("Ajouter / Mettre a jour")}
+                </Button>
+              </HStack>
+
+              <VStack align="stretch" spacing={2}>
+                {(rules?.special_days ?? []).length === 0 && (
+                  <Text color="gray.500" fontSize="sm">
+                    {t("Aucun jour special configure.")}
+                  </Text>
+                )}
+                {(rules?.special_days ?? [])
+                  .filter((item) => item.type !== "holiday" || rules?.enable_holidays)
+                  .sort((a, b) => a.date.localeCompare(b.date))
+                  .map((item) => (
+                    <HStack
+                      key={item.date}
+                      justify="space-between"
+                      p={3}
+                      border="1px solid"
+                      borderColor="gray.100"
+                      borderRadius="md"
                     >
-                      {t("Supprimer")}
-                    </Button>
-                  </HStack>
-                ))}
-            </VStack>
-          </Box>
+                      <HStack>
+                        <Badge
+                          colorScheme={item.type === "holiday" ? "red" : "blue"}
+                        >
+                          {item.type === "holiday"
+                            ? t("Jour ferie")
+                            : t("Jour a distance")}
+                        </Badge>
+                        <Text fontSize="sm">{item.date}</Text>
+                        {item.label && (
+                          <Text fontSize="sm" color="gray.600">
+                            - {item.label}
+                          </Text>
+                        )}
+                      </HStack>
+                      <Button
+                        size="xs"
+                        colorScheme="red"
+                        variant="outline"
+                        onClick={() => deleteSpecialDay(item.date)}
+                      >
+                        {t("Supprimer")}
+                      </Button>
+                    </HStack>
+                  ))}
+              </VStack>
+            </Box>
+          )}
 
           <Box bg="white" p={6} borderRadius="lg" boxShadow="sm" mb={8}>
             <Heading size="sm" mb={2}>
