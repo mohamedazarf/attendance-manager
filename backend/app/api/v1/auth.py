@@ -23,7 +23,10 @@ def register(user_in: UserPlatformCreate):
     
     user_dict = user_in.dict()
     password = user_dict.pop("password")
-    user_dict["hashed_password"] = get_password_hash(password)
+    try:
+        user_dict["hashed_password"] = get_password_hash(password)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     user_dict["created_at"] = datetime.utcnow()
     
     result = users_collection.insert_one(user_dict)

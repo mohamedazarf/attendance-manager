@@ -8,6 +8,7 @@ mongomock
 pyzk
 python-dotenv
 python-jose[cryptography]
+bcrypt<4
 passlib[bcrypt]
 python-multipart
 email-validator

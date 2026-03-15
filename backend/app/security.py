@@ -7,13 +7,25 @@ from passlib.context import CryptContext
 from app.core.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+MAX_BCRYPT_PASSWORD_LEN = 72
+
+
+def _is_password_too_long(password: str) -> bool:
+    return len(password.encode("utf-8")) > MAX_BCRYPT_PASSWORD_LEN
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    if _is_password_too_long(plain_password):
+        return False
+    try:
+        return pwd_context.verify(plain_password, hashed_password)
+    except ValueError:
+        return False
 
 
 def get_password_hash(password: str) -> str:
+    if _is_password_too_long(password):
+        raise ValueError("Password exceeds bcrypt 72-byte limit.")
     return pwd_context.hash(password)
 
 
