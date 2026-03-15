@@ -118,7 +118,7 @@ export default function RapportPage() {
   const [historyLoading, setHistoryLoading] = useState(false);
 
   const [drawerFilterState, setDrawerFilterState] = useState<
-    "all" | "present" | "absent" | "late"
+    "all" | "present" | "absent" 
   >("all");
   const [drawerSelectedAnomalies, setDrawerSelectedAnomalies] = useState<
     string[]
@@ -558,7 +558,7 @@ export default function RapportPage() {
 
                 <Flex gap={2} mt={2}>
                   <ButtonGroup size="sm">
-                    {["all", "present", "absent", "late"].map((f) => (
+                    {["all", "present", "absent"].map((f) => (
                       <Button
                         key={f}
                         colorScheme={
