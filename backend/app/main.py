@@ -96,7 +96,6 @@ app = FastAPI(lifespan=lifespan)
 # Allow your frontend origin
 import os
 origins_env = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://192.168.1.244:3000")
-print("CORS_ORIGINS =", origins_env) 
 origins = [origin.strip() for origin in origins_env.split(",")]
 
 app.add_middleware(

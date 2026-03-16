@@ -137,6 +137,7 @@ export default function EmployeesToday() {
     name: string;
   } | null>(null);
   const [manualDate, setManualDate] = useState<string>(targetDate);
+  const [manualEventType, setManualEventType] = useState<"check_in" | "check_out">("check_out");
 
   // Dates filtre pour l’historique
   const [dateFrom, setDateFrom] = useState<string>("2026-01-01");
@@ -215,13 +216,14 @@ export default function EmployeesToday() {
 
   const closeDrawer = () => setSelectedEmployeeId(null);
 
-  const openManualCheckoutFromHistory = (historyDate: string) => {
+  const openManualPunchFromHistory = (historyDate: string, eventType: "check_in" | "check_out" = "check_out") => {
     if (!selectedEmployeeId) return;
     setManualEmployee({
       id: selectedEmployeeId,
       name: employeeName || `#${selectedEmployeeId}`,
     });
     setManualDate(historyDate);
+    setManualEventType(eventType);
     setIsManualOpen(true);
   };
 
@@ -493,13 +495,25 @@ export default function EmployeesToday() {
                               </Td>
                               <Td>{h.status}</Td>
                               <Td>
+                                {!h.check_in_time && (
+                                  <Button
+                                    size="xs"
+                                    colorScheme="blue"
+                                    mr={2}
+                                    onClick={() =>
+                                      openManualPunchFromHistory(h.date, "check_in")
+                                    }
+                                  >
+                                    {t("Manual punch")}
+                                  </Button>
+                                )}
                                 {(h.anomalies.includes("entree_sans_sortie") ||
                                   (!!h.check_in_time && !h.check_out_time)) && (
                                   <Button
                                     size="xs"
                                     colorScheme="orange"
                                     onClick={() =>
-                                      openManualCheckoutFromHistory(h.date)
+                                      openManualPunchFromHistory(h.date, "check_out")
                                     }
                                   >
                                     {t("Add manual check-out")}
@@ -541,7 +555,7 @@ export default function EmployeesToday() {
         onClose={() => setIsManualOpen(false)}
         employee={manualEmployee}
         date={manualDate}
-        initialEventType="check_out"
+        initialEventType={manualEventType}
         onSuccess={() => {
           if (selectedEmployeeId) {
             openEmployeeHistory(selectedEmployeeId);

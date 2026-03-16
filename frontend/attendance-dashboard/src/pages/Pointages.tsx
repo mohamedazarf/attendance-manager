@@ -1,4 +1,4 @@
-﻿// src/pages/Pointages.tsx
+// src/pages/Pointages.tsx
 import {
   Box,
   Container,
@@ -424,6 +424,7 @@ export default function Pointages() {
         (suppressAbsence
           ? false
           : emp.status === "absent" && !emp.justification) ||
+        emp.status === "remote" ||
         emp.anomalies.length > 0,
     ) ?? [];
   const previousDate = getPreviousDate(selectedDate);

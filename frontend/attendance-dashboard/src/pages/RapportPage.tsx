@@ -67,6 +67,8 @@ type EmployeeHistoryItem = {
   status: string;
 };
 
+import { ManualPunchModal } from "../components/AttendanceModals";
+
 import { useTranslation } from "react-i18next";
 
 export default function RapportPage() {
@@ -117,8 +119,33 @@ export default function RapportPage() {
   const [totalOvertimeHours, setTotalOvertimeHours] = useState(0);
   const [historyLoading, setHistoryLoading] = useState(false);
 
+  // Manual Punch Modal State
+  const [isManualOpen, setIsManualOpen] = useState(false);
+  const [manualEmployee, setManualEmployee] = useState<{
+    id: number;
+    name: string;
+  } | null>(null);
+  const [manualDate, setManualDate] = useState<string>("");
+  const [manualEventType, setManualEventType] = useState<
+    "check_in" | "check_out"
+  >("check_in");
+
+  const openManualPunch = (
+    date: string,
+    eventType: "check_in" | "check_out",
+  ) => {
+    if (!selectedEmployee) return;
+    setManualEmployee({
+      id: selectedEmployee.employee_id,
+      name: selectedEmployee.employee_name,
+    });
+    setManualDate(date);
+    setManualEventType(eventType);
+    setIsManualOpen(true);
+  };
+
   const [drawerFilterState, setDrawerFilterState] = useState<
-    "all" | "present" | "absent" 
+    "all" | "present" | "absent"
   >("all");
   const [drawerSelectedAnomalies, setDrawerSelectedAnomalies] = useState<
     string[]
@@ -209,7 +236,7 @@ export default function RapportPage() {
     .filter((h) => {
       if (drawerFilterState === "present") return h.status === "normal";
       if (drawerFilterState === "absent") return h.status === "absent";
-      if (drawerFilterState === "late") return h.is_late;
+
       return true;
     });
 
@@ -607,6 +634,7 @@ export default function RapportPage() {
                           <Th>{t("Late Minutes")}</Th>
                           <Th>{t("Anomalies")}</Th>
                           <Th>{t("Status")}</Th>
+                          <Th>{t("Actions")}</Th>
                         </Tr>
                       </Thead>
                       <Tbody>
@@ -630,6 +658,32 @@ export default function RapportPage() {
                               ))}
                             </Td>
                             <Td>{h.status}</Td>
+                            <Td>
+                              {!h.check_in_time && (
+                                <Button
+                                  size="xs"
+                                  colorScheme="blue"
+                                  mr={2}
+                                  onClick={() =>
+                                    openManualPunch(h.date, "check_in")
+                                  }
+                                >
+                                  {t("Manual punch")}
+                                </Button>
+                              )}
+                              {(h.anomalies.includes("entree_sans_sortie") ||
+                                (!!h.check_in_time && !h.check_out_time)) && (
+                                <Button
+                                  size="xs"
+                                  colorScheme="orange"
+                                  onClick={() =>
+                                    openManualPunch(h.date, "check_out")
+                                  }
+                                >
+                                  {t("Add manual check-out")}
+                                </Button>
+                              )}
+                            </Td>
                           </Tr>
                         ))}
                       </Tbody>
@@ -658,6 +712,17 @@ export default function RapportPage() {
               </DrawerBody>
             </DrawerContent>
           </Drawer>
+
+          <ManualPunchModal
+            isOpen={isManualOpen}
+            onClose={() => setIsManualOpen(false)}
+            employee={manualEmployee}
+            date={manualDate}
+            initialEventType={manualEventType}
+            onSuccess={() => {
+              if (selectedEmployee) fetchEmployeeHistory(selectedEmployee);
+            }}
+          />
         </Container>
       </VStack>
     </Box>
