@@ -4,7 +4,7 @@ from app.repositories.attendanceRepo import AttendanceRepository
 from app.schemas.employee import Employee
 from app.schemas.attendanceLog import AttendanceLog
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 
 class SyncService:
     def __init__(self):
@@ -92,45 +92,40 @@ class SyncService:
         """
         Sync attendance logs from the device incrementally.
         Uses the latest timestamp in DB as starting point.
+        All timestamps are treated as naive local time (device local clock).
         """
         try:
-            now_utc = datetime.now(timezone.utc)
+            now_local = datetime.now()
             
             # 1. Get the latest VALID (non-future) timestamp from DB
-            latest_db_timestamp = self.attendance_repo.get_latest_timestamp(max_timestamp=now_utc)
+            latest_db_timestamp = self.attendance_repo.get_latest_timestamp(max_timestamp=now_local)
             
             if latest_db_timestamp is None:
                 # Fallback to today at midnight if no valid logs exist
-                start_date = now_utc.replace(
+                start_date = now_local.replace(
                     hour=0, minute=0, second=0, microsecond=0
                 )
             else:
-                # Ensure latest_db_timestamp is timezone-aware
-                if latest_db_timestamp.tzinfo is None:
-                    start_date = latest_db_timestamp.replace(tzinfo=timezone.utc)
-                else:
-                    start_date = latest_db_timestamp
+                # Strip any tzinfo for consistent naive-local comparison
+                start_date = latest_db_timestamp.replace(tzinfo=None) if latest_db_timestamp.tzinfo else latest_db_timestamp
 
             # 2. Fetch all logs from device
             attendances = self.zk_service.get_attendances()
             
             new_logs = []
             for att in attendances:
-                # Ensure att.timestamp is timezone-aware (device timestamps are usually naive)
-                if att.timestamp.tzinfo is None:
-                    att_timestamp = att.timestamp.replace(tzinfo=timezone.utc)
-                else:
-                    att_timestamp = att.timestamp
+                # Device timestamps are always local-naive; strip tzinfo if present
+                att_timestamp = att.timestamp.replace(tzinfo=None) if att.timestamp.tzinfo else att.timestamp
                 
                 # Ignore logs from the future (erroneous device time)
-                if att_timestamp > now_utc:
+                if att_timestamp > now_local:
                     continue
 
                 # Incrementally add logs that are strictly newer than the latest in DB
                 if att_timestamp > start_date:
                     log_data = AttendanceLog(
                         user_id=int(att.user_id),
-                        timestamp=att.timestamp
+                        timestamp=att_timestamp
                     )
                     new_logs.append(log_data)
             

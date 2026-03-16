@@ -55,11 +55,12 @@ def send_monthly_report_job():
 def auto_sync_attendance_job():
     """Synchronise automatiquement les pointages depuis la pointeuse ZKTeco."""
     from app.services.SyncService import SyncService
+    logger.info("[AutoSync] Démarrage de la synchronisation automatique...")
     try:
         result = SyncService().sync_attendances()
-        logger.info(f"[AutoSync] Pointages synchronisés : {result}")
+        logger.info(f"[AutoSync] Terminé — {result}")
     except Exception as e:
-        logger.error(f"[AutoSync] Erreur lors de la synchronisation : {e}")
+        logger.error(f"[AutoSync] Erreur lors de la synchronisation : {e}", exc_info=True)
 
 
 @asynccontextmanager
