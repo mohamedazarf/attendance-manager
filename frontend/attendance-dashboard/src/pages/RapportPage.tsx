@@ -91,7 +91,6 @@ export default function RapportPage() {
   const [loading, setLoading] = useState(false);
 
   const filteredData = data.filter((row) => {
-    // Bug 2 fix: chaque mot doit matcher
     const search = employeeSearchTerm.trim().toLowerCase();
     const words = search.length > 0 ? search.split(/\s+/) : [];
     const matchesSearch =
@@ -99,12 +98,11 @@ export default function RapportPage() {
       words.every(
         (word) =>
           row.employee_name.toLowerCase().includes(word) ||
-          String(row.employee_id).toLowerCase().includes(word),
+          String(row.employee_id).includes(word),
       );
 
-    // Bug 1 fix: parse robuste
-    const overtimeValue = parseFloat(row.overtime_hours as any) || 0;
-    const matchesOvertime = !overtimeOnly || overtimeValue > 0;
+    // overtime_hours is guaranteed to be a number (forced at fetch time)
+    const matchesOvertime = !overtimeOnly || row.overtime_hours > 0;
 
     return matchesSearch && matchesOvertime;
   });
@@ -156,10 +154,16 @@ export default function RapportPage() {
 
   // -------------------- Fetch metrics --------------------
   useEffect(() => {
+    const controller = new AbortController();
+    let cancelled = false;
+
     const fetchMetrics = async () => {
       setLoading(true);
       try {
-        const empRes = await axios.get(`${BASE_URL}/employee/`);
+        const empRes = await axios.get(`${BASE_URL}/employee/`, {
+          signal: controller.signal,
+        });
+        if (cancelled) return;
         const employees = empRes.data;
 
         const metricsPromises = employees.map((emp: any) =>
@@ -168,25 +172,46 @@ export default function RapportPage() {
               `${BASE_URL}/attendance/metrics/employee/${emp.employee_code}/range`,
               {
                 params: { start_date: startDate, end_date: endDate },
+                signal: controller.signal,
               },
             )
-            .then((res) => ({
-              employee_id: emp.employee_code,
-              employee_name: emp.name,
-              ...res.data.data,
-            })),
+            .then((res) => {
+              const d = res.data.data ?? {};
+              return {
+                employee_id: emp.employee_code,
+                employee_name: emp.name,
+                ...d,
+                // Force numeric types to avoid string comparison bugs
+                overtime_hours: Number(d.overtime_hours) || 0,
+                total_hours_worked: Number(d.total_hours_worked) || 0,
+              };
+            }),
         );
 
         const allMetrics = await Promise.all(metricsPromises);
-        setData(allMetrics);
-      } catch (err) {
-        console.error("Error fetching metrics:", err);
+        if (cancelled) return;
+
+        // Deduplicate by employee_id as a safety net
+        const seen = new Map<number, AttendanceMetric>();
+        for (const m of allMetrics) {
+          seen.set(m.employee_id, m);
+        }
+        setData(Array.from(seen.values()));
+      } catch (err: any) {
+        if (err?.name !== "CanceledError" && err?.name !== "AbortError") {
+          console.error("Error fetching metrics:", err);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchMetrics();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
   }, [selectedYear, selectedMonth]);
 
   // -------------------- Fetch employee history --------------------
