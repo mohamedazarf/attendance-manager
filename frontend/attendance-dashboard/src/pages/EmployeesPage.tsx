@@ -102,7 +102,6 @@ export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const [privilege, setPrivilege] = useState("all");
   const [department, setDepartment] = useState("all");
   const [departments, setDepartments] = useState<string[]>([
     "usine",
@@ -561,16 +560,14 @@ export default function EmployeesPage() {
 
   const filteredEmployees = useMemo(() => {
     return employees.filter((emp) => {
-      const matchSearch = `${emp.name} ${emp.employee_code}`
+      const matchSearch = `${emp.name} ${emp.employee_code} ${emp.matricule || ""}`
         .toLowerCase()
         .includes(search.toLowerCase());
-      const matchPrivilege =
-        privilege === "all" || emp.privilege.toString() === privilege;
       const matchDepartment =
         department === "all" || emp.department === department;
-      return matchSearch && matchPrivilege && matchDepartment;
+      return matchSearch && matchDepartment;
     });
-  }, [employees, search, privilege, department]);
+  }, [employees, search, department]);
 
   // -------------------- Fetch Employee History --------------------
   const openEmployeeHistory = (emp: Employee) => {
@@ -691,16 +688,6 @@ export default function EmployeesPage() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </InputGroup>
-
-            <Select
-              maxW="200px"
-              value={privilege}
-              onChange={(e) => setPrivilege(e.target.value)}
-            >
-              <option value="all">{t("All privileges")}</option>
-              <option value="0">{t("User")}</option>
-              <option value="14">{t("Admin")}</option>
-            </Select>
 
             <Select
               maxW="200px"
@@ -851,8 +838,7 @@ export default function EmployeesPage() {
                   <Th>{t("Code")}</Th>
                   <Th>{t("Privilege")}</Th>
                   <Th>{t("Department")}</Th>
-                  {/* <Th>{t("Group")}</Th> */}
-                  <Th>{t("Card")}</Th>
+
                   <Th>{t("Matricule")}</Th>
                   <Th>{t("Fingerprint")}</Th>
                   <Th>{t("Actions")}</Th>
@@ -877,8 +863,7 @@ export default function EmployeesPage() {
                         </Badge>
                       </Td>
                       <Td>{t(emp.department || "usine")}</Td>
-                      {/* <Td>{emp.group_id || "-"}</Td> */}
-                      <Td>{emp.card || "-"}</Td>
+
                       <Td>{emp.matricule || "-"}</Td>
                       <Td>
                         {(emp.fingerprint_count ?? 0) > 0
@@ -1162,7 +1147,10 @@ export default function EmployeesPage() {
                   placeholder={t("Matricule")}
                   value={newEmployee.matricule}
                   onChange={(e) =>
-                    setNewEmployee({ ...newEmployee, matricule: e.target.value })
+                    setNewEmployee({
+                      ...newEmployee,
+                      matricule: e.target.value,
+                    })
                   }
                 />
 

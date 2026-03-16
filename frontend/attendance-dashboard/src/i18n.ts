@@ -267,7 +267,7 @@ const resources = {
         "Fingerprint successfully enrolled on device.",
       "User created successfully. You can now enroll fingerprint.":
         "User created successfully. You can now enroll fingerprint.",
-      Department: "Usine",
+      Department: "Departement",
       "Error fetching employees": "Error fetching employees",
       "Error fetching history": "Error fetching history",
 
@@ -604,7 +604,7 @@ const resources = {
         "Empreinte enrôlée avec succès sur l'appareil.",
       "User created successfully. You can now enroll fingerprint.":
         "Utilisateur créé avec succès. Vous pouvez maintenant enrôler l'empreinte.",
-      Department: "Usine",
+      Department: "Département",
       "Error fetching employees": "Erreur lors de la récupération des employés",
       "Error fetching history":
         "Erreur lors de la récupération de l'historique",

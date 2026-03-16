@@ -54,6 +54,7 @@ type AttendanceMetric = {
 
   total_hours_worked: number;
   overtime_hours: number;
+  matricule?: string | null;
 };
 
 type EmployeeHistoryItem = {
@@ -98,7 +99,8 @@ export default function RapportPage() {
       words.every(
         (word) =>
           row.employee_name.toLowerCase().includes(word) ||
-          String(row.employee_id).includes(word),
+          String(row.employee_id).includes(word) ||
+          (row.matricule && row.matricule.toLowerCase().includes(word)),
       );
 
     // overtime_hours is guaranteed to be a number (forced at fetch time)
@@ -180,6 +182,7 @@ export default function RapportPage() {
               return {
                 employee_id: emp.employee_code,
                 employee_name: emp.name,
+                matricule: emp.matricule,
                 ...d,
                 // Force numeric types to avoid string comparison bugs
                 overtime_hours: Number(d.overtime_hours) || 0,
@@ -538,6 +541,7 @@ export default function RapportPage() {
                     <Th>{t("Employee ID")}</Th>
                     <Th>{t("Name")}</Th>
                     <Th>{t("Period")}</Th>
+                    <Th>{t("Matricule")}</Th>
                     <Th isNumeric>{t("Working Days")}</Th>
                     <Th isNumeric>{t("Presences")}</Th>
                     <Th isNumeric>{t("Absences")}</Th>
@@ -556,6 +560,7 @@ export default function RapportPage() {
                       <Td>{row.employee_id}</Td>
                       <Td>{row.employee_name}</Td>
                       <Td>{`${row.start_date} → ${row.end_date}`}</Td>
+                      <Td>{row.matricule}</Td>
                       <Td isNumeric>{row.total_working_days}</Td>
                       <Td isNumeric>{row.days_present}</Td>
                       <Td isNumeric>{row.days_absent}</Td>
