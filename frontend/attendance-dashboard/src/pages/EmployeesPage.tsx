@@ -41,8 +41,10 @@ import {
   ModalBody,
   ModalCloseButton,
   useToast, // Using toast for better feedback
+  Tooltip,
 } from "@chakra-ui/react";
 import { SearchIcon, HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
+import { Trash2, Key, Fingerprint, Pencil, Globe } from "lucide-react";
 import axios from "axios";
 import Sidebar from "../components/layout/Sidebar";
 import Navbar from "../components/layout/Navbar";
@@ -740,15 +742,20 @@ export default function EmployeesPage() {
                     transition: "all 0.2s",
                   }}
                 >
-                  <Flex justify="space-between" align="center" mb={3}>
-                    <Heading size="md">{emp.name}</Heading>
+                    <Flex align="center" gap={2}>
+                      <Heading size="md">{emp.name}</Heading>
+                      {emp.remote_start_date && (
+                        <Badge colorScheme="purple" variant="solid">
+                          {t("Remote")}
+                        </Badge>
+                      )}
+                    </Flex>
                     <Badge
                       colorScheme={emp.privilege === 14 ? "green" : "blue"}
                       fontSize="0.8em"
                     >
                       {emp.privilege === 14 ? t("Admin") : t("User")}
                     </Badge>
-                  </Flex>
                   <Text fontSize="sm" mb={1}>
                     <strong>{t("Code")}:</strong> {emp.employee_code}
                   </Text>
@@ -771,60 +778,75 @@ export default function EmployeesPage() {
                   </Text>
 
                   <Flex gap={2} mt={3} wrap="wrap">
-                    <Button
-                      size="sm"
-                      colorScheme="red"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeletingEmployee(emp);
-                      }}
+                    <Tooltip label={t("Delete")} hasArrow>
+                      <IconButton
+                        aria-label={t("Delete")}
+                        icon={<Trash2 size={16} />}
+                        size="sm"
+                        colorScheme="red"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeletingEmployee(emp);
+                        }}
+                      />
+                    </Tooltip>
+                    <Tooltip label={t("Password")} hasArrow>
+                      <IconButton
+                        aria-label={t("Password")}
+                        icon={<Key size={16} />}
+                        size="sm"
+                        colorScheme="teal"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openPasswordModal(emp);
+                        }}
+                      />
+                    </Tooltip>
+                    <Tooltip
+                      label={
+                        (emp.fingerprint_count ?? 0) > 0
+                          ? t("Add Another Fingerprint")
+                          : t("Enroll Fingerprint")
+                      }
+                      hasArrow
                     >
-                      {t("Delete")}
-                    </Button>
-                    <Button
-                      size="sm"
-                      colorScheme="teal"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openPasswordModal(emp);
-                      }}
-                    >
-                      {t("Password")}
-                    </Button>
-                    <Button
-                      size="sm"
-                      colorScheme="orange"
-                      isLoading={enrollLoading === emp.employee_code}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEnrollFingerprint(emp);
-                      }}
-                    >
-                      {(emp.fingerprint_count ?? 0) > 0
-                        ? t("Add Another Fingerprint")
-                        : t("Enroll Fingerprint")}
-                    </Button>
-                    <Button
-                      size="sm"
-                      colorScheme="blue"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingEmployee({ ...emp });
-                        setIsEditOpen(true);
-                      }}
-                    >
-                      {t("Edit")}
-                    </Button>
-                    <Button
-                      size="sm"
-                      colorScheme="purple"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openRemoteModal(emp);
-                      }}
-                    >
-                      {t("Remote Config")}
-                    </Button>
+                      <IconButton
+                        aria-label={t("Fingerprint")}
+                        icon={<Fingerprint size={16} />}
+                        size="sm"
+                        colorScheme="orange"
+                        isLoading={enrollLoading === emp.employee_code}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEnrollFingerprint(emp);
+                        }}
+                      />
+                    </Tooltip>
+                    <Tooltip label={t("Edit")} hasArrow>
+                      <IconButton
+                        aria-label={t("Edit")}
+                        icon={<Pencil size={16} />}
+                        size="sm"
+                        colorScheme="blue"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingEmployee({ ...emp });
+                          setIsEditOpen(true);
+                        }}
+                      />
+                    </Tooltip>
+                    <Tooltip label={t("Remote Config")} hasArrow>
+                      <IconButton
+                        aria-label={t("Remote Config")}
+                        icon={<Globe size={16} />}
+                        size="sm"
+                        colorScheme="purple"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openRemoteModal(emp);
+                        }}
+                      />
+                    </Tooltip>
                   </Flex>
                 </Box>
               ))}
@@ -853,7 +875,16 @@ export default function EmployeesPage() {
                       _hover={{ bg: "gray.50", cursor: "pointer" }}
                       onClick={() => openEmployeeHistory(emp)}
                     >
-                      <Td fontWeight="semibold">{emp.name}</Td>
+                      <Td fontWeight="semibold">
+                        <Flex align="center" gap={2}>
+                          {emp.name}
+                          {emp.remote_start_date && (
+                            <Badge colorScheme="purple" variant="solid" size="xs">
+                              {t("Remote")}
+                            </Badge>
+                          )}
+                        </Flex>
+                      </Td>
                       <Td>{emp.employee_code}</Td>
                       <Td>
                         <Badge
@@ -874,66 +905,83 @@ export default function EmployeesPage() {
                       <Td>
                         <Flex gap={2} wrap="wrap">
                           {/* Delete */}
-                          <Button
-                            size="xs"
-                            colorScheme="red"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDeletingEmployee(emp);
-                            }}
-                          >
-                            {t("Delete")}
-                          </Button>
+                          <Tooltip label={t("Delete")} hasArrow>
+                            <IconButton
+                              aria-label={t("Delete")}
+                              icon={<Trash2 size={14} />}
+                              size="xs"
+                              colorScheme="red"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeletingEmployee(emp);
+                              }}
+                            />
+                          </Tooltip>
 
                           {/* Password */}
-                          <Button
-                            size="xs"
-                            colorScheme="teal"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openPasswordModal(emp);
-                            }}
-                          >
-                            {t("Password")}
-                          </Button>
+                          <Tooltip label={t("Password")} hasArrow>
+                            <IconButton
+                              aria-label={t("Password")}
+                              icon={<Key size={14} />}
+                              size="xs"
+                              colorScheme="teal"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openPasswordModal(emp);
+                              }}
+                            />
+                          </Tooltip>
 
                           {/* Enroll Fingerprint */}
-                          <Button
-                            size="xs"
-                            colorScheme="orange"
-                            isLoading={enrollLoading === emp.employee_code}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEnrollFingerprint(emp);
-                            }}
+                          <Tooltip
+                            label={
+                              (emp.fingerprint_count ?? 0) > 0
+                                ? t("Add Another Fingerprint")
+                                : t("Enroll Fingerprint")
+                            }
+                            hasArrow
                           >
-                            {(emp.fingerprint_count ?? 0) > 0
-                              ? t("Add Another Fingerprint")
-                              : t("Enroll Fingerprint")}
-                          </Button>
+                            <IconButton
+                              aria-label={t("Fingerprint")}
+                              icon={<Fingerprint size={14} />}
+                              size="xs"
+                              colorScheme="orange"
+                              isLoading={enrollLoading === emp.employee_code}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEnrollFingerprint(emp);
+                              }}
+                            />
+                          </Tooltip>
 
                           {/* Edit */}
-                          <Button
-                            size="xs"
-                            colorScheme="blue"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingEmployee({ ...emp });
-                              setIsEditOpen(true);
-                            }}
-                          >
-                            {t("Edit")}
-                          </Button>
-                          <Button
-                            size="xs"
-                            colorScheme="purple"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openRemoteModal(emp);
-                            }}
-                          >
-                            {t("Remote Config")}
-                          </Button>
+                          <Tooltip label={t("Edit")} hasArrow>
+                            <IconButton
+                              aria-label={t("Edit")}
+                              icon={<Pencil size={14} />}
+                              size="xs"
+                              colorScheme="blue"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingEmployee({ ...emp });
+                                setIsEditOpen(true);
+                              }}
+                            />
+                          </Tooltip>
+
+                          {/* Remote Config */}
+                          <Tooltip label={t("Remote Config")} hasArrow>
+                            <IconButton
+                              aria-label={t("Remote Config")}
+                              icon={<Globe size={14} />}
+                              size="xs"
+                              colorScheme="purple"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openRemoteModal(emp);
+                              }}
+                            />
+                          </Tooltip>
                         </Flex>
                       </Td>
                     </Tr>
@@ -1454,6 +1502,20 @@ export default function EmployeesPage() {
           <ModalCloseButton />
           <ModalBody>
             <Flex direction="column" gap={4}>
+              {remoteEmployee?.remote_start_date && (
+                <Box p={3} bg="purple.50" borderRadius="md" borderLeft="4px solid" borderColor="purple.500">
+                  <Text fontWeight="bold" color="purple.700">
+                    {remoteEmployee.remote_end_date
+                      ? t("This employee is configured for remote work from {{start}} to {{end}}", {
+                          start: remoteEmployee.remote_start_date,
+                          end: remoteEmployee.remote_end_date,
+                        })
+                      : t("This employee is configured for remote work from {{start}} indefinitely", {
+                          start: remoteEmployee.remote_start_date,
+                        })}
+                  </Text>
+                </Box>
+              )}
               <Box>
                 <Text mb={2} fontWeight="bold">
                   {t("Start Date")}
