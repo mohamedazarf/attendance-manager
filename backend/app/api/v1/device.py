@@ -29,7 +29,7 @@ def create_user(uid: int, name: str):
 
 
 @router.delete("/users/{uid}")
-def delete_user(uid: int):
+def delete_user(uid: str):
     return zk_service.delete_user(uid)
 
 @router.get("/sync")
@@ -62,21 +62,21 @@ def create_user_request(request: CreateEnrollRequest):
     )
 
 @router.get("/users/{uid}/fingerprint-status")
-def fingerprint_status(uid: int):
+def fingerprint_status(uid: str):
     return zk_service.check_fingerprints(uid)
 
 @router.post("/users/{uid}/enroll")
-def enroll_user(uid: int):
+def enroll_user(uid: str):
     return zk_service.enroll_fingerprint(uid)
 
 @router.post("/users/{uid}/set-password")
-def set_password(uid: int, password: str):
+def set_password(uid: str, password: str):
     return zk_service.set_user_password(uid, password)
 
 @router.put("/users/{uid}")
-def update_user(uid: int, name: Optional[str] = None, privilege: Optional[int] = None, department: Optional[str] = None, matricule: Optional[str] = None):
+def update_user(uid: str, name: Optional[str] = None, privilege: Optional[int] = None, department: Optional[str] = None, matricule: Optional[str] = None):
     # 1️⃣ Update sur le device et en DB (via update_user)
-    update_result = zk_service.update_user(str(uid), name, privilege, department, matricule)
+    update_result = zk_service.update_user(uid, name, privilege, department, matricule)
 
     # 2️⃣ Vérifie si l’update a réussi
     if update_result.get("status") != "success":
