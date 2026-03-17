@@ -219,9 +219,9 @@ const resources = {
       "Save Employee": "Save Employee",
       "Update Employee": "Update Employee",
       "This employee is configured for remote work from {{start}} to {{end}}":
-        "This employee is configured for remote work from {{start}} to {{end}}",
+        "This employee is configured as remote from {{start}} to {{end}}",
       "This employee is configured for remote work from {{start}} indefinitely":
-        "This employee is configured for remote work from {{start}} indefinitely",
+        "This employee is configured as remote from {{start}} indefinitely",
 
       /* ===== Login Page ===== */
       "Sign in to manage your workplace": "Sign in to manage your workplace",
@@ -559,9 +559,9 @@ const resources = {
       "Save Employee": "Enregistrer l'employé",
       "Update Employee": "Mettre à jour l'employé",
       "This employee is configured for remote work from {{start}} to {{end}}":
-        "Cet employé est configuré à distance de {{start}} à {{end}}",
+        "C'est un employé configuré à distance de {{start}} à {{end}}",
       "This employee is configured for remote work from {{start}} indefinitely":
-        "Cet employé est configuré à distance de {{start}} indéfiniment",
+        "C'est un employé configuré à distance de {{start}} indéfiniment",
 
       /* ===== Login Page ===== */
       "Sign in to manage your workplace":

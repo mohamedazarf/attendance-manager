@@ -24,6 +24,8 @@ from app.api.v1.email_report import router as email_report_router
 from app.api.v1.platform_users import router as platform_users_router
 
 logger = logging.getLogger(__name__)
+# Use uvicorn's error logger for scheduler output so it always shows in the terminal.
+scheduler_logger = logging.getLogger("uvicorn.error")
 
 # ──────────────────────────────────────────────────────────────────────────────
 # APScheduler job — fires on the 1st of every month at 08:00
@@ -41,26 +43,26 @@ def send_monthly_report_job():
     else:
         report_year, report_month = now.year, now.month - 1
 
-    logger.info(
+    scheduler_logger.info(
         f"[Scheduler] Déclenchement rapport mensuel : {report_year}-{report_month:02d}"
     )
     try:
         service = OvertimeReportService()
         result = service.send_monthly_report(year=report_year, month=report_month)
-        logger.info(f"[Scheduler] Résultat : {result}")
+        scheduler_logger.info(f"[Scheduler] Résultat : {result}")
     except Exception as e:
-        logger.error(f"[Scheduler] Erreur lors du rapport mensuel : {e}")
+        scheduler_logger.error(f"[Scheduler] Erreur lors du rapport mensuel : {e}")
 
 
 def auto_sync_attendance_job():
     """Synchronise automatiquement les pointages depuis la pointeuse ZKTeco."""
     from app.services.SyncService import SyncService
-    logger.info("[AutoSync] Démarrage de la synchronisation automatique...")
+    scheduler_logger.info("[AutoSync] Démarrage de la synchronisation automatique...")
     try:
         result = SyncService().sync_attendances()
-        logger.info(f"[AutoSync] Terminé — {result}")
+        scheduler_logger.info(f"[AutoSync] Terminé — {result}")
     except Exception as e:
-        logger.error(f"[AutoSync] Erreur lors de la synchronisation : {e}", exc_info=True)
+        scheduler_logger.error(f"[AutoSync] Erreur lors de la synchronisation : {e}", exc_info=True)
 
 
 @asynccontextmanager
@@ -85,10 +87,10 @@ async def lifespan(app: FastAPI):
         replace_existing=True,
     )
     scheduler.start()
-    logger.info("[Scheduler] APScheduler démarré — rapport mensuel le 1er à 08h00, sync pointages toutes les 5 min")
+    scheduler_logger.info("[Scheduler] APScheduler démarré — rapport mensuel le 1er à 08h00, sync pointages toutes les 5 min")
     yield
     scheduler.shutdown(wait=False)
-    logger.info("[Scheduler] APScheduler arrêté")
+    scheduler_logger.info("[Scheduler] APScheduler arrêté")
 
 
 # ──────────────────────────────────────────────────────────────────────────────

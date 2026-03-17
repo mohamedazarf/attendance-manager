@@ -12,7 +12,7 @@ class AttendanceHistoryService:
         self.processor = AttendanceProcessingService()
         self.employees_collection = self.db["employees"]
 
-    def get_employee_history(self, employee_id: int, date_from, date_to):
+    def get_employee_history(self, employee_id: str, date_from, date_to):
         start_dt = datetime.combine(date_from, time.min)
         end_dt = datetime.combine(date_to, time.max)
 
@@ -25,7 +25,7 @@ class AttendanceHistoryService:
             raise HTTPException(status_code=404, detail="Employee not found")
 
         logs = list(self.logs_collection.find({
-            "user_id": employee_id,
+            "user_id": int(employee_id),
             "timestamp": {"$gte": start_dt, "$lte": end_dt}
         }))
 
@@ -41,7 +41,7 @@ class AttendanceHistoryService:
 
         logs = [log for log in logs if log.get("timestamp") is not None]
 
-        user_departments = {employee_id: employee.get("department", "usine")}
+        user_departments = {int(employee_id): employee.get("department", "usine")}
         processed_map = self.processor.process_logs(logs, user_departments=user_departments)
 
         history = []

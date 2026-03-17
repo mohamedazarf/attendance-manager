@@ -124,7 +124,7 @@ class AttendanceMetricsService:
 
     def get_employee_attendance_status(
         self, 
-        employee_id: int, 
+        employee_id: str, 
         year: int, 
         month: int
     ) -> Dict:
@@ -149,7 +149,7 @@ class AttendanceMetricsService:
         collection = db["attendance_logs"]
         
         logs = list(collection.find({
-            "user_id": employee_id,
+            "user_id": int(employee_id),
             "timestamp": {
                 "$gte": start_date,
                 "$lte": end_date
@@ -241,14 +241,14 @@ class AttendanceMetricsService:
         metrics_list = []
         for employee in employees:
             # emp_id = employee.get("employee_code") or employee.get("_id")
-            emp_id = int(employee.get("employee_code")) if employee.get("employee_code") else employee.get("_id")
+            emp_id = str(employee.get("employee_code")) if employee.get("employee_code") else str(employee.get("_id"))
             metrics = self.get_employee_attendance_status(emp_id, year, month)
             metrics["employee_name"] = employee.get("name", "Unknown")
             metrics_list.append(metrics)
         
         return metrics_list
 
-    def get_monthly_hours_worked(self, employee_id: int, year: int, month: int) -> float:
+    def get_monthly_hours_worked(self, employee_id: str, year: int, month: int) -> float:
         """
         Calculate total real hours worked by an employee during a given month.
         Uses AttendanceProcessingService to pair in/out events and sum hours.
@@ -260,7 +260,7 @@ class AttendanceMetricsService:
         db = utils.get_db()
         collection = db["attendance_logs"]
         logs = list(collection.find({
-            "user_id": employee_id,
+            "user_id": int(employee_id),
             "timestamp": {"$gte": start_date, "$lte": end_date}
         }))
 
@@ -278,7 +278,7 @@ class AttendanceMetricsService:
 
     def get_employee_metrics_date_range(
         self,
-        employee_id: int,
+        employee_id: str,
         start_date: date,
         end_date: date
     ) -> Dict:
@@ -286,7 +286,7 @@ class AttendanceMetricsService:
         collection = db["attendance_logs"]
 
         logs = list(collection.find({
-            "user_id": employee_id,
+            "user_id": int(employee_id),
             "timestamp": {
                 "$gte": datetime.combine(start_date, time.min),
                 "$lte": datetime.combine(end_date, time.max)

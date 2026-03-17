@@ -745,9 +745,24 @@ export default function EmployeesPage() {
                     <Flex align="center" gap={2}>
                       <Heading size="md">{emp.name}</Heading>
                       {emp.remote_start_date && (
-                        <Badge colorScheme="purple" variant="solid">
-                          {t("Remote")}
-                        </Badge>
+                        <Tooltip
+                          label={
+                            emp.remote_end_date
+                              ? t("This employee is configured for remote work from {{start}} to {{end}}", {
+                                  start: emp.remote_start_date,
+                                  end: emp.remote_end_date,
+                                })
+                              : t("This employee is configured for remote work from {{start}} indefinitely", {
+                                  start: emp.remote_start_date,
+                                })
+                          }
+                          hasArrow
+                        >
+                          <Badge colorScheme="purple" variant="solid" display="flex" alignItems="center" gap={1}>
+                            <Globe size={12} />
+                            {t("Remote")}
+                          </Badge>
+                        </Tooltip>
                       )}
                     </Flex>
                     <Badge
@@ -879,9 +894,24 @@ export default function EmployeesPage() {
                         <Flex align="center" gap={2}>
                           {emp.name}
                           {emp.remote_start_date && (
-                            <Badge colorScheme="purple" variant="solid" size="xs">
-                              {t("Remote")}
-                            </Badge>
+                            <Tooltip
+                              label={
+                                emp.remote_end_date
+                                  ? t("This employee is configured for remote work from {{start}} to {{end}}", {
+                                      start: emp.remote_start_date,
+                                      end: emp.remote_end_date,
+                                    })
+                                  : t("This employee is configured for remote work from {{start}} indefinitely", {
+                                      start: emp.remote_start_date,
+                                    })
+                              }
+                              hasArrow
+                            >
+                              <Badge colorScheme="purple" variant="solid" size="xs" display="flex" alignItems="center" gap={1}>
+                                <Globe size={10} />
+                                {t("Remote")}
+                              </Badge>
+                            </Tooltip>
                           )}
                         </Flex>
                       </Td>

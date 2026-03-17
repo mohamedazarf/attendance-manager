@@ -86,7 +86,7 @@ def ingest_employees_mock():
 
 @router.get("/{employee_id}/history")
 def get_employee_history(
-    employee_id: int,
+    employee_id: str,
     date_from: date,
     date_to: date
 ):

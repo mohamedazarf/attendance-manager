@@ -281,7 +281,7 @@ def report_mock():
 # ==================== METRICS ENDPOINTS ====================
 
 @router.get("/metrics/employee/{employee_id}")
-def get_employee_metrics(employee_id: int, year: int, month: int):
+def get_employee_metrics(employee_id: str, year: int, month: int):
     """
     Get attendance metrics for a specific employee in a given month.
     
@@ -333,7 +333,7 @@ def get_all_employees_metrics(year: int, month: int):
 
 @router.get("/metrics/employee/{employee_id}/range")
 def get_employee_metrics_range(
-    employee_id: int,
+    employee_id: str,
     start_date: str,
     end_date: str
 ):
@@ -362,7 +362,7 @@ def get_employee_metrics_range(
 
 
 @router.get("/metrics/employee/{employee_id}/weekend")
-def get_employee_weekend_metrics(employee_id: int, year: int, month: int):
+def get_employee_weekend_metrics(employee_id: str, year: int, month: int):
     """
     Get weekend work metrics for a specific employee in a given month.
     
