@@ -22,6 +22,7 @@ from app.api.v1.auth import router as auth_router
 from app.api.v1.roles import router as roles_router
 from app.api.v1.email_report import router as email_report_router
 from app.api.v1.platform_users import router as platform_users_router
+import time
 
 logger = logging.getLogger(__name__)
 # Use uvicorn's error logger for scheduler output so it always shows in the terminal.
@@ -31,6 +32,9 @@ scheduler_logger = logging.getLogger("uvicorn.error")
 # APScheduler job — fires on the 1st of every month at 08:00
 # ──────────────────────────────────────────────────────────────────────────────
 scheduler = AsyncIOScheduler()
+
+# Auto-sync overlap guard
+_AUTO_SYNC_IN_PROGRESS = False
 
 
 def send_monthly_report_job():
@@ -57,12 +61,22 @@ def send_monthly_report_job():
 def auto_sync_attendance_job():
     """Synchronise automatiquement les pointages depuis la pointeuse ZKTeco."""
     from app.services.SyncService import SyncService
-    scheduler_logger.info("[AutoSync] Démarrage de la synchronisation automatique...")
+    # Simple anti-overlap guard (APScheduler may trigger while previous run is still active)
+    global _AUTO_SYNC_IN_PROGRESS
+    if _AUTO_SYNC_IN_PROGRESS:
+        scheduler_logger.warning("[AutoSync] Ignore ? synchronisation deja en cours.")
+        return
+    _AUTO_SYNC_IN_PROGRESS = True
+    started = time.monotonic()
+    scheduler_logger.info("[AutoSync] Demarrage de la synchronisation automatique...")
     try:
         result = SyncService().sync_attendances()
-        scheduler_logger.info(f"[AutoSync] Terminé — {result}")
+        duration_s = time.monotonic() - started
+        scheduler_logger.info(f"[AutoSync] Termine en {duration_s:.2f}s ? {result}")
     except Exception as e:
         scheduler_logger.error(f"[AutoSync] Erreur lors de la synchronisation : {e}", exc_info=True)
+    finally:
+        _AUTO_SYNC_IN_PROGRESS = False
 
 
 @asynccontextmanager
@@ -78,16 +92,17 @@ async def lifespan(app: FastAPI):
         id="monthly_overtime_report",
         replace_existing=True,
     )
-    # Synchronisation automatique des pointages toutes les 5 minutes
+    # Synchronisation automatique des pointages toutes les 5 minutes (configurable)
+    sync_minutes = int(os.getenv("AUTO_SYNC_INTERVAL_MINUTES", "1"))
     scheduler.add_job(
         auto_sync_attendance_job,
         trigger="interval",
-        minutes=5,
+        minutes=sync_minutes,
         id="auto_sync_attendance",
         replace_existing=True,
     )
     scheduler.start()
-    scheduler_logger.info("[Scheduler] APScheduler démarré — rapport mensuel le 1er à 08h00, sync pointages toutes les 5 min")
+    scheduler_logger.info("[Scheduler] APScheduler démarré — rapport mensuel le 1er à 08h00, sync pointages toutes les 1 min")
     yield
     scheduler.shutdown(wait=False)
     scheduler_logger.info("[Scheduler] APScheduler arrêté")
