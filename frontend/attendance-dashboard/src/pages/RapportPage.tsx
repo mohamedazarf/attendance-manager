@@ -72,6 +72,20 @@ import { ManualPunchModal } from "../components/AttendanceModals";
 
 import { useTranslation } from "react-i18next";
 
+const formatHours = (decimalHours: number | null | undefined): string => {
+  if (decimalHours == null || isNaN(decimalHours)) return "0h 00m";
+  const isNegative = decimalHours < 0;
+  let absHours = Math.abs(decimalHours);
+  let h = Math.floor(absHours);
+  let m = Math.round((absHours - h) * 60);
+  if (m === 60) {
+    h += 1;
+    m = 0;
+  }
+  const sign = isNegative ? "-" : "";
+  return `${sign}${h}h ${String(m).padStart(2, '0')}m`;
+};
+
 export default function RapportPage() {
   const { t } = useTranslation();
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -295,8 +309,8 @@ export default function RapportPage() {
             row.total_working_days,
             row.days_present,
             row.days_absent,
-            row.total_hours_worked?.toFixed(2) ?? "0.00",
-            row.overtime_hours?.toFixed(2) ?? "0.00",
+            formatHours(row.total_hours_worked),
+            formatHours(row.overtime_hours),
           ].join(","),
         ),
       ].join("\n");
@@ -323,8 +337,8 @@ export default function RapportPage() {
       Presences: emp.days_present,
       Absences: emp.days_absent,
 
-      "Total Hours": emp.total_hours_worked?.toFixed(2) ?? "0.00",
-      "Overtime Hours": emp.overtime_hours?.toFixed(2) ?? "0.00",
+      "Total Hours": formatHours(emp.total_hours_worked),
+      "Overtime Hours": formatHours(emp.overtime_hours),
     }));
     const ws = XLSX.utils.json_to_sheet(sheetData);
     const wb = XLSX.utils.book_new();
@@ -358,7 +372,7 @@ export default function RapportPage() {
             h.date,
             h.check_in_time?.split("T")[1] ?? "-",
             h.check_out_time?.split("T")[1] ?? "-",
-            h.worked_hours.toFixed(2),
+            formatHours(h.worked_hours),
             h.is_late ? "Yes" : "No",
             h.late_minutes,
             `"${h.anomalies.join("; ")}"`,
@@ -385,7 +399,7 @@ export default function RapportPage() {
       Date: h.date,
       "Check-in": h.check_in_time?.slice(11, 16) ?? "-",
       "Check-out": h.check_out_time?.slice(11, 16) ?? "-",
-      "Worked Hours": h.worked_hours.toFixed(2),
+      "Worked Hours": formatHours(h.worked_hours),
       Late: h.is_late ? "Yes" : "No",
       "Late Minutes": h.late_minutes,
       Anomalies: h.anomalies.join("; "),
@@ -566,10 +580,10 @@ export default function RapportPage() {
                       <Td isNumeric>{row.days_absent}</Td>
 
                       <Td isNumeric>
-                        {row.total_hours_worked?.toFixed(2) ?? "0.00"}
+                        {formatHours(row.total_hours_worked)}
                       </Td>
                       <Td isNumeric>
-                        {row.overtime_hours?.toFixed(2) ?? "0.00"}
+                        {formatHours(row.overtime_hours)}
                       </Td>
                     </Tr>
                   ))}
@@ -673,7 +687,7 @@ export default function RapportPage() {
                             <Td>{h.date}</Td>
                             <Td>{h.check_in_time?.split("T")[1] ?? "-"}</Td>
                             <Td>{h.check_out_time?.split("T")[1] ?? "-"}</Td>
-                            <Td>{h.worked_hours.toFixed(2)}</Td>
+                            <Td>{formatHours(h.worked_hours)}</Td>
                             <Td>{h.is_late ? t("Yes") : t("No")}</Td>
                             <Td>{h.late_minutes}</Td>
                             <Td>
@@ -725,7 +739,7 @@ export default function RapportPage() {
                           {t("Total Worked Hours in That Period")}:
                         </Text>
                         <Text fontWeight="bold" color="blue.600">
-                          {totalPeriodHours.toFixed(2)} h
+                          {formatHours(totalPeriodHours)}
                         </Text>
                       </Flex>
                       <Flex justify="space-between" align="center">
@@ -733,7 +747,7 @@ export default function RapportPage() {
                           {t("Overtime Hours (beyond 173.33 h/month)")}:
                         </Text>
                         <Text fontWeight="bold" color="orange.500">
-                          {totalOvertimeHours.toFixed(2)} h
+                          {formatHours(totalOvertimeHours)}
                         </Text>
                       </Flex>
                     </Box>
