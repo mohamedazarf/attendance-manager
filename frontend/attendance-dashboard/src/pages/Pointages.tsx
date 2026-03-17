@@ -401,7 +401,12 @@ export default function Pointages() {
       }
     });
 
-    const preferredOrder = ["administration", "employee", "logistique", "usine"];
+    const preferredOrder = [
+      "administration",
+      "employee",
+      "logistique",
+      "usine",
+    ];
     const ordered = preferredOrder
       .map((key) => byLower.get(key))
       .filter(Boolean) as {
@@ -461,21 +466,20 @@ export default function Pointages() {
         <Navbar />
 
         <Container maxW="100%" flex={1} p={6}>
-          <Heading mb={2}>{t("Attendance dashboard")}</Heading>
-          <HStack justify="space-between" mb={6}>
-            <Text color="gray.500">
-              {t("Date")}: {dashboard?.date}
-            </Text>
-            <HStack spacing={3}>
-              <Input
-                type="date"
-                value={selectedDate}
-                max={getCurrentDate()}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                size="sm"
-                bg="white"
-              />
-            </HStack>
+          <Heading mb={2}>
+            {t("Attendance dashboard")}: {dashboard?.date}
+          </Heading>
+          <HStack justify="flex-end" mb={6} spacing={3}>
+            <Input
+              type="date"
+              value={selectedDate}
+              max={getCurrentDate()}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              size="sm"
+              bg="white"
+              maxW="200px"
+            />
+
             {loading && <Spinner size="sm" />}
           </HStack>
 
@@ -646,4 +650,3 @@ export default function Pointages() {
     </Box>
   );
 }
-
