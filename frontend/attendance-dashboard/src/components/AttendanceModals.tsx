@@ -16,6 +16,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
+import API_BASE_URL from "../config/apiConfig";
 
 interface ManualPunchModalProps {
   isOpen: boolean;
@@ -60,7 +61,7 @@ export const ManualPunchModal: React.FC<ManualPunchModalProps> = ({
     try {
       const timestamp = `${date}T${time}:00`;
       const response = await fetch(
-        "http://127.0.0.1:8000/api/v1/attendance/manual",
+        `${API_BASE_URL}/api/v1/attendance/manual`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -178,7 +179,7 @@ export const MarkAbsentModal: React.FC<MarkAbsentModalProps> = ({
     setLoading(true);
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/v1/attendance/confirm-absence",
+        `${API_BASE_URL}/api/v1/attendance/confirm-absence`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
