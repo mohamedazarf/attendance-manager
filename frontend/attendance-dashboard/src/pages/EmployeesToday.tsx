@@ -154,7 +154,6 @@ export default function EmployeesToday() {
   const [history, setHistory] = useState<EmployeeHistory[]>([]);
   const [totalPeriodHours, setTotalPeriodHours] = useState<number>(0);
   const [totalOvertimeHours, setTotalOvertimeHours] = useState<number>(0);
-  const [totalWeekendHours, setTotalWeekendHours] = useState<number>(0);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [isManualOpen, setIsManualOpen] = useState(false);
   const [manualEmployee, setManualEmployee] = useState<{
@@ -234,7 +233,6 @@ export default function EmployeesToday() {
         setHistory(data.history);
         setTotalPeriodHours(data.total_period_hours);
         setTotalOvertimeHours(data.total_overtime_hours);
-        setTotalWeekendHours(data.total_weekend_hours);
         console.log("Employee history:", data);
         setHistoryLoading(false);
         setDrawerFilterState("all");
