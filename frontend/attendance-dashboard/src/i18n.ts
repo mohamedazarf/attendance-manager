@@ -365,7 +365,7 @@ const resources = {
       "Jour special enregistre": "Special day saved",
       "Jours speciaux": "Special Days",
       "Libelle (optionnel)": "Label (optional)",
-      "Mettre à jour": "Update",
+      "Remote Config": "Remote Config",
       Modifier: "Edit",
       "Modifier l'utilisateur": "Edit user",
       "Mohamed Aziz Arfaoui": "Mohamed Aziz Arfaoui",
@@ -634,6 +634,7 @@ const resources = {
         "Cette date est un jour spécial: {{label}}. Les absences ne sont pas comptabilisées.",
       "National holiday": "Jour férié",
       "Remote day": "Jour à distance",
+      "Remote Config": "Configuration à distance",
       Sunday: "Dimanche",
       "Working day": "Jour ouvrable",
       "Total Weekend Hours": "Total des heures de week-end",
@@ -645,6 +646,7 @@ const resources = {
       "Add manual check-out": "Ajouter une sortie manuelle",
       Yesterday: "Hier",
       today: "Aujourd'hui",
+
       /* ===== Added (auto) ===== */
       "(laisser vide pour ne pas changer)":
         "(laisser vide pour ne pas changer)",
