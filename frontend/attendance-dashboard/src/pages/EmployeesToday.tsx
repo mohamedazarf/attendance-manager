@@ -229,10 +229,10 @@ export default function EmployeesToday() {
     )
       .then((res) => res.json())
       .then((data) => {
-        setEmployeeName(data.employee_name);
-        setHistory(data.history);
-        setTotalPeriodHours(data.total_period_hours);
-        setTotalOvertimeHours(data.total_overtime_hours);
+        setEmployeeName(data.employee_name || "");
+        setHistory(data.history || []);
+        setTotalPeriodHours(data.total_period_hours ?? 0);
+        setTotalOvertimeHours(data.total_overtime_hours ?? 0);
         console.log("Employee history:", data);
         setHistoryLoading(false);
         setDrawerFilterState("all");
@@ -482,8 +482,8 @@ export default function EmployeesToday() {
                       <Box flex={1} minW="300px">
                         <Text fontWeight="bold" mb={2}>{t("Intervals")}</Text>
                         <VStack align="stretch" spacing={2}>
-                          {selectedEmployeeForToday.intervals && selectedEmployeeForToday.intervals.length > 0 ? (
-                            selectedEmployeeForToday.intervals.map((interval, idx) => (
+                          {(selectedEmployeeForToday?.intervals || []).length > 0 ? (
+                            selectedEmployeeForToday?.intervals?.map((interval, idx) => (
                               <Flex key={idx} justify="space-between" p={2} bg="white" borderRadius="sm" shadow="sm" align="center">
                                 <HStack>
                                   <TimeIcon color="green.500" />
@@ -506,8 +506,8 @@ export default function EmployeesToday() {
                       <Box flex={1} minW="200px">
                         <Text fontWeight="bold" mb={2}>{t("Raw Events")}</Text>
                         <List spacing={1}>
-                          {selectedEmployeeForToday.events && selectedEmployeeForToday.events.length > 0 ? (
-                            selectedEmployeeForToday.events.map((ev, idx) => (
+                          {(selectedEmployeeForToday?.events || []).length > 0 ? (
+                            selectedEmployeeForToday?.events?.map((ev, idx) => (
                               <ListItem key={idx} fontSize="sm">
                                 <ListIcon 
                                   as={TimeIcon} 
@@ -559,11 +559,11 @@ export default function EmployeesToday() {
                         </Tr>
                       </Thead>
                       <Tbody>
-                        {history
+                        {(history || [])
                           .filter((h) => {
                             if (drawerSelectedAnomalies.length === 0)
                               return true;
-                            return h.anomalies.some((a) =>
+                            return (h.anomalies || []).some((a) =>
                               drawerSelectedAnomalies.includes(a),
                             );
                           })
@@ -586,13 +586,13 @@ export default function EmployeesToday() {
                               <Td>{h.is_late ? t("Yes") : t("No")}</Td>
                               <Td>{h.late_minutes}</Td>
                               <Td>
-                                {h.anomalies.map((a) => (
+                                {(h.anomalies ?? []).map((a) => (
                                   <Badge
                                     key={a}
                                     colorScheme={anomalyColors[a] || "gray"}
                                     mr={1}
                                   >
-                                    {a.replace("_", " ")}
+                                    {typeof a === "string" ? a.replace("_", " ") : a}
                                   </Badge>
                                 ))}
                               </Td>
@@ -610,8 +610,8 @@ export default function EmployeesToday() {
                                     {t("Manual punch")}
                                   </Button>
                                 )}
-                                {(h.anomalies.includes("entree_sans_sortie") ||
-                                  (!!h.check_in_time && !h.check_out_time)) && (
+                                {(h.anomalies || []).includes("entree_sans_sortie") ||
+                                  (!!h.check_in_time && !h.check_out_time) ? (
                                   <Button
                                     size="xs"
                                     colorScheme="orange"
@@ -621,7 +621,7 @@ export default function EmployeesToday() {
                                   >
                                     {t("Add manual check-out")}
                                   </Button>
-                                )}
+                                ) : null}
                               </Td>
                             </Tr>
                           ))}
