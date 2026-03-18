@@ -152,6 +152,22 @@ class DailyAttendanceDashboardService:
                 anomalies = processed.anomalies or []
 
                 expected_hours = processed.expected_hours
+                intervals = []
+                events = getattr(processed, "events", [])
+                for i in range(0, len(events) - 1, 2):
+                    in_ev = events[i]
+                    out_ev = events[i+1]
+                    if in_ev.event_type == "in" and out_ev.event_type == "out":
+                        intervals.append({
+                            "start": in_ev.timestamp.isoformat(),
+                            "end": out_ev.timestamp.isoformat(),
+                            "duration": round((out_ev.timestamp - in_ev.timestamp).total_seconds() / 3600, 2)
+                        })
+
+                events_data = [
+                    {"timestamp": e.timestamp.isoformat(), "event_type": e.event_type}
+                    for e in events
+                ]
                 extra_hours = (
                     round(worked_hours - expected_hours, 2)
                     if worked_hours > expected_hours
@@ -170,6 +186,8 @@ class DailyAttendanceDashboardService:
                 late_minutes = 0
                 anomalies = []
                 extra_hours = 0
+                events_data = []
+                intervals = []
 
             employees_data.append(
                 {
@@ -184,6 +202,8 @@ class DailyAttendanceDashboardService:
                     "anomalies": anomalies,
                     "extra_hours": extra_hours,
                     "justification": justifications.get(emp_id),
+                    "events": events_data,
+                    "intervals": intervals,
                 }
             )
 

@@ -74,5 +74,8 @@ class AttendanceHistoryService:
             "date_to": date_to,
             "history": history,
             "total_period_hours": round(total_period_hours, 2),
-            "total_overtime_hours": total_overtime_hours
+            "total_overtime_hours": total_overtime_hours,
+            "total_weekend_hours": 0.0
         }
+
+

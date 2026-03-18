@@ -24,17 +24,32 @@ import {
   DrawerBody,
   Input,
   IconButton,
+  Divider,
+  List,
+  ListItem,
+  ListIcon,
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 import Navbar from "../components/layout/Navbar";
 import Sidebar from "../components/layout/Sidebar";
 import { useEffect, useState } from "react";
-import { CloseIcon, HamburgerIcon } from "@chakra-ui/icons";
+import { ArrowForwardIcon, CloseIcon, HamburgerIcon, TimeIcon } from "@chakra-ui/icons";
 import { useLocation } from "react-router-dom";
 import { ManualPunchModal } from "../components/AttendanceModals";
 import API_BASE_URL from "../config/apiConfig";
 
 // -------------------- Types --------------------
+type AttendanceEvent = {
+  timestamp: string;
+  event_type: "in" | "out";
+};
+
+type AttendanceInterval = {
+  start: string;
+  end: string;
+  duration: number;
+};
+
 type Employee = {
   employee_id: number;
   employee_name: string;
@@ -45,6 +60,8 @@ type Employee = {
   is_late: boolean;
   late_minutes: number;
   anomalies: string[];
+  events?: AttendanceEvent[];
+  intervals?: AttendanceInterval[];
 };
 
 type EmployeeHistory = {
@@ -88,6 +105,13 @@ function getCurrentDate() {
   return formattedDate; // Returns: "2026-02-18" (for example)
 }
 
+function formatTime(isoString: string | undefined | null, length: number = 5) {
+  if (!isoString || typeof isoString !== "string") return "--:--";
+  const parts = isoString.split("T");
+  if (parts.length < 2) return isoString;
+  return parts[1].substring(0, length);
+}
+
 export default function EmployeesToday() {
   const { t } = useTranslation();
   const { search } = useLocation();
@@ -129,6 +153,7 @@ export default function EmployeesToday() {
   const [employeeName, setEmployeeName] = useState<string>("");
   const [history, setHistory] = useState<EmployeeHistory[]>([]);
   const [totalPeriodHours, setTotalPeriodHours] = useState<number>(0);
+  const [totalOvertimeHours, setTotalOvertimeHours] = useState<number>(0);
   const [totalWeekendHours, setTotalWeekendHours] = useState<number>(0);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [isManualOpen, setIsManualOpen] = useState(false);
@@ -138,6 +163,8 @@ export default function EmployeesToday() {
   } | null>(null);
   const [manualDate, setManualDate] = useState<string>(targetDate);
   const [manualEventType, setManualEventType] = useState<"check_in" | "check_out">("check_out");
+
+  const [selectedEmployeeForToday, setSelectedEmployeeForToday] = useState<Employee | null>(null);
 
   // Dates filtre pour l’historique
   const [dateFrom, setDateFrom] = useState<string>("2026-01-01");
@@ -191,6 +218,10 @@ export default function EmployeesToday() {
 
   // -------------------- Afficher l’historique --------------------
   const openEmployeeHistory = (employee_id: number) => {
+    // Trouver l'employé dans le dashboard pour avoir ses données du jour (events/intervals)
+    const emp = dashboard?.employees.find(e => e.employee_id === employee_id);
+    setSelectedEmployeeForToday(emp || null);
+
     setSelectedEmployeeId(employee_id);
     setHistoryLoading(true);
 
@@ -202,6 +233,7 @@ export default function EmployeesToday() {
         setEmployeeName(data.employee_name);
         setHistory(data.history);
         setTotalPeriodHours(data.total_period_hours);
+        setTotalOvertimeHours(data.total_overtime_hours);
         setTotalWeekendHours(data.total_weekend_hours);
         console.log("Employee history:", data);
         setHistoryLoading(false);
@@ -214,7 +246,10 @@ export default function EmployeesToday() {
       });
   };
 
-  const closeDrawer = () => setSelectedEmployeeId(null);
+  const closeDrawer = () => {
+    setSelectedEmployeeId(null);
+    setSelectedEmployeeForToday(null);
+  };
 
   const openManualPunchFromHistory = (historyDate: string, eventType: "check_in" | "check_out" = "check_out") => {
     if (!selectedEmployeeId) return;
@@ -336,7 +371,7 @@ export default function EmployeesToday() {
                     bg="white"
                   >
                     {emp.status === "present"
-                      ? emp.worked_hours.toFixed(2)
+                      ? (emp.worked_hours ?? 0).toFixed(2)
                       : "-"}
                   </Td>
                   <Td>
@@ -437,6 +472,76 @@ export default function EmployeesToday() {
               </DrawerHeader>
 
               <DrawerBody>
+                {/* -------------------- DÉTAILS DU JOUR (INTERVALLES) -------------------- */}
+                {selectedEmployeeForToday && (
+                  <Box mb={8} p={4} bg="gray.50" borderRadius="md" border="1px solid" borderColor="gray.200">
+                    <Heading size="md" mb={4} color="blue.600">
+                      {t("Today's Sessions")} ({targetDate})
+                    </Heading>
+                    
+                    <Flex gap={8} wrap="wrap">
+                      {/* Section Intervalles */}
+                      <Box flex={1} minW="300px">
+                        <Text fontWeight="bold" mb={2}>{t("Intervals")}</Text>
+                        <VStack align="stretch" spacing={2}>
+                          {selectedEmployeeForToday.intervals && selectedEmployeeForToday.intervals.length > 0 ? (
+                            selectedEmployeeForToday.intervals.map((interval, idx) => (
+                              <Flex key={idx} justify="space-between" p={2} bg="white" borderRadius="sm" shadow="sm" align="center">
+                                <HStack>
+                                  <TimeIcon color="green.500" />
+                                  <Text fontSize="sm">
+                                    {formatTime(interval.start)} 
+                                    <ArrowForwardIcon mx={2} />
+                                    {formatTime(interval.end)}
+                                  </Text>
+                                </HStack>
+                                <Badge colorScheme="blue">{(interval.duration ?? 0).toFixed(2)}h</Badge>
+                              </Flex>
+                            ))
+                          ) : (
+                            <Text fontSize="sm" color="gray.500">{t("No intervals recorded")}</Text>
+                          )}
+                        </VStack>
+                      </Box>
+
+                      {/* Section Événements Bruts */}
+                      <Box flex={1} minW="200px">
+                        <Text fontWeight="bold" mb={2}>{t("Raw Events")}</Text>
+                        <List spacing={1}>
+                          {selectedEmployeeForToday.events && selectedEmployeeForToday.events.length > 0 ? (
+                            selectedEmployeeForToday.events.map((ev, idx) => (
+                              <ListItem key={idx} fontSize="sm">
+                                <ListIcon 
+                                  as={TimeIcon} 
+                                  color={ev.event_type === "in" ? "green.500" : "red.500"} 
+                                />
+                                <Badge variant="outline" mr={2} colorScheme={ev.event_type === "in" ? "green" : "red"}>
+                                  {ev.event_type.toUpperCase()}
+                                </Badge>
+                                  {formatTime(ev.timestamp, 8)}
+                                </ListItem>
+                            ))
+                          ) : (
+                            <Text fontSize="sm" color="gray.500">{t("No events recorded")}</Text>
+                          )}
+                        </List>
+                      </Box>
+                    </Flex>
+                    
+                    <Divider my={4} />
+                    <Flex justify="space-between" align="center">
+                      <HStack>
+                        <Text fontWeight="bold">{t("Summary Today")}:</Text>
+                        <Badge colorScheme="green" fontSize="sm">
+                          {typeof selectedEmployeeForToday.worked_hours === 'number' ? selectedEmployeeForToday.worked_hours.toFixed(2) : "0.00"}h {t("Worked")}
+                        </Badge>
+                      </HStack>
+                    </Flex>
+                  </Box>
+                )}
+
+                <Heading size="md" mb={4} mt={6}>{t("Historical Records")}</Heading>
+
                 {historyLoading ? (
                   <Spinner size="lg" />
                 ) : (
@@ -479,7 +584,7 @@ export default function EmployeesToday() {
                               <Td>{h.date}</Td>
                               <Td>{h.check_in_time?.split("T")[1] ?? "-"}</Td>
                               <Td>{h.check_out_time?.split("T")[1] ?? "-"}</Td>
-                              <Td>{h.worked_hours.toFixed(2)}</Td>
+                              <Td>{(h.worked_hours ?? 0).toFixed(2)}</Td>
                               <Td>{h.is_late ? t("Yes") : t("No")}</Td>
                               <Td>{h.late_minutes}</Td>
                               <Td>
@@ -531,7 +636,7 @@ export default function EmployeesToday() {
                           {t("Total Worked Hours in That Period")}:
                         </Text>
                         <Text fontWeight="bold" color="blue.600">
-                          {totalPeriodHours.toFixed(2)} h
+                          {(totalPeriodHours ?? 0).toFixed(2)} h
                         </Text>
                       </Flex>
                       <Flex justify="space-between" align="center">
@@ -539,7 +644,7 @@ export default function EmployeesToday() {
                           {t("Total Extra Hours in That Period..")}:
                         </Text>
                         <Text fontWeight="bold" color="blue.600">
-                          {totalWeekendHours.toFixed(2)} h
+                          {(totalOvertimeHours ?? 0).toFixed(2)} h
                         </Text>
                       </Flex>
                     </Box>
