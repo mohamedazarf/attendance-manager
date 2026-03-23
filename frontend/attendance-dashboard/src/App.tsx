@@ -13,7 +13,25 @@ import Parametrage from "./pages/Parametrage";
 import UserManagement from "./pages/UserManagement";
 import "./i18n";
 
+import { useEffect } from "react";
+import axios from "axios";
+import API_BASE_URL from "./config/apiConfig";
+
 export default function App() {
+  useEffect(() => {
+    const performInitialSync = async () => {
+      try {
+        console.log("Triggering initial synchronization...");
+        // Use the sync_all endpoint which syncs both employees and attendances
+        await axios.post(`${API_BASE_URL}/api/v1/device/sync`);
+        console.log("Initial synchronization successful.");
+      } catch (error) {
+        console.error("Initial synchronization failed:", error);
+      }
+    };
+    performInitialSync();
+  }, []);
+
   return (
     <ChakraProvider>
       <AuthProvider>
