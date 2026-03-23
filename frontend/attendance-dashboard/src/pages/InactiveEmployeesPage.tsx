@@ -257,12 +257,7 @@ export default function InactiveEmployeesPage() {
                 >
                   <Flex justify="space-between" align="center" mb={3}>
                     <Heading size="md">{emp.name}</Heading>
-                    <Badge
-                      colorScheme={emp.privilege === 14 ? "red" : "blue"}
-                      fontSize="0.8em"
-                    >
-                      {emp.privilege === 14 ? t("Admin") : t("User")}
-                    </Badge>
+
                   </Flex>
 
                   <Text fontSize="sm" mb={1}>
@@ -288,7 +283,7 @@ export default function InactiveEmployeesPage() {
                   <Tr>
                     <Th>{t("Name")}</Th>
                     <Th>{t("Code")}</Th>
-                    <Th>{t("Privilege")}</Th>
+
                     <Th>{t("Group")}</Th>
                     <Th>{t("Card")}</Th>
                     <Th>{t("Matricule")}</Th>
@@ -304,13 +299,7 @@ export default function InactiveEmployeesPage() {
                     >
                       <Td fontWeight="medium">{emp.name}</Td>
                       <Td>{emp.employee_code}</Td>
-                      <Td>
-                        <Badge
-                          colorScheme={emp.privilege === 14 ? "red" : "blue"}
-                        >
-                          {emp.privilege === 14 ? t("Admin") : t("User")}
-                        </Badge>
-                      </Td>
+
                       <Td>{emp.group_id || "-"}</Td>
                       <Td>{emp.card || "-"}</Td>
                       <Td>{emp.matricule || "-"}</Td>

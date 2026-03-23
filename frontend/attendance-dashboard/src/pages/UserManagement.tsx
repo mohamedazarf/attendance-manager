@@ -177,46 +177,6 @@ export default function UserManagement() {
     }
   };
 
-  // const handleDeleteUser = async (id: string) => {
-  //   if (
-  //     !window.confirm(t("Êtes-vous sûr de vouloir supprimer cet utilisateur ?"))
-  //   )
-  //     return;
-
-  //   const token = localStorage.getItem("token");
-  //   try {
-  //     const response = await fetch(
-  //       `${API_BASE_URL}/api/v1/platform-users/${id}`,
-  //       {
-  //         method: "DELETE",
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       },
-  //     );
-
-  //     if (response.ok) {
-  //       toast({
-  //         title: t("Utilisateur supprimé"),
-  //         status: "success",
-  //         duration: 3000,
-  //       });
-  //       fetchUsers();
-  //     } else {
-  //       const errorData = await response.json();
-  //       toast({
-  //         title: t("Erreur"),
-  //         description:
-  //           errorData.detail || t("Impossible de supprimer l'utilisateur"),
-  //         status: "error",
-  //         duration: 3000,
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.error("Error deleting user:", error);
-  //   }
-  // };
-
   const handleOpenDeleteModal = (user: UserPlatform) => {
     setUserToDelete(user);
     onDeleteOpen();

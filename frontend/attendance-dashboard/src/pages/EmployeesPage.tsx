@@ -562,9 +562,10 @@ export default function EmployeesPage() {
 
   const filteredEmployees = useMemo(() => {
     return employees.filter((emp) => {
-      const matchSearch = `${emp.name} ${emp.employee_code} ${emp.matricule || ""}`
-        .toLowerCase()
-        .includes(search.toLowerCase());
+      const matchSearch =
+        `${emp.name} ${emp.employee_code} ${emp.matricule || ""}`
+          .toLowerCase()
+          .includes(search.toLowerCase());
       const matchDepartment =
         department === "all" || emp.department === department;
       return matchSearch && matchDepartment;
@@ -742,35 +743,42 @@ export default function EmployeesPage() {
                     transition: "all 0.2s",
                   }}
                 >
-                    <Flex align="center" gap={2}>
-                      <Heading size="md">{emp.name}</Heading>
-                      {emp.remote_start_date && (
-                        <Tooltip
-                          label={
-                            emp.remote_end_date
-                              ? t("This employee is configured for remote work from {{start}} to {{end}}", {
+                  <Flex align="center" gap={2}>
+                    <Heading size="md">{emp.name}</Heading>
+                    {emp.remote_start_date && (
+                      <Tooltip
+                        label={
+                          emp.remote_end_date
+                            ? t(
+                                "This employee is configured for remote work from {{start}} to {{end}}",
+                                {
                                   start: emp.remote_start_date,
                                   end: emp.remote_end_date,
-                                })
-                              : t("This employee is configured for remote work from {{start}} indefinitely", {
+                                },
+                              )
+                            : t(
+                                "This employee is configured for remote work from {{start}} indefinitely",
+                                {
                                   start: emp.remote_start_date,
-                                })
-                          }
-                          hasArrow
+                                },
+                              )
+                        }
+                        hasArrow
+                      >
+                        <Badge
+                          colorScheme="purple"
+                          variant="solid"
+                          display="flex"
+                          alignItems="center"
+                          gap={1}
                         >
-                          <Badge colorScheme="purple" variant="solid" display="flex" alignItems="center" gap={1}>
-                            <Globe size={12} />
-                            {t("Remote")}
-                          </Badge>
-                        </Tooltip>
-                      )}
-                    </Flex>
-                    <Badge
-                      colorScheme={emp.privilege === 14 ? "green" : "blue"}
-                      fontSize="0.8em"
-                    >
-                      {emp.privilege === 14 ? t("Admin") : t("User")}
-                    </Badge>
+                          <Globe size={12} />
+                          {t("Remote")}
+                        </Badge>
+                      </Tooltip>
+                    )}
+                  </Flex>
+
                   <Text fontSize="sm" mb={1}>
                     <strong>{t("Code")}:</strong> {emp.employee_code}
                   </Text>
@@ -873,7 +881,7 @@ export default function EmployeesPage() {
                 <Tr>
                   <Th>{t("Name")}</Th>
                   <Th>{t("Code")}</Th>
-                  <Th>{t("Privilege")}</Th>
+
                   <Th>{t("Department")}</Th>
 
                   <Th>{t("Matricule")}</Th>
@@ -897,17 +905,30 @@ export default function EmployeesPage() {
                             <Tooltip
                               label={
                                 emp.remote_end_date
-                                  ? t("This employee is configured for remote work from {{start}} to {{end}}", {
-                                      start: emp.remote_start_date,
-                                      end: emp.remote_end_date,
-                                    })
-                                  : t("This employee is configured for remote work from {{start}} indefinitely", {
-                                      start: emp.remote_start_date,
-                                    })
+                                  ? t(
+                                      "This employee is configured for remote work from {{start}} to {{end}}",
+                                      {
+                                        start: emp.remote_start_date,
+                                        end: emp.remote_end_date,
+                                      },
+                                    )
+                                  : t(
+                                      "This employee is configured for remote work from {{start}} indefinitely",
+                                      {
+                                        start: emp.remote_start_date,
+                                      },
+                                    )
                               }
                               hasArrow
                             >
-                              <Badge colorScheme="purple" variant="solid" size="xs" display="flex" alignItems="center" gap={1}>
+                              <Badge
+                                colorScheme="purple"
+                                variant="solid"
+                                size="xs"
+                                display="flex"
+                                alignItems="center"
+                                gap={1}
+                              >
                                 <Globe size={10} />
                                 {t("Remote")}
                               </Badge>
@@ -916,13 +937,7 @@ export default function EmployeesPage() {
                         </Flex>
                       </Td>
                       <Td>{emp.employee_code}</Td>
-                      <Td>
-                        <Badge
-                          colorScheme={emp.privilege === 14 ? "green" : "blue"}
-                        >
-                          {emp.privilege === 14 ? t("Admin") : t("User")}
-                        </Badge>
-                      </Td>
+
                       <Td>{t(emp.department || "usine")}</Td>
 
                       <Td>{emp.matricule || "-"}</Td>
@@ -1233,21 +1248,6 @@ export default function EmployeesPage() {
                 />
 
                 <Select
-                  value={newEmployee.privilege}
-                  onChange={(e) => {
-                    const selectedPrivilege = Number(e.target.value);
-                    setNewEmployee({
-                      ...newEmployee,
-                      privilege: selectedPrivilege,
-                      department: getDefaultDepartment(selectedPrivilege),
-                    });
-                  }}
-                >
-                  <option value={0}>{t("User")}</option>
-                  <option value={14}>{t("Admin")}</option>
-                </Select>
-
-                <Select
                   value={newEmployee.department}
                   onChange={(e) =>
                     setNewEmployee({
@@ -1350,23 +1350,6 @@ export default function EmployeesPage() {
                     }
                   }}
                 />
-
-                <Select
-                  value={editingEmployee?.privilege}
-                  onChange={(e) => {
-                    if (editingEmployee) {
-                      const selectedPrivilege = Number(e.target.value);
-                      setEditingEmployee({
-                        ...editingEmployee,
-                        privilege: selectedPrivilege,
-                        department: getDefaultDepartment(selectedPrivilege),
-                      } as Employee);
-                    }
-                  }}
-                >
-                  <option value={0}>{t("User")}</option>
-                  <option value={14}>{t("Admin")}</option>
-                </Select>
 
                 <Select
                   value={editingEmployee?.department || getDefaultDepartment(0)}
@@ -1485,12 +1468,6 @@ export default function EmployeesPage() {
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            {/* <Input
-              placeholder={t("Enter new password")}
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-            /> */}
             <Input
               placeholder={t("Enter new password")}
               type="password"
@@ -1533,16 +1510,28 @@ export default function EmployeesPage() {
           <ModalBody>
             <Flex direction="column" gap={4}>
               {remoteEmployee?.remote_start_date && (
-                <Box p={3} bg="purple.50" borderRadius="md" borderLeft="4px solid" borderColor="purple.500">
+                <Box
+                  p={3}
+                  bg="purple.50"
+                  borderRadius="md"
+                  borderLeft="4px solid"
+                  borderColor="purple.500"
+                >
                   <Text fontWeight="bold" color="purple.700">
                     {remoteEmployee.remote_end_date
-                      ? t("This employee is configured for remote work from {{start}} to {{end}}", {
-                          start: remoteEmployee.remote_start_date,
-                          end: remoteEmployee.remote_end_date,
-                        })
-                      : t("This employee is configured for remote work from {{start}} indefinitely", {
-                          start: remoteEmployee.remote_start_date,
-                        })}
+                      ? t(
+                          "This employee is configured for remote work from {{start}} to {{end}}",
+                          {
+                            start: remoteEmployee.remote_start_date,
+                            end: remoteEmployee.remote_end_date,
+                          },
+                        )
+                      : t(
+                          "This employee is configured for remote work from {{start}} indefinitely",
+                          {
+                            start: remoteEmployee.remote_start_date,
+                          },
+                        )}
                   </Text>
                 </Box>
               )}

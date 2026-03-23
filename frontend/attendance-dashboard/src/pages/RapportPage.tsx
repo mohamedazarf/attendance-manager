@@ -83,7 +83,7 @@ const formatHours = (decimalHours: number | null | undefined): string => {
     m = 0;
   }
   const sign = isNegative ? "-" : "";
-  return `${sign}${h}h ${String(m).padStart(2, '0')}m`;
+  return `${sign}${h}h ${String(m).padStart(2, "0")}m`;
 };
 
 export default function RapportPage() {
@@ -466,8 +466,8 @@ export default function RapportPage() {
                 }}
               >
                 {Array.from(
-                  { length: 5 },
-                  (_, i) => now.getFullYear() - 2 + i,
+                  { length: 10 },
+                  (_, i) => now.getFullYear() - 5 + i,
                 ).map((y) => (
                   <option key={y} value={y}>
                     {y}
@@ -579,12 +579,8 @@ export default function RapportPage() {
                       <Td isNumeric>{row.days_present}</Td>
                       <Td isNumeric>{row.days_absent}</Td>
 
-                      <Td isNumeric>
-                        {formatHours(row.total_hours_worked)}
-                      </Td>
-                      <Td isNumeric>
-                        {formatHours(row.overtime_hours)}
-                      </Td>
+                      <Td isNumeric>{formatHours(row.total_hours_worked)}</Td>
+                      <Td isNumeric>{formatHours(row.overtime_hours)}</Td>
                     </Tr>
                   ))}
                 </Tbody>
